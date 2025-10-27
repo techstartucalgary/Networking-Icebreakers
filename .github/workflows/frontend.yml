@@ -6,6 +6,11 @@ on:
     paths:
       - 'shatter-web/**'
 
+  pull_request:
+    branches: [main]
+    paths:
+      - 'shatter-web/**'
+
 jobs:
   build:
     runs-on: ubuntu-latest
