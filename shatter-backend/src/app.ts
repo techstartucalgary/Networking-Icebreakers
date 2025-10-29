@@ -8,6 +8,10 @@ app.get('/', (_req, res) => {
   res.send('Hello');
 });
 
+app.get('/test', (_req, res) => {
+  res.send('Test');
+});
+
 app.use('/api/users', userRoutes);
 
 export default app;
