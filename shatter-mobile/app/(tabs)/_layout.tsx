@@ -1,29 +1,25 @@
-import React from "react";
-import { Tabs } from 'expo-router';
+import { Tabs } from "expo-router";
+import { AuthProvider } from "../context/AuthContext";
 
 export default function RootLayout() {
   return (
-    <Tabs>
-      <Tabs.Screen
-        name="NewEvents"
-        options={{
-          title: 'New Events',
-        }}
-      />
+    <AuthProvider>
+      <Tabs>
+        <Tabs.Screen
+          name="Events"
+          options={{ title: "Events" }}
+        />
 
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Profile',
-        }}
-      />
+        <Tabs.Screen
+          name="JoinEvent"
+          options={{ title: "Join an Event" }}
+        />
 
-      <Tabs.Screen
-        name="PastEvents"
-        options={{
-          title: 'PastEvents',
-        }}
-      />
-    </Tabs>
+        <Tabs.Screen
+          name="Profile"
+          options={{ title: "Profile" }}
+        />
+      </Tabs>
+    </AuthProvider>
   );
 }
