@@ -5,8 +5,8 @@ export default function Navbar() {
       <div className="text-2xl font-semibold">Shatter</div>
       <ul className="flex gap-4">
         <li><a href="/" className="hover:text-blue-500">Home</a></li>
-        <li><a href="/profile" className="hover:text-blue-500">Profile</a></li>
-        <li><a href="/connections" className="hover:text-blue-500">Connections</a></li>
+        <li><a href="/about" className="hover:text-blue-500">About</a></li>
+        <li><a href="/create-event" className="hover:text-blue-500">Create Event</a></li>
       </ul>
     </nav>
   );
