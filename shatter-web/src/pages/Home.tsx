@@ -14,10 +14,7 @@ export default function Home() {
       <section className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-8">
         <Card />
         <Card />
-        <div className="bg-white rounded-lg p-4 shadow-md flex flex-col items-center text-center">
-          <h2 className="font-semibold text-xl mb-4">Share Profile</h2>
-          <QRCode />
-        </div>
+        <Card />
       </section>
 
       <Footer />
