@@ -1,7 +1,7 @@
 //handles user login status
 import React, { createContext, useContext, useState } from "react";
 
-type User = { name: string; email: string } | null;
+type User = { name: string; email: string, linkedin: string, github: string } | null;
 
 type AuthContextType = {
   user: User;
