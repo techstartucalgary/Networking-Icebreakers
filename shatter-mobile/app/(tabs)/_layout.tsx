@@ -5,7 +5,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <Tabs>
-        <Tabs.Screen
+        <Tabs.Screen 
           name="Events"
           options={{ title: "Events" }}
         />
