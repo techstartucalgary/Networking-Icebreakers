@@ -44,7 +44,6 @@ export default function Profile() {
           placeholder="Enter LinkedIn URL"
           placeholderTextColor="#888"
         />
-
         <Text style={styles.label}>GitHub:</Text>
         <TextInput
           style={styles.input}
