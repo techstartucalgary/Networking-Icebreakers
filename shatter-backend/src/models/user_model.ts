@@ -9,6 +9,7 @@ import { Schema, model } from 'mongoose';
 export interface IUser {
     name: string;
     email: string;
+    password: string;
 }
 
 // Create the Mongoose Schema (the database blueprint)
@@ -28,6 +29,11 @@ const UserSchema = new Schema<IUser>(
       trim: true,
       lowercase: true,  // converts all emails to lowercase before saving for consistency
       unique: true      // enforce uniqueness, error 11000 if duplicate is detected
+    },
+    password: {
+      type: String,
+      required: true,
+      select: false // exclude password field by default when querying users for security
     }
   },
   {
