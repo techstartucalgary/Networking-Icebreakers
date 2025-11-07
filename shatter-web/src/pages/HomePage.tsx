@@ -1,11 +1,10 @@
-// src/pages/Home.tsx
-import Navbar from "../components/Navbar";
-import Hero from "../components/Hero";
-import Card from "../components/Card";
-import Footer from "../components/Footer";
+import Navbar from "../components/NavBar/Navbar";
+import Hero from "../components/HomePage/Hero";
+import Card from "../components/HomePage/Card";
+import Footer from "../components/Footer/Footer";
 import QRCode from "../components/QRCode";
 
-export default function Home() {
+export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />

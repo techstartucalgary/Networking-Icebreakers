@@ -1,6 +1,6 @@
 // src/App.tsx
-import Home from "./pages/Home";
+import HomePage from "./pages/HomePage";
 
 export default function App() {
-  return <Home />;
+  return <HomePage />;
 }
