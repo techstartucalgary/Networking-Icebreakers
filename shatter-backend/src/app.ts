@@ -1,6 +1,6 @@
 // Express framework gives us fucnctions to creeate web server, handle routes, process HTTP req and send responses
 import express from 'express';
-import userRoutes from './routes/user_route.ts'; // these routes define how to handel requests to /api/users
+import userRoutes from './routes/user_route'; // these routes define how to handel requests to /api/users
 
 // Creating express application as a single "app" object, started in server.ts
 // This object represents entire web server and will be used to:
