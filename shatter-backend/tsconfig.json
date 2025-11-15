@@ -8,8 +8,7 @@
     "sourceMap": true,
     "outDir": "dist",
     "lib": ["ES2021"],
-    "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": false
   },
   "include": ["src/**/*"]
 }

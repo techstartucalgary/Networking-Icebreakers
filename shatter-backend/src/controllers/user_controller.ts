@@ -1,6 +1,6 @@
 // import req and res types for type safety
 import { Request, Response } from 'express';
-import { User } from '../models/user_model.ts'; // imports user model created with mongoose
+import { User } from '../models/user_model'; // imports user model created with mongoose
 
 // controller: GET /api/users
 // This function handles GET reqs to /api/users

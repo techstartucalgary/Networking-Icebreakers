@@ -2,7 +2,7 @@
 
 import 'dotenv/config';           // loads .env file and populates process.env (the node.js object)
 import mongoose from 'mongoose';  // mongoose is an Object Data Modelling (ODM) livrary for MongoDB
-import app from './app.ts';       // Import the express app
+import app from './app';       // Import the express app
 
 
 // config
