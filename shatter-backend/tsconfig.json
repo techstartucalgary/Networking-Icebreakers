@@ -6,9 +6,10 @@
     "esModuleInterop": true,
     "strict": true,
     "sourceMap": true,
-    "outDir": "dist",
-    "lib": ["ES2021"],
-    "noEmit": false
+    "outDir": "./dist",
+    "rootDir": "./",
+    "lib": ["ES2021"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "api/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
