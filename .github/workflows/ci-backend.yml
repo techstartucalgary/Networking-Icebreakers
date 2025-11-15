@@ -14,9 +14,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: shatter-backend
 
     steps:
       - name: Checkout code
@@ -28,18 +25,23 @@ jobs:
           node-version: "20"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+            cd shatter-backend
+            npm ci
 
       - name: Build project
-        run: npm run build
+        run: |
+            cd shatter-backend   
+            npm run build
 
       - name: Package build artifacts
         working-directory: shatter-backend
         run: |
-          mkdir output
-          cp -r dist package.json package-lock.json vercel.json output/
-          tar -czf node-backend-${{ github.run_number }}.tar.gz output
-          mv node-backend-${{ github.run_number }}.tar.gz $GITHUB_WORKSPACE/
+            cd shatter-backend
+            mkdir output
+            cp -r dist package.json package-lock.json vercel.json output/
+            tar -czf node-backend-${{ github.run_number }}.tar.gz output
+            mv node-backend-${{ github.run_number }}.tar.gz $GITHUB_WORKSPACE/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
