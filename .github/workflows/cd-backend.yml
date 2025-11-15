@@ -1,0 +1,47 @@
+name: CD - Deploy Backend to Vercel
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'CI Build Number to Deploy'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node-backend-${{ inputs.build_number }}
+          path: ./artifacts
+
+      - name: Extract artifact
+        run: |
+          cd artifacts
+          tar -xzf node-backend-${{ inputs.build_number }}.tar.gz
+          ls -la output
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_BACKEND }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
+        run: |
+          cd artifacts/output
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          vercel deploy --prod --token=$VERCEL_TOKEN > deployment-url.txt
