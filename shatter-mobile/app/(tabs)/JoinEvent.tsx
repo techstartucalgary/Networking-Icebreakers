@@ -16,7 +16,7 @@ export default function Profile() {
         <Button
           title ="Scan Qr Code"
           onPress = {()=>{
-            router.push("../../src/components/QrcodeScan")
+            router.push("/QrcodeScan")
           }}
 
         />
@@ -31,7 +31,7 @@ export default function Profile() {
         <Button
           title ="Scan Qr Code"
           onPress = {()=>{
-            router.push("../../src/components/QrcodeScan")
+            router.push("/QrcodeScan")
           }}
 
         />

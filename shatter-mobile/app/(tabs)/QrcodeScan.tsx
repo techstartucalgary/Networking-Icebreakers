@@ -1,9 +1,10 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Button, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FullWindowOverlay } from 'react-native-screens';
 
 export default function QrcodeScan() {
-  const [facing, setFacing] = useState<CameraType>('back');
+  // const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
 
   if (!permission) {
@@ -21,18 +22,20 @@ export default function QrcodeScan() {
     );
   }
 
-  function toggleCameraFacing() {
-    setFacing(current => (current === 'back' ? 'front' : 'back'));
-  }
+
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing} />
+      <CameraView style={styles.camera} facing={'back'} 
+      onBarcodeScanned={({data})=>{
+        Linking.openURL(data);
+      }}
+      />
+      
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-          <Text style={styles.text}>Flip Camera</Text>
-        </TouchableOpacity>
+
       </View>
+      
     </View>
   );
 }
