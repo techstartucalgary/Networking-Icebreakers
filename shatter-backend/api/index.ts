@@ -27,4 +27,14 @@ connectDB().catch((err) => {
   console.error('Failed to connect to MongoDB:', err);
 });
 
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection error:', error);
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
+
 export default app;
