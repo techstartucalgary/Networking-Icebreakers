@@ -1,15 +1,16 @@
 name: Build and Deploy Backend
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'shatter-backend/**'
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'shatter-backend/**'
 
-  pull_request:
-    branches: [main]
-    paths:
-      - 'shatter-backend/**'
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - 'shatter-backend/**'
+  workflow_dispatch:
 
 jobs:
   build:
