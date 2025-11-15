@@ -34,6 +34,7 @@ jobs:
         run: npm run build
 
       - name: Package build artifacts
+        working-directory: shatter-backend
         run: |
           mkdir output
           cp -r dist package.json package-lock.json vercel.json output/
