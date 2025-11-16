@@ -1,20 +1,21 @@
-//called by Profile.tsx for logging in
-import { useState } from "react";
-import { StyleSheet, ActivityIndicator, TextInput, TouchableOpacity, View, Text } from "react-native";
-import { useAuth } from "../../app/context/AuthContext";
+//called by Profile.tsx for signing up
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { useAuth } from "../../../app/context/AuthContext";
 
 //used in profile to swap page
 type Props = {
-  switchToSignUp: () => void;
+  switchToLogin: () => void;
 };
 
-export default function LoginForm({ switchToSignUp }: Props) {
+export default function SignUpForm({ switchToLogin }: Props) {
   const { setUser } = useAuth();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleSignup = () => {
     setLoading(true);
 
     if (!email || !password) {
@@ -37,24 +38,26 @@ export default function LoginForm({ switchToSignUp }: Props) {
     }
 
     //TODO: Backend logic
-    
+
     setTimeout(() => {
-      setUser({ name: "John Doe", email, linkedin: "", github: "" }); //load name from backend
+      setUser({ name, email, linkedin: "", github: "" });
       setLoading(false);
     }, 1000);
   };
 
   return (
     <View>
-      <Text style={styles.title}>Log In</Text>
+      <Text style={styles.title}>Sign Up</Text>
+      <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} placeholderTextColor="#888"/>
       <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} placeholderTextColor="#888"/>
       <TextInput style={styles.input} placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} placeholderTextColor="#888"/>
-      <TouchableOpacity style={[styles.button, loading && { backgroundColor: "#ccc" }]} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log In</Text>}
+
+      <TouchableOpacity style={[styles.button, loading && { backgroundColor: "#ccc" }]} onPress={handleSignup} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign Up</Text>}
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={switchToSignUp} style={{ marginTop: 16 }}>
-        <Text style={{ textAlign: "center", color: "#1C1DEF" }}>Don't have an account? Sign Up</Text>
+      <TouchableOpacity onPress={switchToLogin} style={{ marginTop: 16 }}>
+        <Text style={{ textAlign: "center", color: "#1C1DEF" }}>Already have an account? Log In</Text>
       </TouchableOpacity>
     </View>
   );
@@ -70,7 +73,7 @@ const styles = StyleSheet.create({
   input: { 
     borderWidth: 1, 
     borderColor: "#ccc", 
-    borderRadius: 8,
+    borderRadius: 8, 
     padding: 12, 
     marginBottom: 16, 
     backgroundColor: "#fff" },
