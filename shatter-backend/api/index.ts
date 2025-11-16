@@ -4,8 +4,6 @@ import app from '../src/app';
 
 const MONGODB_URI = process.env.MONGO_URI;
 
-mongoose.set('bufferCommands', false);
-
 let connectionPromise: Promise<void> | null = null;
 
 async function connectDB() {
