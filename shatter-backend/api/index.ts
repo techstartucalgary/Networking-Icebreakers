@@ -6,50 +6,56 @@ const MONGODB_URI = process.env.MONGO_URI;
 
 mongoose.set('bufferCommands', false);
 
-let isConnected = false;
+let connectionPromise: Promise<void> | null = null;
 
 async function connectDB() {
-  if (isConnected && mongoose.connection.readyState === 1) {
+  if (mongoose.connection.readyState === 1) {
     return;
+  }
+
+  if (connectionPromise) {
+    return connectionPromise;
   }
 
   if (!MONGODB_URI) {
     throw new Error('MONGO_URI is not set in environment variables');
   }
 
-  try {
-    await mongoose.connect(MONGODB_URI, {
-      bufferCommands: false,
-      maxPoolSize: 10,
-      minPoolSize: 2, 
-      maxIdleTimeMS: 30000, 
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
+  connectionPromise = (async () => {
+    try {   
+      await mongoose.connect(MONGODB_URI, {
+        bufferCommands: false,
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        maxIdleTimeMS: 30000,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      });
 
-    isConnected = true;
+      mongoose.connection.on('error', (err) => {
+        console.error('MongoDB connection error:', err);
+        connectionPromise = null;
+      });
 
-    mongoose.connection.on('error', (err) => {
-      isConnected = false;
-    });
+      mongoose.connection.on('disconnected', () => {
+        console.log('MongoDB disconnected');
+        connectionPromise = null;
+      });
 
-    mongoose.connection.on('disconnected', () => {
-      isConnected = false;
-    });
+    } catch (error) {
+      console.error('Failed to connect to MongoDB:', error);
+      connectionPromise = null;
+      throw error;
+    }
+  })();
 
-  } catch (error) {
-    isConnected = false;
-    throw error;
-  }
+  return connectionPromise;
 }
 
 connectDB().catch(console.error);
 
 app.use(async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState === 1) {
-      return next();
-    }
     await connectDB();
     next();
   } catch (error: any) {
