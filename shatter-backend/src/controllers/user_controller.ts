@@ -24,16 +24,16 @@ export const createUser = async (req: Request, res: Response) => {
     try {
 	// Destructure the req body sent by the client
 	// The ?? {} ensures we don't get error if req.body is undefined
-	const { name, email } = req.body ?? {};
+	const { name, email, password} = req.body ?? {};
 
 	// Basic validation to ensure both name and email are provided
 	// if not respond with bad request and stop further processes
-	if (!name || !email) {
-	    return res.status(400).json({ error: 'name and email required' });
+	if (!name || !email || !password) {
+	    return res.status(400).json({ error: 'name, email required, and password' });
 	}
 
 	// create a new user doc in DB using Mongoose's .create()
-	const user = await User.create({ name, email });
+	const user = await User.create({ name, email, password});
 	// respond with "created" and send back created user as JSON
 	res.status(201).json(user);
     } catch(err: any) {
