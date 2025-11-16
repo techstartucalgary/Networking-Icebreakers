@@ -13,6 +13,11 @@ async function connectDB() {
     return;
   }
 
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+    connectionPromise = null;
+  }
+
   if (connectionPromise) {
     return connectionPromise;
   }
