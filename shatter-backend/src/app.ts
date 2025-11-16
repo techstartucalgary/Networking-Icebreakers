@@ -1,7 +1,8 @@
 import express from 'express';
-import userRoutes from './routes/user_route.ts';
+import userRoutes from './routes/user_route'; 
 
 const app = express();
+
 app.use(express.json());
 
 app.get('/', (_req, res) => {
