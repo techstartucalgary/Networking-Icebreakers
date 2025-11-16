@@ -4,57 +4,66 @@ import app from '../src/app';
 
 const MONGODB_URI = process.env.MONGO_URI;
 
-let isConnected = false;
+let connectionPromise: Promise<void> | null = null;
 
 async function connectDB() {
-  if (isConnected && mongoose.connection.readyState === 1) {
-    console.log('Using existing MongoDB connection');
+  if (mongoose.connection.readyState === 1) {
     return;
+  }
+
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+    connectionPromise = null;
+  }
+
+  if (connectionPromise) {
+    return connectionPromise;
   }
 
   if (!MONGODB_URI) {
     throw new Error('MONGO_URI is not set in environment variables');
   }
 
-  try {
-    console.log('Creating new MongoDB connection...');
-    
-    await mongoose.connect(MONGODB_URI, {
-      bufferCommands: false,
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
+  connectionPromise = (async () => {
+    try {   
+      await mongoose.connect(MONGODB_URI, {
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        maxIdleTimeMS: 30000,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      });
 
-    isConnected = true;
-    console.log('MongoDB connected successfully');
+      mongoose.connection.on('error', (err) => {
+        console.error('MongoDB connection error:', err);
+        connectionPromise = null;
+      });
 
-    mongoose.connection.on('error', (err) => {
-      console.error('MongoDB connection error:', err);
-      isConnected = false;
-    });
+      mongoose.connection.on('disconnected', () => {
+        console.log('MongoDB disconnected');
+        connectionPromise = null;
+      });
 
-    mongoose.connection.on('disconnected', () => {
-      console.log('MongoDB disconnected');
-      isConnected = false;
-    });
+    } catch (error) {
+      console.error('Failed to connect to MongoDB:', error);
+      connectionPromise = null;
+      throw error;
+    }
+  })();
 
-  } catch (error) {
-    console.error('Failed to connect to MongoDB:', error);
-    isConnected = false;
-    throw error;
-  }
+  return connectionPromise;
 }
+
+connectDB().catch(console.error);
 
 app.use(async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (error: any) {
-    console.error('Database connection error:', error);
     res.status(500).json({ 
       error: 'Database connection failed',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: error.message
     });
   }
 });
