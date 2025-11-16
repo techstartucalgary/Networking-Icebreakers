@@ -7,7 +7,7 @@ export default function Navbar() {
         {/* Shatter Logo */}
         <div className="w-10 h-10 flex items-center justify-center">
           <img 
-            src="/src/assets/ShatterLogo_Blue.png" 
+            src="/src/assets/ShatterLogo_White.png" 
             alt="Shatter Logo" 
             className="w-full h-full object-contain"
           />
