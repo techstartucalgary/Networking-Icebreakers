@@ -1,22 +1,27 @@
-import Navbar from "../components/NavBar/Navbar";
-import Hero from "../components/HomePage/Hero";
-import Card from "../components/HomePage/Card";
-import Footer from "../components/Footer/Footer";
-import QRCode from "../components/QRCode";
+import React from 'react';
+import Navbar from '../components/Navbar';
+import Hero from '../components/Hero';
+import About from '../components/About';
+import Footer from '../components/Footer';
 
-export default function HomePage() {
+const HomePage: React.FC = () => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div 
+      className="min-h-screen relative text-white"
+      style={{ 
+        background: 'linear-gradient(to bottom, #0a0f1a, #1B253A, #0a0f1a)'
+      }}
+    >
       <Navbar />
-      <Hero />
-
-      <section className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-8">
-        <Card />
-        <Card />
-        <Card />
-      </section>
-
+      
+      <main>
+        <Hero qrPayload="Test" />
+        <About />
+      </main>
+      
       <Footer />
     </div>
   );
-}
+};
+
+export default HomePage;
