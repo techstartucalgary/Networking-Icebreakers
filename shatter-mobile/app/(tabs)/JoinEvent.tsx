@@ -1,22 +1,38 @@
-import { Text, View } from "react-native";
+import React, { useState } from "react";
+import { View, Text, Button, StyleSheet } from "react-native";
+import QRScannerBox from "../../src/components/QRScannerBox";
 import { useAuth } from "../context/AuthContext";
 
-export default function Profile() {
-  const { user } = useAuth();
+export default function JoinEventPage() {
+  const { user, setUser } = useAuth();
+  const [showScanner, setShowScanner] = useState(false);
 
-  if (user) {
-    return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Welcome, {user.name}!</Text>
-        <Text>Join an Event Here</Text>
-        </View>
-    );
-  } else {
-    return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Welcome!</Text>
-        <Text>Join an Event Here</Text>
-        </View>
-    );
-  }
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Welcome! Join an Event</Text>
+
+      {!showScanner && (
+        <Button
+          title="Scan QR Code"
+          onPress={() => setShowScanner(true)}
+        />
+      )}
+
+      {showScanner && <QRScannerBox />}
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "600",
+    marginBottom: 20,
+  },
+});
