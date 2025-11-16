@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Button, StyleSheet } from "react-native";
-import QRScannerBox from "../../src/components/QRScannerBox";
+import QRScannerBox from "../../src/components/new-events/QRScannerBox";
 import { useAuth } from "../context/AuthContext";
 
 export default function JoinEventPage() {

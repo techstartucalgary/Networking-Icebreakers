@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, TextInput } from "react-native";
 import { useAuth } from "../context/AuthContext";
-import LoginForm from "../../src/components/LoginForm";
-import SignUpForm from "../../src/components/SignupForm";
+import LoginForm from "../../src/components/login-signup/LoginForm";
+import SignUpForm from "../../src/components/login-signup/SignupForm";
 
 export default function Profile() {
   const { user, setUser } = useAuth();
