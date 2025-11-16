@@ -7,7 +7,7 @@ export default function Navbar() {
         {/* Shatter Logo */}
         <div className="w-10 h-10 flex items-center justify-center">
           <img 
-            src="/src/assets/ShatterLogo_White.png" 
+            src="/src/assets/ShatterLogo_Blue.png" 
             alt="Shatter Logo" 
             className="w-full h-full object-contain"
           />
@@ -19,7 +19,7 @@ export default function Navbar() {
       <ul className="flex gap-4 items-center">
         <li>
           <a 
-            href="/about" 
+            href="#about" 
             className="px-4 py-2 text-white/90 hover:text-white transition-colors duration-200 font-body"
           >
             About
@@ -28,8 +28,16 @@ export default function Navbar() {
         <li>
           <a 
             href="/create-event" 
-            className="px-4 py-2 rounded-full text-white font-body transition-all duration-200 border border-transparent hover:border-white/30"
-            style={{ backgroundColor: '#4DC4FF' }}
+            className="px-4 py-2 rounded-full font-body transition-all duration-200 border border-transparent"
+            style={{ backgroundColor: '#4DC4FF', color: '#ffffff' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#F8F7DE';
+              e.currentTarget.style.color = '#1B253A';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#4DC4FF';
+              e.currentTarget.style.color = '#ffffff';
+            }}
           >
             Create Event
           </a>
