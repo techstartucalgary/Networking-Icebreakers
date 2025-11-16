@@ -29,7 +29,6 @@ async function connectDB() {
   connectionPromise = (async () => {
     try {   
       await mongoose.connect(MONGODB_URI, {
-        bufferCommands: false,
         maxPoolSize: 10,
         minPoolSize: 2,
         maxIdleTimeMS: 30000,
