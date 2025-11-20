@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/user_model';
-import { hashPassword } from '../utils/password_hash';
+import { hashPassword, comparePassword } from '../utils/password_hash';
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -89,4 +89,79 @@ export const signup = async (req: Request, res: Response) => {
     }
 };
 
+
+/**
+ * POST /api/auth/login
+ * Authenticate user and log them in
+ * 
+ * @param req.body.email - User's email
+ * @param req.body.password - User's plain text password
+ * @returns 200 with userId on success
+ */
+export const login = async (req: Request, res: Response) => {
+    try {
+	// 1 - extract data from req body
+	const { email, password } = req.body as {
+	    email?: string;
+	    password?: string;
+	};
+
+	// 2 - validate required fields
+	if (!email || !password) {
+	    return res.status(400).json({
+		error: 'Email and password are required'
+	    });
+	}
+
+	// 3 - normalize email
+	const normalizedEmail = email.toLowerCase().trim();
+
+	// 4 - validate email format
+	if (!EMAIL_REGEX.test(normalizedEmail)) {
+	    return res.status(400).json({
+		error: 'Invalid email format'
+	    });
+	}
+
+	// 5 - find user by email
+	const user = await User.findOne({ email: normalizedEmail })
+	    .select('+passwordHash'); // need this since queries don't return passwordHash by default
+
+	// 6 - check if user exists
+	if (!user) {
+	    // for security purposes I won't include whether email exists or not
+	    return res.status(401).json({
+		error: 'Invalid credentials'
+	    });
+	}
+
+	// 7 - verify password
+	const isPasswordValid = await comparePassword(password, user.passwordHash);
+
+	if (!isPasswordValid) {
+	    return res.status(401).json({
+		error: 'Invalid credentials'
+	    });
+	}
+
+	// 8 - update lastLogin stamp
+	user.lastLogin = new Date();
+	await user.save(); // save the updated user
+
+	// 9 - return success
+	res.status(200).json({
+	    message: 'Login successful',
+	    userId: user._id
+	    // TODO: figure out a way to add JWT token here
+	});
+
+    } catch (err: any) {
+	console.error('POST /api/auth/login error:', err);
+
+	// Generic error Response
+	res.status(500).json({
+	    error: 'Login failed'
+	});
+    }
+};
 
