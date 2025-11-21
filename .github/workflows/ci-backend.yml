@@ -2,12 +2,12 @@ name: CI - Build Backend
 
 on:
   push:
-    branches: [main]
+    branches: [main, backend]
     paths:
       - 'shatter-backend/**'
 
   pull_request:
-    branches: [main]
+    branches: [main, backend]
     paths:
       - 'shatter-backend/**'
 
