@@ -1,0 +1,49 @@
+name: CI - Build Backend
+
+on:
+  push:
+    branches: [main, backend]
+    paths:
+      - 'shatter-backend/**'
+
+  pull_request:
+    branches: [main, backend]
+    paths:
+      - 'shatter-backend/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: |
+            cd shatter-backend
+            npm ci
+
+      - name: Build project
+        run: |
+            cd shatter-backend   
+            npm run build
+
+      - name: Package build artifacts
+        run: |
+            cd shatter-backend
+            mkdir output
+            cp -r dist package.json package-lock.json vercel.json output/
+            tar -czf node-backend-${{ github.run_number }}.tar.gz output
+            mv node-backend-${{ github.run_number }}.tar.gz $GITHUB_WORKSPACE/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-backend-${{ github.run_number }}
+          path: node-backend-${{ github.run_number }}.tar.gz
