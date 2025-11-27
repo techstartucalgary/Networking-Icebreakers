@@ -47,7 +47,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
       };
 
       try {
-        await login(user, "access-token", Date.now() + 3600 * 1000);
+        await login(user, "access-token", Date.now() + 3600 * 1000); //1hr
       } catch (e) {
         console.log("Login failed:", e);
       } finally {

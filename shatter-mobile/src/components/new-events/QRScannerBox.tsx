@@ -36,7 +36,7 @@ export default function QRScannerBox() {
       return;
     }
 
-    console.log("Current User ID:", userId);
+    console.log("Current User ID:", userId, " Join Code: ", joinCode);
   };
 
   if (!permission) return <View />;

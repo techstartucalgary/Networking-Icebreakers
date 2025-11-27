@@ -4,12 +4,16 @@ import { useAuth } from "../../src/components/context/AuthContext";
 import QRScannerBox from "../../src/components/new-events/QRScannerBox";
 
 export default function JoinEventPage() {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const [showScanner, setShowScanner] = useState(false);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome! Join an Event</Text>
+      {user ? (
+        <Text style={styles.title}>Welcome {user.name}! Join an Event</Text>
+      ) : (
+        <Text style={styles.title}>Welcome! Join an Event</Text>
+      )}
 
       {!showScanner && (
         <Button
