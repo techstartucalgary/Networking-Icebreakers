@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { AuthProvider } from "../context/AuthContext";
+import { AuthProvider } from "../../src/components/context/AuthContext";
 
 export default function RootLayout() {
   return (
