@@ -1,7 +1,7 @@
 //called by Profile.tsx for signing up
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
-import { useAuth } from "../../../app/context/AuthContext";
+import { useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useAuth, User } from "../context/AuthContext";
 
 //used in profile to swap page
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
 };
 
 export default function SignUpForm({ switchToLogin }: Props) {
-  const { setUser } = useAuth();
+  const { login } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,11 +37,24 @@ export default function SignUpForm({ switchToLogin }: Props) {
         return;
     }
 
-    //TODO: Backend logic
+    //TODO: Backend logic --> auth for access-token, then create new user for backend based on user details
+    setTimeout(async () => {
+      const newId = "user1234"; //backend-generated user ID
+      const user: User = {
+        user_id: newId,
+        name,
+        email,
+        linkedin: "",
+        github: ""
+      };
 
-    setTimeout(() => {
-      setUser({ name, email, linkedin: "", github: "" });
-      setLoading(false);
+      try {
+        await login(user, "new-access-token", Date.now() + 3600 * 1000); //1hr
+      } catch (e) {
+        console.log("Signup failed:", e);
+      } finally {
+        setLoading(false);
+      }
     }, 1000);
   };
 
@@ -61,7 +74,7 @@ export default function SignUpForm({ switchToLogin }: Props) {
       </TouchableOpacity>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   title: { 

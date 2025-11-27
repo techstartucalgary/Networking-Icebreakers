@@ -1,7 +1,7 @@
 //called by Profile.tsx for logging in
 import { useState } from "react";
-import { StyleSheet, ActivityIndicator, TextInput, TouchableOpacity, View, Text } from "react-native";
-import { useAuth } from "../../../app/context/AuthContext";
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useAuth, User } from "../context/AuthContext";
 
 //used in profile to swap page
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
 };
 
 export default function LoginForm({ switchToSignUp }: Props) {
-  const { setUser } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
         return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     if (!emailRegex.test(email)) {
         console.log("Error: Invalid email format");
         setLoading(false)
@@ -36,11 +36,23 @@ export default function LoginForm({ switchToSignUp }: Props) {
         return;
     }
 
-    //TODO: Backend logic
-    
-    setTimeout(() => {
-      setUser({ name: "John Doe", email, linkedin: "", github: "" }); //load name from backend
-      setLoading(false);
+    //TODO: Backend logic --> auth for access-token, then load user details from backend based on userId
+    setTimeout(async () => {
+      const user: User = {
+        user_id: "user123",
+        name: "John Doe",
+        email,
+        linkedin: "",
+        github: ""
+      };
+
+      try {
+        await login(user, "access-token", Date.now() + 3600 * 1000);
+      } catch (e) {
+        console.log("Login failed:", e);
+      } finally {
+        setLoading(false);
+      }
     }, 1000);
   };
 
@@ -58,7 +70,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
       </TouchableOpacity>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   title: { 
