@@ -1,50 +1,41 @@
-// import req and res types for type safety
-import { Request, Response } from 'express';
-import { User } from '../models/user_model.ts'; // imports user model created with mongoose
+import { Request, Response } from "express";
+import { User } from "../models/user_model";
 
 // controller: GET /api/users
 // This function handles GET reqs to /api/users
 // It fetches all users from MongoDB and sends them as json
 
 export const getUsers = async (_req: Request, res: Response) => {
-    try {
-	// retrieves all docs from "users" collection
-	const users = await User.find().lean(); // .lean() returns plain JS objects instead of Mongoose docs, may change incase we need extra model methods later
-	res.json(users); // sends list of users back as JSON response
-    } catch (err) { // log the error if something goes wrong
-	console.error('GET /api/users error:', err);
-	res.status(500).json({ error: 'Failed to fetch users' });
-    }
+  try {
+    const users = await User.find().lean();
+    res.json(users); 
+  } catch (err: any) {
+    console.error("GET /api/users error:", err);
+    res.status(500).json({
+      error: "Failed to fetch users",
+      message: err.message,
+    });
+  }
 };
-
 
 // controller: POST /api/users
 // reads data from req body, vailidates it and creates a new user
 export const createUser = async (req: Request, res: Response) => {
-    try {
-	// Destructure the req body sent by the client
-	// The ?? {} ensures we don't get error if req.body is undefined
-	const { name, email, password} = req.body ?? {};
+  try {
+    const { name, email } = req.body ?? {};
 
-	// Basic validation to ensure both name and email are provided
-	// if not respond with bad request and stop further processes
-	if (!name || !email || !password) {
-	    return res.status(400).json({ error: 'name, email required, and password' });
-	}
-
-	// create a new user doc in DB using Mongoose's .create()
-	const user = await User.create({ name, email, password});
-	// respond with "created" and send back created user as JSON
-	res.status(201).json(user);
-    } catch(err: any) {
-	// Handle duplicate email error
-	// Mongo DB rejects duplicat value since we have email marked as 'unique'
-	if (err?.code === 11000) {
-	    return res.status(409).json({ error: 'email already exists' });
-	}
-	
-	// for all other errors, log them and return generic 500 response
-	console.error('POST /api/users error:', err);
-	res.status(500).json({error: 'Failed to create user' });
+    if (!name || !email) {
+      return res.status(400).json({ error: "name and email required" });
     }
+
+    const user = await User.create({ name, email });
+    res.status(201).json(user);
+  } catch (err: any) {
+    if (err?.code === 11000) {
+      return res.status(409).json({ error: "email already exists" });
+    }
+
+    console.error("POST /api/users error:", err);
+    res.status(500).json({ error: "Failed to create user" });
+  }
 };

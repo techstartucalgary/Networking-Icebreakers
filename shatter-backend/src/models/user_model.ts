@@ -9,7 +9,11 @@ import { Schema, model } from 'mongoose';
 export interface IUser {
     name: string;
     email: string;
-    password: string;
+    passwordHash: string;
+    lastLogin?: Date;
+    passwordChangedAt?: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 // Create the Mongoose Schema (the database blueprint)
@@ -27,13 +31,26 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: true,
       trim: true,
-      lowercase: true,  // converts all emails to lowercase before saving for consistency
-      unique: true      // enforce uniqueness, error 11000 if duplicate is detected
+      lowercase: true,
+      unique: true,
+      index: true,
+      match: [
+	/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
+	'Please provide a valid email address'
+      ]
     },
-    password: {
+    passwordHash: {
       type: String,
       required: true,
-      select: false // exclude password field by default when querying users for security
+      select: false             // Don't return in queries by default
+    },
+    lastLogin: {
+      type: Date,
+      default: null
+    },
+    passwordChangedAt: {
+      type: Date,
+      default: null
     }
   },
   {
@@ -44,6 +61,13 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
+// Add middleware to auto-update passwordChangedAt
+UserSchema.pre('save', function (next) {
+  if (this.isModified('passwordHash') && !this.isNew) {
+    this.passwordChangedAt = new Date();
+  }
+  next();
+});
 
 // create and export mongoose model
 // model is simply a wrapper around schema that gives access to MongoDB opeprations
