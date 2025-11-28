@@ -1,6 +1,7 @@
 //called by Profile.tsx for logging in
+import { router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAuth, User } from "../context/AuthContext";
 
 //used in profile to swap page
@@ -42,8 +43,9 @@ export default function LoginForm({ switchToSignUp }: Props) {
         user_id: "user123",
         name: "John Doe",
         email,
-        linkedin: "",
-        github: ""
+        linkedin: "https://linkedin.com/john-doe",
+        github: "https://github.com/john-doe",
+        isGuest: false
       };
 
       try {
@@ -67,6 +69,10 @@ export default function LoginForm({ switchToSignUp }: Props) {
 
       <TouchableOpacity onPress={switchToSignUp} style={{ marginTop: 16 }}>
         <Text style={{ textAlign: "center", color: "#1C1DEF" }}>Don't have an account? Sign Up</Text>
+        <Button
+          title="Continue as Guest"
+          onPress={() => router.push("/(tabs)/Guest")}
+        />
       </TouchableOpacity>
     </View>
   );

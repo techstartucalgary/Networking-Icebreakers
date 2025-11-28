@@ -19,6 +19,14 @@ export default function RootLayout() {
           name="Profile"
           options={{ title: "Profile" }}
         />
+
+        <Tabs.Screen
+          name="Guest"
+          options={{
+            href: null, //don't show in nav bar
+            title: "Guest"
+          }}
+        />
       </Tabs>
     </AuthProvider>
   );
