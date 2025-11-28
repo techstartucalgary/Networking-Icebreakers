@@ -1,22 +1,23 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { getStoredAuth, saveStoredAuth, clearStoredAuth, AuthDataStorage  } from "../general/AsyncStorage";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { AuthDataStorage, clearStoredAuth, getStoredAuth, saveStoredAuth } from "../general/AsyncStorage";
 
 export type User = {
   user_id: string;
-  name: string;
-  email: string;
-  linkedin: string;
-  github: string;
+  name?: string;
+  email?: string;
+  linkedin?: string;
+  github?: string;
+  isGuest?: boolean;
 } | null;
 
 type AuthContextType = {
-  authStorage: AuthDataStorage;  //minimal persisted data (userId, accessToken, expiry)
-  user: User;                     //full profile in memory
+  authStorage: AuthDataStorage;
+  user: User;
   login: (user: User, accessToken: string, expiry: number) => Promise<void>;
+  continueAsGuest: (name: string, linkedin: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (updates: Partial<User>) => void; //in-memory only
+  updateUser: (updates: Partial<User>) => void;
 };
-
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -29,21 +30,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [user, setUser] = useState<User>(null);
 
-  //load stored data on app startup
+  //load stored data on startup
   useEffect(() => {
     const load = async () => {
       const stored = await getStoredAuth();
       setAuthStorage(stored);
-      //TODO: Load full profile from backend, applies for app restart
+      //TODO: Pull full profile from backend using stored.userId
     };
+
     load();
   }, []);
 
-  //login (store in context and AsyncStorage)
   const login = async (user: User, accessToken: string, expiry: number) => {
     setUser(user);
     const storageData: AuthDataStorage = {
-      userId: user?.user_id || "",
+      userId: user?.user_id || null,
       accessToken,
       expiry,
     };
@@ -51,21 +52,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await saveStoredAuth(storageData);
   };
 
-  //logout (clear storage and context)
+  const continueAsGuest = async (name: string, linkedin: string) => {
+    const guestUser: User = {
+      user_id: "guest-" + Date.now().toString(), //how to ID guests?
+      name: name,
+      linkedin: linkedin,
+      isGuest: true,
+    };
+
+    setUser(guestUser);
+
+    const storageData: AuthDataStorage = {
+      userId: guestUser.user_id,
+      accessToken: null,
+      expiry: null,
+    };
+
+    setAuthStorage(storageData);
+    await saveStoredAuth(storageData);
+  };
+
   const logout = async () => {
     setUser(null);
     setAuthStorage({ userId: null, accessToken: null, expiry: null });
     await clearStoredAuth();
   };
 
-  //update user with new info, keeps auth up to date with new changes
+  //Upuate in-memory user
   const updateUser = (updates: Partial<User>) => {
     if (!user) return;
     setUser({ ...user, ...updates });
   };
 
   return (
-    <AuthContext.Provider value={{ authStorage, user, login, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{
+        authStorage,
+        user,
+        login,
+        continueAsGuest,
+        logout,
+        updateUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

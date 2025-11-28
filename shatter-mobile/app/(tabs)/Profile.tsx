@@ -27,7 +27,7 @@ export default function Profile() {
   };
 
   //logged in
-  if (user) {
+  if (user && !user.isGuest) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Welcome, {user.name}!</Text>
@@ -41,7 +41,7 @@ export default function Profile() {
           placeholder="Enter LinkedIn URL"
           placeholderTextColor="#888"
         />
-        
+
         <Text style={styles.label}>GitHub:</Text>
         <TextInput
           style={styles.input}
@@ -54,12 +54,38 @@ export default function Profile() {
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.buttonText}>Save</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.button} onPress={(logout)}>
+
+        <TouchableOpacity style={styles.button} onPress={logout}>
           <Text style={styles.buttonText}>Log Out</Text>
         </TouchableOpacity>
       </View>
     );
+  }
+
+  if (form === "signup") {
+    return <SignUpForm switchToLogin={() => setForm("login")} />;
+  }
+
+  if (user?.isGuest) {
+    return (
+        <View style={styles.container}>
+          <Text style={styles.title}>Welcome, {user?.name || "Guest"}!</Text>
+          <Text style={styles.subtitle}>
+            You are logged in as a guest. Some features may be limited.
+          </Text>
+    
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={() => setForm("signup")}
+            >
+            <Text style={styles.buttonText}>Create Account</Text>
+          </TouchableOpacity>
+    
+          <TouchableOpacity style={styles.button} onPress={logout}>
+            <Text style={styles.buttonText}>Log Out</Text>
+          </TouchableOpacity>
+        </View>
+      );
   }
 
   //not logged in, show pages for signup or login

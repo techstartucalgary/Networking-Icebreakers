@@ -32,6 +32,7 @@ export default function QRScannerBox() {
     const userId = user?.user_id;
 
     if (!userId) {
+      console.log(user);
       console.log("No user logged in!");
       return;
     }
