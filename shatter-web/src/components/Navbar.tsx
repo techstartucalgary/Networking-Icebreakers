@@ -4,7 +4,7 @@ export default function Navbar() {
     <nav className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-6xl backdrop-blur-lg border border-white/20 shadow-2xl rounded-2xl p-4 flex justify-between items-center z-50"
          style={{ backgroundColor: 'rgba(27, 37, 58, 0.85)' }}>
       <div className="flex items-center gap-3">
-        {/* Shatter Logo */}
+        {/* Shatter Logo and Name (On the left)*/}
         <div className="w-10 h-10 flex items-center justify-center">
           <img 
             src="/src/assets/ShatterLogo_White.png" 
@@ -16,7 +16,9 @@ export default function Navbar() {
         <div className="text-2xl font-heading font-semibold text-white">Shatter</div>
       </div>
       
+      {/* Buttons on the Right */}
       <ul className="flex gap-4 items-center">
+        {/* About */}
         <li>
           <a 
             href="#about" 
@@ -25,6 +27,8 @@ export default function Navbar() {
             About
           </a>
         </li>
+
+        {/* Create Event */}
         <li>
           <a 
             href="/create-event" 
@@ -42,6 +46,8 @@ export default function Navbar() {
             Create Event
           </a>
         </li>
+
+        {/* Login */}
         <li>
           <a 
             href="/login" 
