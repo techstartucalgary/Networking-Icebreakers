@@ -1,3 +1,4 @@
+import { getEventByCode } from "@/src/services/event.service";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -13,8 +14,8 @@ export default function QRScannerBox() {
   //extract joinCode from QR code
   const extractjoinCode = (qrData: string): string | null => {
     try { 
-      //4 characters, uppercase letters or numbers (0-9)
-      const isValid = /^[A-Z0-9]{4}$/.test(qrData);
+      //8 numbers (0-9)
+      const isValid = /^[0-9]{8}$/.test(qrData);
 
       if (!isValid) {
         console.log("Invalid join code format");
@@ -38,6 +39,8 @@ export default function QRScannerBox() {
     }
 
     console.log("Current User ID:", userId, " Join Code: ", joinCode);
+    const eventData = await getEventByCode(joinCode);
+    console.log("Event returned successfully:", eventData?.event.name);
   };
 
   if (!permission) return <View />;

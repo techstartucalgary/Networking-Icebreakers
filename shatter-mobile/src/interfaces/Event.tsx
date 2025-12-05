@@ -1,29 +1,27 @@
-export default interface Event{
-    eventId: String,
-    eventName: String,
-    description: String,
-    status: EventState,
-    startTime: String,
-    endTime: String,
-    location: String,
-    activities: Activities[],
-    participants: Participants[],
-    currentState: EventState,
-    eventImg: String
+export default interface Event {
+    eventId: string;
+    name: string;
+    description: string;
+    joinCode: string | null;
+    startDate: string;
+    endDate: string;
+    maxParticipants: number;
+    participants: Participant[];
+    currentState: EventState;
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+    eventImg: string;
 }
 
-export interface Participants{
-    userId: String,
-    username: String
-}
-
-export interface Activities{
-    activityId: String,
-    activityName: String
+export interface Participant{
+    userId: string,
+    username: string
 }
 
 export enum EventState{
     UPCOMING = "Upcoming",
     IN_PROGRESS = "In Progress",
-    COMPLETED = "Completed"
+    COMPLETED = "Completed",
+    INVALID = "Invalid",
 }
