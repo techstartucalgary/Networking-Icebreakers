@@ -1,7 +1,8 @@
 //called by Profile.tsx for logging in
+import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, ActivityIndicator, TextInput, TouchableOpacity, View, Text } from "react-native";
-import { useAuth } from "../../../app/context/AuthContext";
+import { ActivityIndicator, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useAuth, User } from "../context/AuthContext";
 
 //used in profile to swap page
 type Props = {
@@ -9,7 +10,7 @@ type Props = {
 };
 
 export default function LoginForm({ switchToSignUp }: Props) {
-  const { setUser } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
         return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     if (!emailRegex.test(email)) {
         console.log("Error: Invalid email format");
         setLoading(false)
@@ -36,11 +37,24 @@ export default function LoginForm({ switchToSignUp }: Props) {
         return;
     }
 
-    //TODO: Backend logic
-    
-    setTimeout(() => {
-      setUser({ name: "John Doe", email, linkedin: "", github: "" }); //load name from backend
-      setLoading(false);
+    //TODO: Backend logic --> auth for access-token, then load user details from backend based on userId
+    setTimeout(async () => {
+      const user: User = {
+        user_id: "user123",
+        name: "John Doe",
+        email,
+        linkedin: "https://linkedin.com/john-doe",
+        github: "https://github.com/john-doe",
+        isGuest: false
+      };
+
+      try {
+        await login(user, "access-token", Date.now() + 3600 * 1000); //1hr
+      } catch (e) {
+        console.log("Login failed:", e);
+      } finally {
+        setLoading(false);
+      }
     }, 1000);
   };
 
@@ -55,10 +69,14 @@ export default function LoginForm({ switchToSignUp }: Props) {
 
       <TouchableOpacity onPress={switchToSignUp} style={{ marginTop: 16 }}>
         <Text style={{ textAlign: "center", color: "#1C1DEF" }}>Don't have an account? Sign Up</Text>
+        <Button
+          title="Continue as Guest"
+          onPress={() => router.push("/(tabs)/Guest")}
+        />
       </TouchableOpacity>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   title: { 

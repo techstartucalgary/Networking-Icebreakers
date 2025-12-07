@@ -1,24 +1,33 @@
-import { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, TextInput } from "react-native";
-import { useAuth } from "../context/AuthContext";
+import { useEffect, useState } from "react";
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useAuth } from "../../src/components/context/AuthContext";
 import LoginForm from "../../src/components/login-signup/LoginForm";
 import SignUpForm from "../../src/components/login-signup/SignupForm";
 
 export default function Profile() {
-  const { user, setUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [form, setForm] = useState<"login" | "signup">("login");
 
   //other profile info
   const [linkedin, setLinkedin] = useState(user?.linkedin || "");
   const [github, setGithub] = useState(user?.github || "");
 
+  //update local form
+  useEffect(() => {
+    setLinkedin(user?.linkedin || "");
+    setGithub(user?.github || "");
+  }, [user]);
+
   const handleSave = () => {
-    //TODO: Backend upload
+    //TODO: Backend Logic --> Update user profile in backend
     console.log("Saved profile info:", { linkedin, github });
+
+    //update auth state with new info
+    updateUser({ linkedin, github });
   };
 
   //logged in
-  if (user) {
+  if (user && !user.isGuest) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Welcome, {user.name}!</Text>
@@ -32,7 +41,7 @@ export default function Profile() {
           placeholder="Enter LinkedIn URL"
           placeholderTextColor="#888"
         />
-        
+
         <Text style={styles.label}>GitHub:</Text>
         <TextInput
           style={styles.input}
@@ -45,12 +54,38 @@ export default function Profile() {
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.buttonText}>Save</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.button} onPress={() => setUser(null)}>
+
+        <TouchableOpacity style={styles.button} onPress={logout}>
           <Text style={styles.buttonText}>Log Out</Text>
         </TouchableOpacity>
       </View>
     );
+  }
+
+  if (form === "signup") {
+    return <SignUpForm switchToLogin={() => setForm("login")} />;
+  }
+
+  if (user?.isGuest) {
+    return (
+        <View style={styles.container}>
+          <Text style={styles.title}>Welcome, {user?.name || "Guest"}!</Text>
+          <Text style={styles.subtitle}>
+            You are logged in as a guest. Some features may be limited.
+          </Text>
+    
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={() => setForm("signup")}
+            >
+            <Text style={styles.buttonText}>Create Account</Text>
+          </TouchableOpacity>
+    
+          <TouchableOpacity style={styles.button} onPress={logout}>
+            <Text style={styles.buttonText}>Log Out</Text>
+          </TouchableOpacity>
+        </View>
+      );
   }
 
   //not logged in, show pages for signup or login
@@ -63,7 +98,7 @@ export default function Profile() {
       )}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: { 

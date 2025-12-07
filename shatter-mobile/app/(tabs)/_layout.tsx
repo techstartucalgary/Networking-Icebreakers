@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { AuthProvider } from "../context/AuthContext";
+import { AuthProvider } from "../../src/components/context/AuthContext";
 
 export default function RootLayout() {
   return (
@@ -18,6 +18,14 @@ export default function RootLayout() {
         <Tabs.Screen
           name="Profile"
           options={{ title: "Profile" }}
+        />
+
+        <Tabs.Screen
+          name="Guest"
+          options={{
+            href: null, //don't show in nav bar
+            title: "Guest"
+          }}
         />
       </Tabs>
     </AuthProvider>

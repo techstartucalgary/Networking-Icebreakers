@@ -1,39 +1,43 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { useAuth } from "../context/AuthContext";
 
 export default function QRScannerBox() {
+  const { user } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const router = useRouter();
 
-  const userId = "USER123";
+  //extract joinCode from QR code
+  const extractjoinCode = (qrData: string): string | null => {
+    try { 
+      //4 characters, uppercase letters or numbers (0-9)
+      const isValid = /^[A-Z0-9]{4}$/.test(qrData);
 
-  //extract event ID from QR code
-  const extractEventId = (qrData: string): string | null => {
-    try {
-      //plain event ID
-      console.log(qrData)
-      return qrData; //TODO: Insert checks for data passed
-    } catch {
+      if (!isValid) {
+        console.log("Invalid join code format");
+        return null;
+      }
+      return qrData; 
+    } catch (e) {
+      console.log("Error extracting join code:", e);
       return null;
     }
   };
 
-  //TODO: Backend Request
-  const joinEvent = async (userId: string, eventId: string) => {
-    const res = await fetch("backend_route", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, eventId }),
-    });
+  //TODO: Backend Request --> Need route to join event via joinCode and passed userId
+  const joinEvent = async (joinCode: string) => {
+    const userId = user?.user_id;
 
-    const data = await res.json();
+    if (!userId) {
+      console.log(user);
+      console.log("No user logged in!");
+      return;
+    }
 
-    if (!res.ok) throw new Error(data.detail || "Unable to join event");
-
-    return data;
+    console.log("Current User ID:", userId, " Join Code: ", joinCode);
   };
 
   if (!permission) return <View />;
@@ -53,20 +57,18 @@ export default function QRScannerBox() {
     if (scanned) return;
     setScanned(true);
 
-    const eventId = extractEventId(data);
-    if (!eventId) {
-      Alert.alert("Invalid QR Code", "Could not extract event ID");
+    const joinCode = extractjoinCode(data);
+    if (!joinCode) {
+      Alert.alert("Invalid QR Code", "Could not extract join code");
       setScanned(false);
       return;
     }
 
     try {
-      const userId = "USER123"; //TODO: User ID in AuthContext
-      await joinEvent(userId, eventId);
+      await joinEvent(joinCode);
 
       router.push({
         pathname: "/Events", //navigate to event page after scanning
-        params: { id: eventId },
       });
     } catch (err: any) {
       Alert.alert("Error", err.message);
