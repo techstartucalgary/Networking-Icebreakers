@@ -31,6 +31,14 @@ const NewEvents = () => {
     );
   }
 
+  if (events.length === 0) {
+    return (
+      <View style={[ styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <Text>No events joined</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <FlatList
