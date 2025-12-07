@@ -33,14 +33,14 @@ export default function QRScannerBox() {
     const userId = user?.user_id;
 
     if (!userId) {
-      console.log(user);
       console.log("No user logged in!");
-      return;
+      return { status: "no-user" };
     }
 
     console.log("Current User ID:", userId, " Join Code: ", joinCode);
     const eventData = await getEventByCode(joinCode);
     console.log("Event returned successfully:", eventData?.event.name);
+    return { status: "ok", event: eventData };
   };
 
   if (!permission) return <View />;
@@ -68,11 +68,15 @@ export default function QRScannerBox() {
     }
 
     try {
-      await joinEvent(joinCode);
+      const result = await joinEvent(joinCode);
 
-      router.push({
-        pathname: "/Events", //navigate to event page after scanning
-      });
+      if (result.status === "no-user") {
+        router.push({ pathname: "/Profile", }); //user must log in or create a guest account
+        Alert.alert("No User Found", "Please Create an Account to Join the Event");
+        return;
+      }
+
+      router.push({ pathname: "/Events", }); //navigate to event page after scanning
     } catch (err: any) {
       Alert.alert("Error", err.message);
       setScanned(false);
