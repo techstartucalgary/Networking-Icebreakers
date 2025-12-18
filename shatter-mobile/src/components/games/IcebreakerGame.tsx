@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import NameBingo from "./NameBingo";
 
@@ -8,25 +7,6 @@ type IcebreakerGameProps = {
 };
 
 const IcebreakerGame = ({ eventId, gameType }: IcebreakerGameProps) => {
-  const [timeLeft, setTimeLeft] = useState(300); //5 mins
-  const [gameOver, setGameOver] = useState(false);
-
-  //Timer logic
-  useEffect(() => {
-    if (gameOver) return;
-    const interval = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setGameOver(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [gameOver]);
-
   //Pick game-specific component
   const renderGame = () => {
     switch (gameType) {
@@ -40,15 +20,8 @@ const IcebreakerGame = ({ eventId, gameType }: IcebreakerGameProps) => {
   return (
     <View style={styles.container}>
       <View style={styles.border}>
-        <Text style={styles.timer}>Time Left: {timeLeft}s</Text>
         {renderGame()}
       </View>
-
-      {gameOver && (
-        <View style={styles.overlay}>
-          <Text style={styles.overlayText}>Game Over!</Text>
-        </View>
-      )}
     </View>
   );
 };
@@ -66,6 +39,7 @@ const styles = StyleSheet.create({
   border: {
     width: "100%",
     backgroundColor: "#fff",
+    flex: 1,
     borderRadius: 12,
     padding: 16,
     borderWidth: 2,
