@@ -37,9 +37,9 @@ export default function QRScannerBox() {
       return { status: "no-user" };
     }
 
-    console.log("Current User ID:", userId, " Join Code: ", joinCode);
     const eventData = await getEventByCode(joinCode);
     console.log("Event returned successfully:", eventData?.event.name);
+    
     return { status: "ok", event: eventData };
   };
 
