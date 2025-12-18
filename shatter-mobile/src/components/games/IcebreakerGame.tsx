@@ -1,76 +1,16 @@
-import { StyleSheet, Text, View } from "react-native";
-import NameBingo from "./NameBingo";
-
 type IcebreakerGameProps = {
   eventId: string;
-  gameType: "Name Bingo"; //TODO: Add more games
+  mode: "preview" | "live";
 };
 
-const IcebreakerGame = ({ eventId, gameType }: IcebreakerGameProps) => {
-  //Pick game-specific component
-  const renderGame = () => {
-    switch (gameType) {
-      case "Name Bingo":
-        return <NameBingo eventId={eventId} />;
-      default:
-        return <Text>Game not found</Text>;
-    }
-  };
-
+export default function IcebreakerGame({ eventId, mode }: IcebreakerGameProps) {
   return (
-    <View style={styles.container}>
-      <View style={styles.border}>
-        {renderGame()}
-      </View>
-    </View>
+    <div className="icebreaker-container">
+      <h2 className="text-xl font-bold">
+        {mode === "preview" ? "Event Icebreaker Preview" : "Icebreaker Game"}
+      </h2>
+
+      {/* Game content here */}
+    </div>
   );
-};
-
-export default IcebreakerGame;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    backgroundColor: "#f8f8f8",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  border: {
-    width: "100%",
-    backgroundColor: "#fff",
-    flex: 1,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: "#3b82f6",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  timer: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#ef4444",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 12,
-  },
-  overlayText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-  },
-});
+}
