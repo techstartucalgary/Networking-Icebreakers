@@ -27,6 +27,14 @@ export default function RootLayout() {
             title: "Guest"
           }}
         />
+
+        <Tabs.Screen
+          name="Game"
+          options={{
+            href: null, //don't show in nav bar
+            title: "Game"
+          }}
+        />
       </Tabs>
     </AuthProvider>
   );
