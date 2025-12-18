@@ -39,7 +39,6 @@ export default function QRScannerBox() {
 
     const eventData = await getEventByCode(joinCode);
     console.log("Event returned successfully:", eventData?.event.name);
-    
     return { status: "ok", event: eventData };
   };
 
