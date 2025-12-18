@@ -13,14 +13,16 @@ const EventCard = ({ event, expanded, onPress, onJoinGame, }: EventCardProps) =>
 
   return (
     <Pressable onPress={onPress} style={styles.card}>
-      {/* LIVE badge */}
-      {live && (
-        <View style={styles.liveBadge}>
-          <Text style={styles.liveText}>Currently Shattering!</Text>
-        </View>
-      )}
-
-      <Image source={{ uri: event.eventImg }} style={styles.image} ></Image>
+      <View style={styles.imageWrapper}>
+        <Image source={{ uri: event.eventImg }} style={styles.image} />
+        
+        {/* LIVE badge */}
+        {live && (
+          <View style={styles.liveBadge}>
+            <Text style={styles.liveText}>Currently Shattering!</Text>
+          </View>
+        )}
+      </View>
       <Text style={styles.title}>{event.name}</Text>
 
       <Text style={styles.date}>
@@ -59,6 +61,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
     elevation: 3,
+  },
+  imageWrapper: {
+    position: "relative",
+    width: "100%",
+    borderRadius: 10,
+    overflow: "hidden",
+    marginBottom: 10,
   },
   image: {
     width: "100%",
@@ -110,5 +119,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 12,
+    zIndex: 1,
   },
 });

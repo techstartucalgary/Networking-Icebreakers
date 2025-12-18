@@ -1,6 +1,6 @@
 import { getBingoCategories, getBingoNamesByEventId } from "@/src/services/game.service";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Button, FlatList, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 type NameBingoProps = {
   eventId: string;
@@ -13,6 +13,7 @@ type Card = {
 };
 
 const NameBingo = ({ eventId }: NameBingoProps) => {
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<string[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
   const [search, setSearch] = useState("");
@@ -51,10 +52,16 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
     if (eventId) fetchGameData();
   }, [eventId]);
 
-  const handleAssign = (cardId: string, name: string) => {
+  const handleAssign = (name: string) => {
+    if (!selectedCardId || name === "") return;
+
     setCards((prev) =>
-      prev.map((c) => (c.cardId === cardId ? { ...c, assignedName: name } : c))
+      prev.map((c) =>
+        c.cardId === selectedCardId ? { ...c, assignedName: name } : c
+      )
     );
+    setSearch("");
+    setSelectedCardId(null);
   };
 
   if (loading) {
@@ -66,35 +73,61 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
     );
   }
 
+  const filteredParticipants = participants.filter((name) =>
+    name.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Search participant"
-        value={search}
-        onChangeText={setSearch}
-      />
+      {/* Search bar with type-ahead */}
+      <View style={styles.inputRow}>
+        <TextInput
+          style={styles.inputFlex}
+          placeholder="Search participant"
+          value={search}
+          onChangeText={setSearch}
+        />
+        <TouchableOpacity
+          style={styles.submitButton}
+          onPress={() => handleAssign(search.trim())}
+        >
+          <Text style={styles.submitText}>Submit</Text>
+        </TouchableOpacity>
+      </View>
 
-      {cards.map((card) => (
-        <View key={card.cardId} style={styles.cardContainer}>
-          <Text style={styles.cardText}>
-            {card.assignedName ? card.assignedName : card.category}
-          </Text>
+      {/* Dropdown suggestions */}
+      {search.length > 0 && filteredParticipants.length > 0 && (
+        <ScrollView style={styles.dropdown}>
+          {filteredParticipants.map((p) => (
+            <TouchableOpacity
+              key={p}
+              style={styles.dropdownItem}
+              onPress={() => setSearch(p)}
+            >
+              <Text>{p}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
 
-          <FlatList
-            data={participants.filter((name) =>
-              name.toLowerCase().includes(search.toLowerCase())
+      {/* 3x3 grid */}
+      <View style={styles.grid}>
+        {cards.map((card) => (
+          <TouchableOpacity
+            key={card.cardId}
+            style={[
+              styles.card,
+              selectedCardId === card.cardId && styles.selectedCard,
+            ]}
+            onPress={() => setSelectedCardId(card.cardId)}
+          >
+            <Text style={styles.category}>{card.category}</Text>
+            {card.assignedName && (
+              <Text style={styles.assignedName}>{card.assignedName}</Text>
             )}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <Button
-                title={`Assign ${item}`}
-                onPress={() => handleAssign(card.cardId, item)}
-              />
-            )}
-          />
-        </View>
-      ))}
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 };
@@ -104,18 +137,32 @@ export default NameBingo;
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 10 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 8,
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  card: {
+    width: "30%",
+    aspectRatio: 1,
+    backgroundColor: "#e0f7e0",
     marginBottom: 10,
-    borderRadius: 5,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 5,
   },
-  cardContainer: {
-    marginBottom: 15,
-    padding: 10,
-    backgroundColor: "#f3f3f3",
-    borderRadius: 5,
+  selectedCard: {
+    borderWidth: 2,
+    borderColor: "#3b82f6",
   },
-  cardText: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
+  category: { fontWeight: "bold", textAlign: "center" },
+  assignedName: { fontSize: 12, textAlign: "center", marginTop: 2 },
+  inputRow: { flexDirection: "row", marginBottom: 5 },
+  inputFlex: { flex: 1, borderWidth: 1, borderColor: "#ccc", padding: 8, borderRadius: 5 },
+  submitButton: { marginLeft: 8, backgroundColor: "#3b82f6", paddingHorizontal: 16, justifyContent: "center", borderRadius: 5 },
+  submitText: { color: "#fff", fontWeight: "bold" },
+  dropdown: { maxHeight: 150, borderWidth: 1, borderColor: "#ccc", borderRadius: 5, marginBottom: 10 },
+  dropdownItem: { padding: 8, borderBottomWidth: 1, borderBottomColor: "#eee" },
 });
