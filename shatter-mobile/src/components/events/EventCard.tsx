@@ -21,9 +21,6 @@ const EventCard = ({ event, onPress }: EventCardProps) => {
       </Text>
 
       {event.description ? <Text style={styles.description}>{event.description}</Text> : null}
-
-      {/* Optional: show join code only if needed */}
-      {event.joinCode ? <Text style={styles.joinCode}>Join Code: {event.joinCode}</Text> : null}
     </TouchableOpacity>
   );
 };
