@@ -1,5 +1,5 @@
 import Event from '../Event';
 
-export default interface GetAllEventsResponse {
+export default interface AllEventsResponse {
     events: Event[],
 }
