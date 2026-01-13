@@ -1,15 +1,13 @@
-import { useState } from "react";
-import TestComponent from "./components/TestComponent.tsx";
-import QRCodeDisplay from "./components/QRCodeDisplay.tsx";
+import { Routes, Route } from "react-router-dom";
+import EventPage from "./pages/EventPage";
+import HomePage from "./pages/HomePage";
+
 function App() {
   return (
-    <>
-      <div className="bg-red-500">
-        <p>This is the first component</p>
-        <TestComponent />
-        <QRCodeDisplay />
-      </div>
-    </>
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/events/:joinCode" element={<EventPage />} />
+    </Routes>
   );
 }
 
