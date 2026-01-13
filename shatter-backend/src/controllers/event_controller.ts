@@ -78,12 +78,6 @@ export async function joinEventAsUser(req: Request, res: Response) {
     const { name, userId } = req.body;
     const { eventId } = req.params;
 
-    console.log("=== JOIN EVENT START ===");
-    console.log("EventId:", eventId);
-    console.log("UserId:", userId);
-    console.log("Name:", name);
-    console.log("req.io exists?", !!req.io);
-
     if (!userId || !name)
       return res.status(400).json({ success: false, msg: "Missing fields" });
 
@@ -128,8 +122,7 @@ export async function joinEventAsUser(req: Request, res: Response) {
       { $addToSet: { eventHistoryIds: eventId } }
     );
 
-    console.log("=== EMITTING SOCKET EVENT ===");
-    console.log("Room (eventId):", eventId);
+    console.log("Room socket:", eventId);
     console.log("Participant data:", { participantId, name });
 
     if (!req.io) {
@@ -192,8 +185,7 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     );
 
     // Emit socket
-    console.log("=== EMITTING SOCKET EVENT ===");
-    console.log("Room (eventId):", eventId);
+    console.log("Room socket:", eventId);
     console.log("Participant data:", { participantId, name });
 
     if (!req.io) {
