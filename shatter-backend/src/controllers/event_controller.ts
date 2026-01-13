@@ -116,14 +116,13 @@ export async function joinEventAsUser(req: Request, res: Response) {
       { $addToSet: { participantIds: participantId } }
     );
 
-    // If nothing changed → already joined
     if (eventUpdate.modifiedCount === 0) {
       return res
         .status(400)
         .json({ success: false, msg: "Already joined this event" });
     }
 
-    // 2. Add event to user history
+    // Add event to user history
     await User.updateOne(
       { _id: userId },
       { $addToSet: { eventHistoryIds: eventId } }
