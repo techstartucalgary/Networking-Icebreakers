@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { User } from '../models/user_model';
 import { hashPassword, comparePassword } from '../utils/password_hash';
+import { generateToken } from '../utils/jwt_utils';
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -148,11 +149,14 @@ export const login = async (req: Request, res: Response) => {
 	user.lastLogin = new Date();
 	await user.save(); // save the updated user
 
-	// 9 - return success
+	// 9 - generate JWT token for the user
+	const token = generateToken(user._id.toString());
+
+	// 10 - return success with token
 	res.status(200).json({
 	    message: 'Login successful',
-	    userId: user._id
-	    // TODO: figure out a way to add JWT token here
+	    userId: user._id,
+	    token
 	});
 
     } catch (err: any) {
