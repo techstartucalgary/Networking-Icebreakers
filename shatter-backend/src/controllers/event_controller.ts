@@ -22,7 +22,21 @@ export async function createEvent(req: Request, res: Response) {
     if (!createdBy) {
       return res
         .status(400)
-        .json({ success: false, error: "createdBy email is required" });
+        .json({ success: false, error: "createdBy (userId) is required" });
+    }
+
+    if (!name) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Event name is required" });
+    }
+
+    const user = await User.findById(createdBy).select("_id");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "User not found",
+      });
     }
 
     const joinCode = generateJoinCode();
@@ -36,7 +50,7 @@ export async function createEvent(req: Request, res: Response) {
       maxParticipant,
       participantIds: [],
       currentState,
-      createdBy, // required email field
+      createdBy, // user id
     });
 
     const savedEvent = await event.save();
@@ -78,8 +92,19 @@ export async function joinEventAsUser(req: Request, res: Response) {
     const { name, userId } = req.body;
     const { eventId } = req.params;
 
-    if (!userId || !name)
-      return res.status(400).json({ success: false, msg: "Missing fields" });
+    if (!userId || !name || !eventId)
+      return res.status(400).json({
+        success: false,
+        msg: "Missing fields: userId, name, and eventId are required",
+      });
+
+    const user = await User.findById(userId).select("_id");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "User not found",
+      });
+    }
 
     const event = await Event.findById(eventId);
     if (!event)
@@ -154,10 +179,11 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     const { name } = req.body;
     const { eventId } = req.params;
 
-    if (!name) {
-      return res
-        .status(400)
-        .json({ success: false, msg: "Missing guest name" });
+    if (!name || !eventId) {
+      return res.status(400).json({
+        success: false,
+        msg: "Missing fields: guest name and eventId are required",
+      });
     }
 
     const event = await Event.findById(eventId);
