@@ -6,25 +6,19 @@ export interface IParticipant extends Document {
   eventId: Schema.Types.ObjectId;
 }
 
-const ParticipantSchema = new Schema<IParticipant>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    default: null,
-  },
-
-  name: {
-    type: String,
-    ref: "User Name",
-    required: true,
-  },
-
-  eventId: {
-    type: Schema.Types.ObjectId,
-    ref: "Event",
-    required: true,
-  },
+const ParticipantSchema = new Schema({
+  userId: { type: Schema.Types.ObjectId, ref: "User", default: null },
+  name: { type: String, required: true },
+  eventId: { type: Schema.Types.ObjectId, ref: "Event", required: true },
 });
+
+ParticipantSchema.index(
+  { eventId: 1, name: 1 },
+  {
+    unique: true,
+    collation: { locale: "en", strength: 2 },
+  }
+);
 
 export const Participant = model<IParticipant>(
   "Participant",

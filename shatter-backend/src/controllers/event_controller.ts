@@ -17,7 +17,7 @@ import { Types } from "mongoose";
  * @param req.body.endDate - Event end date
  * @param req.body.maxParticipant - Maximum number of participants
  * @param req.body.currentState - Current state of the event
- * @param req.body.createdBy - User ID of the event creator (required)
+ * @param req.user.userId - Authenticated user ID (from access token)
  *
  * @returns 201 with created event on success
  * @returns 400 if required fields are missing
@@ -32,14 +32,9 @@ export async function createEvent(req: Request, res: Response) {
       endDate,
       maxParticipant,
       currentState,
-      createdBy,
     } = req.body;
 
-    if (!createdBy) {
-      return res
-        .status(400)
-        .json({ success: false, error: "createdBy (userId) is required" });
-    }
+    const createdBy = req.user!.userId;
 
     if (!name) {
       return res
@@ -113,7 +108,6 @@ export async function getEventByJoinCode(req: Request, res: Response) {
   }
 }
 
-
 /**
  * POST /api/events/:eventId/join/user
  * Join an event as a registered user
@@ -159,7 +153,9 @@ export async function joinEventAsUser(req: Request, res: Response) {
     });
 
     if (participant) {
-      return res.status(409).json({ success: false, msg: "Already joined" });
+      return res
+        .status(409)
+        .json({ success: false, msg: "User already joined" });
     }
 
     participant = await Participant.create({
@@ -208,7 +204,13 @@ export async function joinEventAsUser(req: Request, res: Response) {
       success: true,
       participant,
     });
-  } catch (e) {
+  } catch (e: any) {
+    if (e.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        msg: "This name is already taken in this event",
+      });
+    }
     console.error("JOIN EVENT ERROR:", e);
     return res.status(500).json({ success: false, msg: "Internal error" });
   }
@@ -283,8 +285,14 @@ export async function joinEventAsGuest(req: Request, res: Response) {
       success: true,
       participant,
     });
-  } catch (err) {
-    console.error("JOIN GUEST ERROR:", err);
+  } catch (e: any) {
+    if (e.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        msg: "This name is already taken in this event",
+      });
+    }
+    console.error("JOIN GUEST ERROR:", e);
     return res.status(500).json({ success: false, msg: "Internal error" });
   }
 }

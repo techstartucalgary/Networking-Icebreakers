@@ -12,7 +12,7 @@ export interface IEvent extends Document {
   maxParticipant: number;
   participantIds: Schema.Types.ObjectId[];
   currentState: string;
-  createdBy: string;
+  createdBy: Schema.Types.ObjectId;
 }
 
 const EventSchema = new Schema<IEvent>(
@@ -26,15 +26,8 @@ const EventSchema = new Schema<IEvent>(
     participantIds: [{ type: Schema.Types.ObjectId, ref: "Participant" }],
     currentState: { type: String, required: true },
     createdBy: {
-      type: String,
+      type: Schema.Types.ObjectId,
       required: true,
-      validate: {
-        validator: async function (email: string) {
-          const user = await User.findOne({ email });
-          return !!user;
-        },
-        message: "User with this email does not exist",
-      },
     },
   },
   {
