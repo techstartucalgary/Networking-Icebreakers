@@ -7,6 +7,22 @@ import { Participant } from "../models/participant_model";
 import { User } from "../models/user_model";
 import { Types } from "mongoose";
 
+/**
+ * POST /api/events/createEvent
+ * Create a new event
+ *
+ * @param req.body.name - Event name (required)
+ * @param req.body.description - Event description
+ * @param req.body.startDate - Event start date
+ * @param req.body.endDate - Event end date
+ * @param req.body.maxParticipant - Maximum number of participants
+ * @param req.body.currentState - Current state of the event
+ * @param req.body.createdBy - User ID of the event creator (required)
+ *
+ * @returns 201 with created event on success
+ * @returns 400 if required fields are missing
+ * @returns 404 if creator user is not found
+ */
 export async function createEvent(req: Request, res: Response) {
   try {
     const {
@@ -61,6 +77,16 @@ export async function createEvent(req: Request, res: Response) {
   }
 }
 
+/**
+ * GET /api/events/event/:joinCode
+ * Get event details by join code
+ *
+ * @param req.params.joinCode - Unique join code of the event (required)
+ *
+ * @returns 200 with event details on success
+ * @returns 400 if joinCode is missing
+ * @returns 404 if event is not found
+ */
 export async function getEventByJoinCode(req: Request, res: Response) {
   try {
     const { joinCode } = req.params;
@@ -87,6 +113,20 @@ export async function getEventByJoinCode(req: Request, res: Response) {
   }
 }
 
+
+/**
+ * POST /api/events/:eventId/join/user
+ * Join an event as a registered user
+ *
+ * @param req.params.eventId - Event ID to join (required)
+ * @param req.body.userId - User ID joining the event (required)
+ * @param req.body.name - Display name of the participant (required)
+ *
+ * @returns 200 with participant info on success
+ * @returns 400 if required fields are missing or event is full
+ * @returns 404 if user or event is not found
+ * @returns 409 if user already joined the event
+ */
 export async function joinEventAsUser(req: Request, res: Response) {
   try {
     const { name, userId } = req.body;
@@ -174,6 +214,17 @@ export async function joinEventAsUser(req: Request, res: Response) {
   }
 }
 
+/**
+ * POST /api/events/:eventId/join/guest
+ * Join an event as a guest (no registered user)
+ *
+ * @param req.params.eventId - Event ID to join (required)
+ * @param req.body.name - Display name of the guest participant (required)
+ *
+ * @returns 200 with participant info on success
+ * @returns 400 if required fields are missing or event is full
+ * @returns 404 if event is not found
+ */
 export async function joinEventAsGuest(req: Request, res: Response) {
   try {
     const { name } = req.body;
