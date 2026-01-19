@@ -14,6 +14,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [err, setError] = useState("");
 
   const handleLogin = () => {
     setLoading(true);
@@ -21,6 +22,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
     if (!email || !password) {
         console.log("Error: All fields are required");
         setLoading(false)
+        setError("Please fill in all fields.");
         return;
     }
 
@@ -28,19 +30,14 @@ export default function LoginForm({ switchToSignUp }: Props) {
     if (!emailRegex.test(email)) {
         console.log("Error: Invalid email format");
         setLoading(false)
-        return;
-    }
-
-    if (password.length < 8) {
-        console.log("Error: Password must be at least 8 characters");
-        setLoading(false)
+        setError("Please enter a valid email.");
         return;
     }
 
     //TODO: Backend logic --> auth for access-token, then load user details from backend based on userId
     setTimeout(async () => {
       const user: User = {
-        user_id: "user123",
+        user_id: "u001",
         name: "John Doe",
         email,
         linkedin: "https://linkedin.com/john-doe",
@@ -52,8 +49,10 @@ export default function LoginForm({ switchToSignUp }: Props) {
         await login(user, "access-token", Date.now() + 3600 * 1000); //1hr
       } catch (e) {
         console.log("Login failed:", e);
+        setError("Login Failure");
       } finally {
         setLoading(false);
+        setError("");
       }
     }, 1000);
   };
@@ -74,6 +73,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
           onPress={() => router.push("/(tabs)/Guest")}
         />
       </TouchableOpacity>
+      {err && <Text style={{ textAlign: "center", color: "#e63232" }}>{err}</Text>}
     </View>
   );
 };

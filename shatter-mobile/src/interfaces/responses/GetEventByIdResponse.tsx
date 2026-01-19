@@ -1,6 +1,6 @@
-import Event from '../Event'
+import EventIB from '../Event'
 
 export default interface EventIdResponse {
     success: boolean,
-    event: Event
+    event: EventIB
 }

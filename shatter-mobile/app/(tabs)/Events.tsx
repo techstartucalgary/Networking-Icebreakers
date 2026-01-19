@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import EventCard from "../../src/components/events/EventCard";
 import type Event from "../../src/interfaces/Event";
-import { getAllEvents } from "../../src/services/event.service";
+import { getUserEvents } from "../../src/services/event.service";
+import { useAuth } from "@/src/components/context/AuthContext";
 
 const NewEvents = () => {
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
@@ -13,7 +15,7 @@ const NewEvents = () => {
   //reload event list
   const loadEvents = async () => {
     setLoading(true);
-    const data = await getAllEvents();
+    const data = await getUserEvents(user?.user_id!);
     const events: Event[] = data?.events || [];
     setEvents(events);
     setLoading(false);
