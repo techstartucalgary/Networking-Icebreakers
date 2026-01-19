@@ -26,7 +26,7 @@ declare global {
  * Request must include:
  *   Authorization: Bearer <token>
  */
-export const authMiddleware = async (
+export const authMiddleware = (
     req: Request,
     res: Response,
     next: NextFunction
@@ -50,7 +50,7 @@ export const authMiddleware = async (
 	    });
 	}
 
-	if (parts[0] !== 'Bearer') {
+	if (parts[0].toLowerCase() !== 'bearer') {
 	    return res.status(401).json({
 		error: 'Invalid authorization format. Must start with "Bearer"',
 	    });
