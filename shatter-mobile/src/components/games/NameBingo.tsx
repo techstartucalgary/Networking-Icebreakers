@@ -55,6 +55,11 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
   const handleAssign = (name: string) => {
     if (!selectedCardId || name === "") return;
 
+    const trimmed = name.trim();
+
+    if (!isValidParticipant(trimmed)) return;
+    if (isAlreadyAssigned(trimmed)) return;
+
     setCards((prev) =>
       prev.map((c) =>
         c.cardId === selectedCardId ? { ...c, assignedName: name } : c
@@ -63,6 +68,9 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
     setSearch("");
     setSelectedCardId(null);
   };
+
+  const isValidParticipant = (name: string) => participants.some((p) => p.toLowerCase() === name.toLowerCase());
+  const isAlreadyAssigned = (name: string) => cards.some((c) => c.assignedName?.toLowerCase() === name.toLowerCase());
 
   if (loading) {
     return (
@@ -74,7 +82,8 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
   }
 
   const filteredParticipants = participants.filter((name) =>
-    name.toLowerCase().includes(search.toLowerCase())
+    name.toLowerCase().includes(search.toLowerCase()) &&
+    !isAlreadyAssigned(name)
   );
 
   return (
@@ -88,7 +97,7 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
           onChangeText={setSearch}
         />
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[styles.submitButton,]}
           onPress={() => handleAssign(search.trim())}
         >
           <Text style={styles.submitText}>Submit</Text>

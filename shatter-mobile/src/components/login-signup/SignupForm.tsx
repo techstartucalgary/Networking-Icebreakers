@@ -15,6 +15,7 @@ export default function SignUpForm({ switchToLogin }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [err, setError] = useState("");
 
   const handleSignup = () => {
     setLoading(true);
@@ -22,6 +23,7 @@ export default function SignUpForm({ switchToLogin }: Props) {
     if (!email || !password) {
         console.log("Error: All fields are required");
         setLoading(false)
+        setError("Please fill in all fields.");
         return;
     }
 
@@ -29,11 +31,13 @@ export default function SignUpForm({ switchToLogin }: Props) {
     if (!emailRegex.test(email)) {
         console.log("Error: Invalid email format");
         setLoading(false)
+        setError("Please enter a valid email.");
         return;
     }
 
     if (password.length < 8) {
         console.log("Error: Password must be at least 8 characters");
+        setError("Password must be at least 8 characters.");
         setLoading(false)
         return;
     }
@@ -54,8 +58,10 @@ export default function SignUpForm({ switchToLogin }: Props) {
         await login(user, "new-access-token", Date.now() + 3600 * 1000); //1hr
       } catch (e) {
         console.log("Signup failed:", e);
+        setError("Login Failure");
       } finally {
         setLoading(false);
+        setError("");
       }
     }, 1000);
   };
@@ -80,6 +86,8 @@ export default function SignUpForm({ switchToLogin }: Props) {
           />
         )}
       </TouchableOpacity>
+      <Text style={{ textAlign: "center", color: "#afafaf" }}>Password must be at least 8 characters long</Text>
+      {err && <Text style={{ textAlign: "center", color: "#e63232" }}>{err}</Text>}
     </View>
   );
 };

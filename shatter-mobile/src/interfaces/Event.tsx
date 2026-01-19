@@ -1,4 +1,4 @@
-export default interface Event {
+export default interface EventIB {
     eventId: string;
     name: string;
     description: string;

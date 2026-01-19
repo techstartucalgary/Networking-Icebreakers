@@ -22,7 +22,9 @@ export default function JoinEventPage() {
         />
       )}
 
-      {showScanner && <QRScannerBox />}
+      {showScanner && (
+        <QRScannerBox onClose={() => setShowScanner(false)} />
+      )}
     </View>
   );
 }
