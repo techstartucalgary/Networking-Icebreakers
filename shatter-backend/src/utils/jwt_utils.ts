@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
+import type { StringValue } from 'ms';
 
 // Get JWT secret from .env
 const JWT_SECRET = process.env.JWT_SECRET || '';
-const JWT_EXPIRATION = '30d'; // set token to expire in 30 days
+const JWT_EXPIRATION = '30d'; // Default token expiration (can be overridden by JWT_EXPIRATION env var)
 
 // Validate that secret actually exists
 if (!JWT_SECRET) {
@@ -21,11 +22,14 @@ if (!JWT_SECRET) {
  */
 export const generateToken = (userId: string): string => {
     try{
+	// Get expiration from env or use default
+	const expiration = (process.env.JWT_EXPIRATION ?? JWT_EXPIRATION) as StringValue;
+
 	// create and sign the token
 	const token = jwt.sign(
 	    { userId },        		 // payload - data we want to store
 	    JWT_SECRET,                  // Secret key - proves token is real
-	    { expiresIn: JWT_EXPIRATION} // Options - token expires in 30 days
+	    { expiresIn: expiration } // Options - token expires in 30 days
 	);
 
 	return token;
