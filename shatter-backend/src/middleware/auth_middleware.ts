@@ -26,6 +26,7 @@ declare global {
  * Request must include:
  *   Authorization: Bearer <token>
  */
+
 export const authMiddleware = (
     req: Request,
     res: Response,
