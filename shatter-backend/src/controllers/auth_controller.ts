@@ -9,11 +9,11 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 /**
  * POST /api/auth/signup
  * Create new user account
- * 
+ *
  * @param req.body.name - User's display name
  * @param req.body.email - User's email
  * @param req.body.password - User's plain text password
- * @returns 201 with userId on success
+ * @returns 201 with userId and JWT token on success
  */
 export const signup = async (req: Request, res: Response) => {
     try {
@@ -67,10 +67,14 @@ export const signup = async (req: Request, res: Response) => {
 	    passwordHash
 	});
 
-	// return success
+	// generate JWT token for the new user
+	const token = generateToken(newUser._id.toString());
+
+	// return success with token
 	res.status(201).json({
 	    message: 'User created successfully',
-	    userId: newUser._id
+	    userId: newUser._id,
+	    token
 	});
 
     } catch (err: any) {
