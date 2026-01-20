@@ -1,0 +1,57 @@
+name: CD - Deploy Backend
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'CI Build Number'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact from CI workflow
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          echo "Fetching artifact for build #${{ inputs.build_number }}"
+          
+          CI_RUN_ID=$(gh run list --workflow "CI - Build Backend" --json databaseId,number -q ".[] | select(.number == ${{ inputs.build_number }}) | .databaseId")
+          
+          if [ -z "$CI_RUN_ID" ]; then
+            echo "Could not find CI run with build number ${{ inputs.build_number }}"
+            exit 1
+          fi
+          
+          echo "Found CI run ID: $CI_RUN_ID"
+          gh run download $CI_RUN_ID --name node-backend-${{ inputs.build_number }}
+          ls -l
+
+      - name: Extract artifact
+        run: |
+          tar -xzf node-backend-${{ inputs.build_number }}.tar.gz
+          ls -la output
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_BACKEND }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
+        run: |
+          cd output
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          vercel deploy --prod --token=$VERCEL_TOKEN
