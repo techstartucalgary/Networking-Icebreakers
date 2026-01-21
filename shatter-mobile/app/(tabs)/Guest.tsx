@@ -11,7 +11,7 @@ export default function GuestPage() {
 
   const handleContinue = async () => {
     if (!name.trim()) return;
-    await continueAsGuest(name.trim(), linkedin); //TODO: auth token and expiry fetching for guest
+    await continueAsGuest(name.trim(), linkedin);
     router.replace("/JoinEvent"); 
   };
 

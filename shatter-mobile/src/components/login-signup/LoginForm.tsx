@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAuth, User } from "../context/AuthContext";
+import { userLogin } from "@/src/services/user.service";
 
 //used in profile to swap page
 type Props = {
@@ -16,7 +17,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
   const [loading, setLoading] = useState(false);
   const [err, setError] = useState("");
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setLoading(true);
 
     if (!email || !password) {
@@ -34,27 +35,31 @@ export default function LoginForm({ switchToSignUp }: Props) {
         return;
     }
 
-    //TODO: Backend logic --> auth for access-token, then load user details from backend based on userId
-    setTimeout(async () => {
+    //TODO: Backend logic -->  user details from backend based on userId
+    try {
+      const userResponse = await userLogin(email, password);
+
+      if (!userResponse) {
+        throw new Error("No response from server");
+      }
+
       const user: User = {
-        user_id: "u001",
-        name: "John Doe",
+        user_id: userResponse.userId,
+        name: "",
         email,
-        linkedin: "https://linkedin.com/john-doe",
-        github: "https://github.com/john-doe",
-        isGuest: false
+        linkedin: "",
+        github: "",
+        isGuest: false,
       };
 
-      try {
-        await login(user, "access-token", Date.now() + 3600 * 1000); //1hr
-      } catch (e) {
-        console.log("Login failed:", e);
-        setError("Login Failure");
-      } finally {
-        setLoading(false);
-        setError("");
-      }
-    }, 1000);
+      await login(user, userResponse.token); 
+    } catch (e) {
+      console.log("Login failed:", e);
+      setError("Login Failure");
+    } finally {
+      setLoading(false);
+      setError("");
+    }
   };
 
   return (

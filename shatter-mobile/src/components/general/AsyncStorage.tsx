@@ -4,15 +4,14 @@ const STORAGE_KEY = 'AUTH_DATA';
 
 export type AuthDataStorage = {
   userId: string | null;
-  accessToken: string | null;
-  expiry: number | null;
+  accessToken: string;
 };
 
 export const getStoredAuth = async (): Promise<AuthDataStorage> => {
   const json = await AsyncStorage.getItem(STORAGE_KEY);
   return json
     ? JSON.parse(json)
-    : { userId: null, accessToken: null, expiry: null };
+    : { userId: null, accessToken: "" };
 };
 
 export const saveStoredAuth = async (data: Partial<AuthDataStorage>) => {

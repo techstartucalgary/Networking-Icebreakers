@@ -1,31 +1,21 @@
 import { mockEvents } from "@/src/api/mockDB";
+import JoinEventByIdGuestRequest from "@/src/interfaces/requests/JoinEventByIdGuestRequest";
+import JoinEventByIdUserRequest from "@/src/interfaces/requests/JoinEventByIdUserRequest";
 import EventJoinCodeResponse from "@/src/interfaces/responses/GetEventByCodeResponse";
+import EventIdResponse from "@/src/interfaces/responses/GetEventByIdResponse";
 import GetUserEventsResponse from "@/src/interfaces/responses/GetUserEventsResponse";
 import EventJoinIdResponse from "@/src/interfaces/responses/JoinEventIdResponse";
+import axios, { AxiosResponse } from "axios";
 
 const API_BASE_URL: string = '/api/events'
 
 export async function GetEventByCodeApi(joinCode: string): Promise<EventJoinCodeResponse | undefined> {
-    //TODO: Remove mock data call
-    try {
-        await new Promise((resolve) => setTimeout(resolve, 400));
-
-        const foundEvent = mockEvents.find((event) => event.joinCode?.toLowerCase() === joinCode.toLowerCase());
-
-        if (!foundEvent) return undefined;
-
-        return { success: true, event: foundEvent };
-    } catch (error) {
-        console.log("Error", error);
-    }
-    /*
     try{
-        const response: AxiosResponse<EventJoinCodeResponse> = await axios.get(`${API_BASE_URL}/${joinCode}`);
+        const response: AxiosResponse<EventJoinCodeResponse> = await axios.get(`${API_BASE_URL}/event/${joinCode}`);
         return response.data;
     }catch(error){
         console.log('Error', error);
     }
-    */
 }
 
 export async function GetEventByIdApi(eventId: string): Promise<EventJoinCodeResponse | undefined> {
@@ -64,7 +54,7 @@ export async function GetUserEventsApi(userId: string): Promise<GetUserEventsRes
     }
     /*
     try{
-        const response: AxiosResponse<GetAllEventsResponse> = await axios.get(`${API_BASE_URL}`);
+        const response: AxiosResponse<GetAllEventsResponse> = await axios.get(`${API_BASE_URL}/event/${joinCode}`);
         return response.data;
     }catch(error){
         console.log('Error', error);
@@ -72,66 +62,23 @@ export async function GetUserEventsApi(userId: string): Promise<GetUserEventsRes
   */
 }
 
-export async function JoinEventByIdUserApi(eventId: string, userId: string, name: string): Promise<EventJoinIdResponse | undefined> {
-    //TODO: Remove mock data call
-    try {
-        await new Promise((resolve) => setTimeout(resolve, 400));
-
-        //Find event based on eventId
-        const event = mockEvents.find((e) => e.eventId === eventId);
-        if (!event) {
-            return { success: false };
-        }
-
-        //Check if user is already a participant
-        const exists = event.participants.some((p) => p.userId === userId);
-        if (!exists) {
-            event.participants.push({ userId, username: name });
-        }
-
-        return { success: true, event: event };
-    } catch (error) {
-        console.log("Error", error);
-    }
-    /*
+export async function JoinEventByIdUserApi(eventId: string, userId: string, name: string, token: string): Promise<EventJoinIdResponse | undefined> {
     try{
-        const response: AxiosResponse<EventIdResponse> = await axios.post(`${API_BASE_URL}/user/${eventId}`);
+        const body: JoinEventByIdUserRequest = {userId, name,};
+        const response: AxiosResponse<EventJoinIdResponse> = await axios.post(`${API_BASE_URL}/${eventId}/join/user`, body, 
+            {headers: {Authorization: `Bearer ${token}`, },});
         return response.data;
     }catch(error){
         console.log('Error', error);
     }
-    */
 }
 
-export async function JoinEventByIdGuestApi(eventId: string, userId: string, name: string): Promise<EventJoinIdResponse | undefined> {
-    //TODO: Remove mock data call
-    try {
-        await new Promise((resolve) => setTimeout(resolve, 400));
-
-        //Find event based on eventId
-        const event = mockEvents.find((e) => e.eventId === eventId);
-        if (!event) {
-            return { success: false };
-        }
-
-        //Check if user is already a participant
-        const exists = event.participants.some((p) => p.userId === userId);
-        if (!exists) {
-            event.participants.push({ userId: userId, username: name });
-        }
-
-        console.log(event.participants)
-
-        return { success: true, event: event };
-    } catch (error) {
-        console.log("Error", error);
-    }
-    /*
+export async function JoinEventByIdGuestApi(eventId: string, name: string): Promise<EventJoinIdResponse | undefined> {
     try{
-        const response: AxiosResponse<EventIdResponse> = await axios.post(`${API_BASE_URL}/guest/${eventId}`, eventId);
+        const body: JoinEventByIdGuestRequest = {name,};
+        const response: AxiosResponse<EventJoinIdResponse> = await axios.post(`${API_BASE_URL}/${eventId}/join/user`, body);
         return response.data;
     }catch(error){
         console.log('Error', error);
     }
-    */
 }
