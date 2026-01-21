@@ -6,7 +6,7 @@ import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
 export default function QRScannerBox({onClose,}: {onClose: () => void;}) {
-  const { user } = useAuth();
+  const { user, authStorage } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const router = useRouter();
@@ -39,28 +39,29 @@ export default function QRScannerBox({onClose,}: {onClose: () => void;}) {
 
     if (!eventData || !eventId) {
       console.log("No event found for join code!");
-      return { status: "event-not-found", event: null };
+      return { status: "event-not-found" };
     }
 
     if (!name) {
       console.log("No name found for user");
-      return { status: "no-user", event: null };
+      return { status: "no-user" };
     }
 
     let eventJoinStatus;
     try {
       if (!user?.isGuest) {
-        eventJoinStatus = await JoinEventIdUser(eventId, userId!, name);
+        let token = authStorage.accessToken;
+        eventJoinStatus = await JoinEventIdUser(eventId, userId!, name, token);
       } else {
-        eventJoinStatus = await JoinEventIdGuest(eventId, userId!, name);
+        eventJoinStatus = await JoinEventIdGuest(eventId , name);
       }
     } catch (error) {
       console.log("Error joining event:", error);
-      return { status: "join-error", event: null };
+      return { status: "join-error" };
     }
 
     console.log("Event joined successfully!");
-    return { status: eventJoinStatus?.success, event: eventJoinStatus?.event };
+    return { status: eventJoinStatus?.success, };
   };
 
   if (!permission) return <View />;
