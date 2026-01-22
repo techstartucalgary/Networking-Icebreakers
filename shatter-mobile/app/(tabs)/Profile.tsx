@@ -3,6 +3,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-nativ
 import { useAuth } from "../../src/components/context/AuthContext";
 import LoginForm from "../../src/components/login-signup/LoginForm";
 import SignUpForm from "../../src/components/login-signup/SignupForm";
+import { Colors } from "@/src/styles/colors";
 
 export default function Profile() {
   const { user, updateUser, logout } = useAuth();
@@ -103,9 +104,7 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    justifyContent: "center", 
-    padding: 24, 
-    backgroundColor: "#A1C9F6" },
+    backgroundColor: Colors.royalBlue },
   title: { 
     fontSize: 28, 
     fontWeight: "600", 

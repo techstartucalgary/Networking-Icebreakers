@@ -3,6 +3,14 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAuth, User } from "../context/AuthContext";
+// Importing styling, image logo and saferaeavie and logo view
+import { ScrollView, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { loginFormStyles as styles } from "@/src/styles/loginForm.styles";
+const ShatterLogo = require("@/src/images/Shatter-logo-white.png");
+
+
+
 
 //used in profile to swap page
 type Props = {
@@ -59,46 +67,93 @@ export default function LoginForm({ switchToSignUp }: Props) {
   };
 
   return (
-    <View>
-      <Text style={styles.title}>Log In</Text>
-      <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} placeholderTextColor="#888"/>
-      <TextInput style={styles.input} placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} placeholderTextColor="#888"/>
-      <TouchableOpacity style={[styles.button, loading && { backgroundColor: "#ccc" }]} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log In</Text>}
-      </TouchableOpacity>
+    <SafeAreaView style= {styles.safe}>
+      <ScrollView contentContainerStyle={styles.scrollContent} 
+      keyboardShouldPersistTaps="handled" 
+      showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+        <View style={styles.header}>
+          <Image source={ShatterLogo} style={styles.headerLogoBg} />
+          <Image source={ShatterLogo} style={styles.headerLogoTopRight} />
+          <Text style={styles.brandTitle}>Shatter</Text>
+          <Text style={styles.brandSubtitle}>Break the ice.</Text>
+        </View>
 
-      <TouchableOpacity onPress={switchToSignUp} style={{ marginTop: 16 }}>
-        <Text style={{ textAlign: "center", color: "#1C1DEF" }}>Don't have an account? Sign Up</Text>
-        <Button
-          title="Continue as Guest"
-          onPress={() => router.push("/(tabs)/Guest")}
-        />
-      </TouchableOpacity>
-    </View>
+        <View style={styles.card}>
+          <Text style={styles.title}>Log In</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholderTextColor="#888"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            placeholderTextColor="#888"
+          />
+
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Log In</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={switchToSignUp} style={{ marginTop: 16 }}>
+            <Text style={styles.linkText}>
+              Don’t have an account? Sign Up
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={{ marginTop: 12 }}>
+            <Text style={styles.guestText}>Continue as Guest</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      </ScrollView>
+
+    </SafeAreaView>
+    
   );
 };
 
-const styles = StyleSheet.create({
-  title: { 
-    fontSize: 28, 
-    fontWeight: "600", 
-    marginBottom: 24, 
-    textAlign: "center", 
-    color: "#1B253A" },
-  input: { 
-    borderWidth: 1, 
-    borderColor: "#ccc", 
-    borderRadius: 8,
-    padding: 12, 
-    marginBottom: 16, 
-    backgroundColor: "#fff" },
-  button: { 
-    backgroundColor: "#1C1DEF", 
-    padding: 14, 
-    borderRadius: 8, 
-    alignItems: "center" },
-  buttonText: { 
-    color: "#fff", 
-    fontWeight: "600", 
-    fontSize: 16 },
-});
+// const styles = StyleSheet.create({
+//   container:{
+//     backgroundColor: "#1C1DEF",
+//   },
+//   title: { 
+//     fontSize: 28, 
+//     fontWeight: "600", 
+//     marginBottom: 24, 
+//     textAlign: "center", 
+//     color: "#1B253A" },
+//   input: { 
+//     borderWidth: 1, 
+//     borderColor: "#ccc", 
+//     borderRadius: 8,
+//     padding: 12, 
+//     marginBottom: 16, 
+//     backgroundColor: "#fff" },
+//   button: { 
+//     backgroundColor: "#1C1DEF", 
+//     padding: 14, 
+//     borderRadius: 8, 
+//     alignItems: "center" },
+//   buttonText: { 
+//     color: "#fff", 
+//     fontWeight: "600", 
+//     fontSize: 16 },
+// });
