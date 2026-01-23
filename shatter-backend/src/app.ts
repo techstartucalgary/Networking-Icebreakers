@@ -4,6 +4,8 @@ import cors from "cors";
 import userRoutes from './routes/user_route'; // these routes define how to handle requests to /api/users
 import authRoutes from './routes/auth_routes';
 import eventRoutes from './routes/event_routes';
+import bingoRoutes from './routes/bingo_routes';
+
 
 const app = express();
 
@@ -26,5 +28,6 @@ app.get('/', (_req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/bingo', bingoRoutes);
 
 export default app;
