@@ -1,14 +1,14 @@
-import { io } from 'socket.io-client';
+export function CreateEvent(eventData: {
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+    maxParticipants: number;
+}) {
+    console.log("Creating event with:", eventData);
 
-export const socket = io('http://localhost:4000', {
-  autoConnect: true,
-  transports: ['websocket', 'polling'],
-});
+    //Random fake join code, replace later
+    const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-socket.on('connect', () => {
-  console.log('Socket connected:', socket.id);
-});
-
-socket.on('disconnect', () => {
-  console.log('Socket disconnected');
-});
+    return joinCode;
+}
