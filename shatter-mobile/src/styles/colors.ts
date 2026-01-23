@@ -12,4 +12,6 @@ export const Colors = {
     ardBackground: "#F5F5F5",
     lightBlue:"#C9FAD6",
 
+    cream: "#F8F7DE",
+
 };
