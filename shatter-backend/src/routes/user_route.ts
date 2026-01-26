@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getUsers, createUser } from '../controllers/user_controller';
+import { getUsers, createUser, getUserById, getUserEvents } from '../controllers/user_controller';
 import { authMiddleware } from '../middleware/auth_middleware';
 import { User } from '../models/user_model';
 
@@ -21,5 +21,11 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
 	res.status(500).json({ error: 'Failed to fetch user' });
     }
 });
+
+// Get all events a user has joined - must come before /:userId to avoid route conflict
+router.get('/:userId/events', getUserEvents);
+
+// Get user by ID
+router.get('/:userId', getUserById);
 
 export default router;
