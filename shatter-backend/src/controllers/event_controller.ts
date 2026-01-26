@@ -290,3 +290,41 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     return res.status(500).json({ success: false, msg: "Internal error" });
   }
 }
+
+/**
+ * GET /api/events/:eventId
+ * Get event details by event ID
+ *
+ * @param req.params.eventId - Event ID (required)
+ *
+ * @returns 200 with event details on success
+ * @returns 400 if eventId is missing
+ * @returns 404 if event is not found
+ */
+export async function getEventById(req: Request, res: Response) {
+  try {
+    const { eventId } = req.params;
+
+    if (!eventId) {
+      return res
+        .status(400)
+        .json({ success: false, error: "eventId is required" });
+    }
+
+    const event = await Event.findById(eventId).populate(
+      "participantIds",
+      "name userId",
+    );
+
+    if (!event) {
+      return res.status(404).json({ success: false, error: "Event not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      event,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
