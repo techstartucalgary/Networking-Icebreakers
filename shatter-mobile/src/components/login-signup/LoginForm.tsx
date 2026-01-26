@@ -26,6 +26,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
 	const [err, setError] = useState("");
 
 	const handleLogin = async () => {
+		setError("");
 		setLoading(true);
 
 		if (!email || !password) {
@@ -51,7 +52,19 @@ export default function LoginForm({ switchToSignUp }: Props) {
 				throw new Error("No response from server");
 			}
 
+			if (!userResponse.userId) {
+				throw new Error("No user found.");
+			}
+
+			if (!userResponse.token) {
+				throw new Error("No access token passed.");
+			}
+
 			const userData = await userFetch(userResponse.userId, userResponse.token);
+
+			if (!userData) {
+				throw new Error("No response from server");
+			}
 
 			const user: AuthUser = {
 				user_id: userResponse.userId,
@@ -65,10 +78,9 @@ export default function LoginForm({ switchToSignUp }: Props) {
 			await login(user, userResponse.token);
 		} catch (e) {
 			console.log("Login failed:", e);
-			setError("Login Failure");
+			setError("Login Failure: " + e);
 		} finally {
 			setLoading(false);
-			setError("");
 		}
 	};
 
@@ -104,7 +116,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
 
 			<TouchableOpacity onPress={switchToSignUp} style={{ marginTop: 16 }}>
 				<Text style={{ textAlign: "center", color: "#1C1DEF" }}>
-					Don't have an account? Sign Up
+					Don&apos;t have an account? Sign Up
 				</Text>
 				<Button
 					title="Continue as Guest"

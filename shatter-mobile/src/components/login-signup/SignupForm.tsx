@@ -19,6 +19,7 @@ export default function SignUpForm({ switchToLogin }: Props) {
   const [err, setError] = useState("");
 
   const handleSignup = async () => {
+    setError("");
     setLoading(true);
 
     if (!email || !password) {
@@ -65,7 +66,6 @@ export default function SignUpForm({ switchToLogin }: Props) {
       setError("Signup Failure");
     } finally {
       setLoading(false);
-      setError("");
     }
   };
 

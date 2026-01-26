@@ -7,8 +7,9 @@ import UserLoginResponse from '@/src/interfaces/responses/UserLoginResponse';
 import UserSignupResponse from '@/src/interfaces/responses/UserSignupResponse';
 import axios, { type AxiosResponse } from 'axios';
 
-const API_BASE_URL_AUTH: string = '/api/auth'
-const API_BASE_URL_USER: string = '/api/user'
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE
+const API_BASE_URL_AUTH = `${API_BASE}/api/auth`;
+const API_BASE_URL_USER = `${API_BASE}/api/users`;
 
 export async function UserLoginApi(email: string, password: string): Promise<UserLoginResponse | undefined> {
     try{
@@ -32,9 +33,8 @@ export async function UserSignupApi(name: string, email: string, password: strin
 
 export async function UserFetchApi(userId: string, token: string): Promise<UserDataResponse | undefined> {
     try{
-        const body: UserDataRequest = {userId};
-        const response: AxiosResponse<UserDataResponse> = await axios.post(`${API_BASE_URL_USER}/users/${userId}`, body, 
-            {headers: {Authorization: `Bearer ${token}`, },});;
+        const response: AxiosResponse<UserDataResponse> = await axios.get(`${API_BASE_URL_USER}/${userId}`,
+            {headers: {Authorization: `Bearer ${token}`,},});
         return response.data;
     }catch(error){
         console.log('Error', error);
