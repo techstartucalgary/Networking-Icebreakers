@@ -2,13 +2,24 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import app from "./app";
 
-const PORT = 4000;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
+const MONGODB_URI = process.env.MONGO_URI;
 
 async function start() {
-  await mongoose.connect(process.env.MONGO_URI!);
-  app.listen(PORT, () => {
-    console.log(`Local API running at http://localhost:${PORT}`);
-  });
+  try {
+    if (!MONGODB_URI) {
+      throw new Error("MONGO_URI is not set");
+    }
+    await mongoose.connect(MONGODB_URI);
+    console.log("Successfully connected to MongoDB");
+
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error("Failed to start server:", err);
+    process.exit(1);
+  }
 }
 
 start();
