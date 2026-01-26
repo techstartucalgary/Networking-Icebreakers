@@ -37,10 +37,11 @@ jobs:
 
       - name: Compress frontend source for artifact
         run: |
-          tar -czf frontend-source-${{ github.run_number }}.tar.gz shatter-web
-          
+          tar -czf frontend-source-${{ github.run_id }}.tar.gz shatter-web
+
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-source-${{ github.run_number }}
-          path: frontend-source-${{ github.run_number }}.tar.gz
+          name: frontend-source-${{ github.run_id }}
+          path: frontend-source-${{ github.run_id }}.tar.gz
+

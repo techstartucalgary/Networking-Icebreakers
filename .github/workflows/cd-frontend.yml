@@ -3,9 +3,10 @@ name: CD - Deploy Frontend
 on:
   workflow_dispatch:
     inputs:
-      build_number:
-        description: "Frontend build version to deploy"
+      run_id:
+        description: "Frontend CI workflow run_id to deploy"
         required: true
+        type: string
 
 jobs:
   deploy:
@@ -19,28 +20,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          echo "Fetching frontend artifact for build #${{ github.event.inputs.build_number }}"
-          CI_RUN_ID=$(gh run list \
-            --workflow "CI - Build Frontend" \
-            --json databaseId,number \
-            -q ".[] | select(.number == ${{ github.event.inputs.build_number }}) | .databaseId")
-          if [ -z "$CI_RUN_ID" ]; then
-            echo "Could not find CI run with build number: ${{ github.event.inputs.build_number }}"
-            exit 1
-          fi
-          echo "Found CI run ID: $CI_RUN_ID"
-          gh run download $CI_RUN_ID --name frontend-source-${{ github.event.inputs.build_number }}
+          echo "Fetching frontend artifact from CI run ID: ${{ github.event.inputs.run_id }}"
+          gh run download ${{ github.event.inputs.run_id }} --name frontend-source-${{ github.event.inputs.run_id }}
+          ls -l
 
       - name: Extract artifact
         run: |
-          tar -xzf frontend-source-${{ github.event.inputs.build_number }}.tar.gz
+          tar -xzf frontend-source-${{ github.event.inputs.run_id }}.tar.gz
           ls -la
 
-      - name: Setup Node.js & Vercel CLI
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install -g vercel
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
 
       - name: Deploy frontend to Vercel
         env:
@@ -48,8 +43,6 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_FRONTEND }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
         run: |
-          cd shatter-web  # deploy from frontend folder
-          vercel --prod \
-            --token=$VERCEL_TOKEN \
-            --scope=$VERCEL_ORG_ID_FRONTEND \
-            --confirm
+          cd shatter-web
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          vercel deploy --prod --yes --token=$VERCEL_TOKEN
