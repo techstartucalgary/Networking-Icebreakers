@@ -1,18 +1,18 @@
 import {
-    GetEventByCodeApi,
-    GetEventByIdApi,
-    GetUserEventsApi,
-    JoinEventByIdGuestApi,
-    JoinEventByIdUserApi,
+	GetEventByCodeApi,
+	GetEventByIdApi,
+	JoinEventByIdGuestApi,
+	JoinEventByIdUserApi,
 } from "../api/events/event.api";
-import EventJoinCodeResponse from "../interfaces/responses/GetEventByCodeResponse";
+import { GetUserEventsApi } from "../api/users/user.api";
+import EventResponse from "../interfaces/responses/GetEventByCodeResponse";
 import EventIdResponse from "../interfaces/responses/GetEventByIdResponse";
 import UserEventsResponse from "../interfaces/responses/GetUserEventsResponse";
 import EventJoinIdResponse from "../interfaces/responses/JoinEventIdResponse";
 
 export async function getEventByCode(
 	joinCode: string,
-): Promise<EventJoinCodeResponse | undefined> {
+): Promise<EventResponse | undefined> {
 	const eventInfo = await GetEventByCodeApi(joinCode);
 	return eventInfo;
 }
@@ -26,8 +26,9 @@ export async function getEventById(
 
 export async function getUserEvents(
 	userId: string,
+	token: string
 ): Promise<UserEventsResponse | undefined> {
-	const events = await GetUserEventsApi(userId);
+	const events = await GetUserEventsApi(userId, token);
 	return events;
 }
 

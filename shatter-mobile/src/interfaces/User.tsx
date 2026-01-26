@@ -1,11 +1,11 @@
 export interface User {
-    userId: String,
-    name: String,
-    email: String,
-    password: String,
-    profilePicture: String,
-    bio: String,
-    socialLinks: String,
+    userId: string,
+    name: string,
+    email: string,
+    password: string,
+    profilePicture: string,
+    bio: string,
+    socialLinks: string,
     userType: UserType
 }
 

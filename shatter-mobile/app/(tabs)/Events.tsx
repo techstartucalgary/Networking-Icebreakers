@@ -5,6 +5,7 @@ import EventCard from "../../src/components/events/EventCard";
 import type Event from "../../src/interfaces/Event";
 import { getUserEvents } from "../../src/services/event.service";
 import { useAuth } from "@/src/components/context/AuthContext";
+import { getStoredAuth } from "@/src/components/general/AsyncStorage";
 
 const NewEvents = () => {
   const { user } = useAuth();
@@ -15,7 +16,8 @@ const NewEvents = () => {
   //reload event list
   const loadEvents = async () => {
     setLoading(true);
-    const data = await getUserEvents(user?.user_id!);
+    const stored = getStoredAuth()
+    const data = await getUserEvents(user?.user_id!, (await stored).accessToken);
     const events: Event[] = data?.events || [];
     setEvents(events);
     setLoading(false);

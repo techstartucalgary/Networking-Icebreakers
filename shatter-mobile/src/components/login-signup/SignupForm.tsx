@@ -2,7 +2,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useAuth, User } from "../context/AuthContext";
+import { useAuth, AuthUser } from "../context/AuthContext";
 import { userSignup } from "@/src/services/user.service";
 
 //used in profile to swap page
@@ -50,7 +50,7 @@ export default function SignUpForm({ switchToLogin }: Props) {
         throw new Error("No response from server");
       }
 
-      const user: User = {
+      const user: AuthUser = {
         user_id: userResponse.userId,
         name,
         email,
