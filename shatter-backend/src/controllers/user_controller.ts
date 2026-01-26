@@ -39,3 +39,52 @@ export const createUser = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to create user" });
   }
 };
+
+// controller: GET /api/users/:userId
+// Get a specific user by ID
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: "userId is required" });
+    }
+
+    const user = await User.findById(userId).select("-passwordHash");
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    res.status(200).json({ success: true, user });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// controller: GET /api/users/:userId/events
+// Get all events that a user has joined
+export const getUserEvents = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: "userId is required" });
+    }
+
+    const user = await User.findById(userId)
+      .populate("eventHistoryIds", "name description joinCode startDate endDate currentState")
+      .select("eventHistoryIds");
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      events: user.eventHistoryIds,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
