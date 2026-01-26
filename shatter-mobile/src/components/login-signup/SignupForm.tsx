@@ -2,7 +2,8 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useAuth, User } from "../context/AuthContext";
+import { useAuth, AuthUser } from "../context/AuthContext";
+import { userSignup } from "@/src/services/user.service";
 
 //used in profile to swap page
 type Props = {
@@ -15,13 +16,15 @@ export default function SignUpForm({ switchToLogin }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [err, setError] = useState("");
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     setLoading(true);
 
     if (!email || !password) {
         console.log("Error: All fields are required");
         setLoading(false)
+        setError("Please fill in all fields.");
         return;
     }
 
@@ -29,35 +32,41 @@ export default function SignUpForm({ switchToLogin }: Props) {
     if (!emailRegex.test(email)) {
         console.log("Error: Invalid email format");
         setLoading(false)
+        setError("Please enter a valid email.");
         return;
     }
 
     if (password.length < 8) {
         console.log("Error: Password must be at least 8 characters");
+        setError("Password must be at least 8 characters.");
         setLoading(false)
         return;
     }
 
-    //TODO: Backend logic --> auth for access-token, then create new user for backend based on user details
-    setTimeout(async () => {
-      const newId = "user1234"; //backend-generated user ID
-      const user: User = {
-        user_id: newId,
+    try {
+      const userResponse = await userSignup(name, email, password);
+
+      if (!userResponse) {
+        throw new Error("No response from server");
+      }
+
+      const user: AuthUser = {
+        user_id: userResponse.userId,
         name,
         email,
         linkedin: "",
         github: "",
-        isGuest: false
+        isGuest: false,
       };
 
-      try {
-        await login(user, "new-access-token", Date.now() + 3600 * 1000); //1hr
-      } catch (e) {
-        console.log("Signup failed:", e);
-      } finally {
-        setLoading(false);
-      }
-    }, 1000);
+      await login(user, userResponse.token); 
+    } catch (e) {
+      console.log("Signup failed:", e);
+      setError("Signup Failure");
+    } finally {
+      setLoading(false);
+      setError("");
+    }
   };
 
   return (
@@ -80,6 +89,8 @@ export default function SignUpForm({ switchToLogin }: Props) {
           />
         )}
       </TouchableOpacity>
+      <Text style={{ textAlign: "center", color: "#afafaf" }}>Password must be at least 8 characters long</Text>
+      {err && <Text style={{ textAlign: "center", color: "#e63232" }}>{err}</Text>}
     </View>
   );
 };

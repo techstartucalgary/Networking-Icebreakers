@@ -1,21 +1,45 @@
-import GetAllEventsResponse from "@/src/interfaces/responses/GetAllEventsResponse";
-import EventJoinCodeResponse from "@/src/interfaces/responses/GetEventByCodeResponse";
+import JoinEventByIdGuestRequest from "@/src/interfaces/requests/JoinEventByIdGuestRequest";
+import JoinEventByIdUserRequest from "@/src/interfaces/requests/JoinEventByIdUserRequest";
+import EventResponse from "@/src/interfaces/responses/GetEventByCodeResponse";
+import EventIdResponse from "@/src/interfaces/responses/GetEventByIdResponse";
+import EventJoinIdResponse from "@/src/interfaces/responses/JoinEventIdResponse";
 import axios, { AxiosResponse } from "axios";
 
 const API_BASE_URL: string = '/api/events'
 
-export async function GetEventByCodeApi(joinCode: string): Promise<EventJoinCodeResponse | undefined> {
+export async function GetEventByCodeApi(joinCode: string): Promise<EventResponse | undefined> {
     try{
-        const response: AxiosResponse<EventJoinCodeResponse> = await axios.get(`${API_BASE_URL}/event/${joinCode}`);
+        const response: AxiosResponse<EventResponse> = await axios.get(`${API_BASE_URL}/event/${joinCode}`);
         return response.data;
     }catch(error){
         console.log('Error', error);
     }
 }
 
-export async function GetAllEventsApi(): Promise<GetAllEventsResponse | undefined> {
+export async function GetEventByIdApi(eventId: string): Promise<EventResponse | undefined> {
     try{
-        const response: AxiosResponse<GetAllEventsResponse> = await axios.get(`${API_BASE_URL}`);
+        const response: AxiosResponse<EventIdResponse> = await axios.get(`${API_BASE_URL}/${eventId}`);
+        return response.data;
+    }catch(error){
+        console.log('Error', error);
+    }
+}
+
+export async function JoinEventByIdUserApi(eventId: string, userId: string, name: string, token: string): Promise<EventJoinIdResponse | undefined> {
+    try{
+        const body: JoinEventByIdUserRequest = {userId, name,};
+        const response: AxiosResponse<EventJoinIdResponse> = await axios.post(`${API_BASE_URL}/${eventId}/join/user`, body, 
+            {headers: {Authorization: `Bearer ${token}`, },});
+        return response.data;
+    }catch(error){
+        console.log('Error', error);
+    }
+}
+
+export async function JoinEventByIdGuestApi(eventId: string, name: string): Promise<EventJoinIdResponse | undefined> {
+    try{
+        const body: JoinEventByIdGuestRequest = {name,};
+        const response: AxiosResponse<EventJoinIdResponse> = await axios.post(`${API_BASE_URL}/${eventId}/join/user`, body);
         return response.data;
     }catch(error){
         console.log('Error', error);

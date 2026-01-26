@@ -1,6 +1,6 @@
 import EventIB from '../Event'
 
-export default interface EventResponse {
+export default interface EventIdResponse {
     success: boolean,
     event: EventIB
 }

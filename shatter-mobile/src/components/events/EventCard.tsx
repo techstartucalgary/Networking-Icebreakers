@@ -1,30 +1,50 @@
-import { Image, StyleSheet, Text, TouchableOpacity } from "react-native";
-import Event from '../../interfaces/Event';
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import Event, { EventState } from '../../interfaces/Event';
 
-interface EventCardProps {
+type EventCardProps = {
   event: Event;
-  onPress?: () => void; //if tapped
-}
+  expanded: boolean;
+  onPress: () => void; //if tapped
+  onJoinGame?: (event: Event) => void;
+};
 
-const EventCard = ({ event, onPress }: EventCardProps) => {
+const EventCard = ({ event, expanded, onPress, onJoinGame, }: EventCardProps) => {
+  const live = (event.currentState === EventState.IN_PROGRESS);
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      {event.eventImg ? (
+    <Pressable onPress={onPress} style={styles.card}>
+      <View style={styles.imageWrapper}>
         <Image source={{ uri: event.eventImg }} style={styles.image} />
-      ) : null}
-
+        
+        {/* LIVE badge */}
+        {live && (
+          <View style={styles.liveBadge}>
+            <Text style={styles.liveText}>Currently Shattering!</Text>
+          </View>
+        )}
+      </View>
       <Text style={styles.title}>{event.name}</Text>
 
       <Text style={styles.date}>
-        {new Date(event.startDate).toLocaleDateString()} -{" "}
-        {new Date(event.endDate).toLocaleDateString()}
+        {new Date(event.startDate).toLocaleString()}
       </Text>
 
-      {event.description ? <Text style={styles.description}>{event.description}</Text> : null}
+      {expanded && (
+        <View style={styles.expandedContent}>
+          <Text>{event.description}</Text>
 
-      {/* Optional: show join code only if needed */}
-      {event.joinCode ? <Text style={styles.joinCode}>Join Code: {event.joinCode}</Text> : null}
-    </TouchableOpacity>
+          {/* Join Game Button */}
+          {live && onJoinGame && (
+            <Pressable
+              onPress={() => onJoinGame(event)}
+              style={styles.joinButton}
+            >
+              <Text style={styles.joinButtonText}>Join Game</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+    </Pressable>
   );
 };
 
@@ -42,6 +62,13 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
+  imageWrapper: {
+    position: "relative",
+    width: "100%",
+    borderRadius: 10,
+    overflow: "hidden",
+    marginBottom: 10,
+  },
   image: {
     width: "100%",
     height: 150,
@@ -56,13 +83,42 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#555",
   },
+  expandedContent: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    paddingTop: 12,
+  },
   description: {
     fontSize: 14,
     color: "#777",
     marginVertical: 5,
   },
-  joinCode: {
+  liveBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "#ef4444",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  joinButton: {
+    marginTop: 12,
+    backgroundColor: "#22c55e",
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  joinButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 15,
+  },
+  liveText: {
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 12,
-    color: "#999",
+    zIndex: 1,
   },
 });

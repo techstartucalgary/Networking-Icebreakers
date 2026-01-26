@@ -1,4 +1,4 @@
-export default interface Event {
+export default interface EventIB {
     eventId: string;
     name: string;
     description: string;
@@ -12,6 +12,7 @@ export default interface Event {
     createdAt: string;
     updatedAt: string;
     eventImg: string;
+    gameType: GameType;
 }
 
 export interface Participant{
@@ -24,4 +25,8 @@ export enum EventState{
     IN_PROGRESS = "In Progress",
     COMPLETED = "Completed",
     INVALID = "Invalid",
+}
+
+export enum GameType{
+    NAME_BINGO = "Name Bingo"
 }

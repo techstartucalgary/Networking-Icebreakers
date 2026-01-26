@@ -1,15 +1,16 @@
-import { getEventByCode } from "@/src/services/event.service";
+import { getEventByCode, JoinEventIdGuest, JoinEventIdUser } from "@/src/services/event.service";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
-export default function QRScannerBox() {
-  const { user } = useAuth();
+export default function QRScannerBox({onClose,}: {onClose: () => void;}) {
+  const { user, authStorage } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const router = useRouter();
+  const scanLock = useRef(false);
 
   //extract joinCode from QR code
   const extractjoinCode = (qrData: string): string | null => {
@@ -18,7 +19,7 @@ export default function QRScannerBox() {
       const isValid = /^[0-9]{8}$/.test(qrData);
 
       if (!isValid) {
-        console.log("Invalid join code format");
+        console.log("Invalid join code format: ", qrData);
         return null;
       }
       return qrData; 
@@ -28,19 +29,39 @@ export default function QRScannerBox() {
     }
   };
 
-  //TODO: Backend Request --> Need route to join event via joinCode and passed userId
   const joinEvent = async (joinCode: string) => {
     const userId = user?.user_id;
+    const name = user?.name
 
-    if (!userId) {
-      console.log("No user logged in!");
+    const eventData = await getEventByCode(joinCode);
+    const eventId = eventData?.event.eventId
+    console.log("Event returned successfully: ", eventData?.event.name);
+
+    if (!eventData || !eventId) {
+      console.log("No event found for join code!");
+      return { status: "event-not-found" };
+    }
+
+    if (!name) {
+      console.log("No name found for user");
       return { status: "no-user" };
     }
 
-    console.log("Current User ID:", userId, " Join Code: ", joinCode);
-    const eventData = await getEventByCode(joinCode);
-    console.log("Event returned successfully:", eventData?.event.name);
-    return { status: "ok", event: eventData };
+    let eventJoinStatus;
+    try {
+      if (!user?.isGuest) {
+        let token = authStorage.accessToken;
+        eventJoinStatus = await JoinEventIdUser(eventId, userId!, name, token);
+      } else {
+        eventJoinStatus = await JoinEventIdGuest(eventId , name);
+      }
+    } catch (error) {
+      console.log("Error joining event:", error);
+      return { status: "join-error" };
+    }
+
+    console.log("Event joined successfully!");
+    return { status: eventJoinStatus?.success, };
   };
 
   if (!permission) return <View />;
@@ -57,13 +78,13 @@ export default function QRScannerBox() {
   }
 
   const handleScan = async (data: string) => {
-    if (scanned) return;
-    setScanned(true);
+    if (scanLock.current) return;
+    scanLock.current = true; //lock scanner
 
     const joinCode = extractjoinCode(data);
     if (!joinCode) {
       Alert.alert("Invalid QR Code", "Could not extract join code");
-      setScanned(false);
+      onClose();
       return;
     }
 
@@ -73,13 +94,24 @@ export default function QRScannerBox() {
       if (result.status === "no-user") {
         router.push({ pathname: "/Profile", }); //user must log in or create a guest account
         Alert.alert("No User Found", "Please Create an Account to Join the Event");
+        onClose();
+        return;
+      } else if (result.status === "event-not-found") {
+        Alert.alert("No Event Found");
+        onClose();
+        return;
+      } else if (result.status === "join-error") {
+        Alert.alert("An error has occurred, please try again later.");
+        onClose();
         return;
       }
 
+      setScanned(true);
+      onClose();
       router.push({ pathname: "/Events", }); //navigate to event page after scanning
     } catch (err: any) {
       Alert.alert("Error", err.message);
-      setScanned(false);
+      onClose();
     }
   };
 

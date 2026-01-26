@@ -1,107 +1,122 @@
+import { userFetch } from "@/src/services/user.service";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { AuthDataStorage, clearStoredAuth, getStoredAuth, saveStoredAuth } from "../general/AsyncStorage";
+import {
+	AuthDataStorage,
+	clearStoredAuth,
+	getStoredAuth,
+	saveStoredAuth,
+} from "../general/AsyncStorage";
 
-export type User = {
-  user_id: string;
-  name?: string;
-  email?: string;
-  linkedin?: string;
-  github?: string;
-  isGuest?: boolean;
-} | null;
+//internal user for mobile
+export type AuthUser = {
+	user_id: string;
+	name?: string;
+	email?: string;
+	linkedin?: string;
+	github?: string;
+	isGuest?: boolean;
+};
 
 type AuthContextType = {
-  authStorage: AuthDataStorage;
-  user: User;
-  login: (user: User, accessToken: string, expiry: number) => Promise<void>;
-  continueAsGuest: (name: string, linkedin: string) => Promise<void>;
-  logout: () => Promise<void>;
-  updateUser: (updates: Partial<User>) => void;
+	authStorage: AuthDataStorage;
+	user: AuthUser | undefined;
+	login: (user: AuthUser, accessToken: string) => Promise<void>;
+	continueAsGuest: (name: string, linkedin: string) => Promise<void>;
+	logout: () => Promise<void>;
+	updateUser: (updates: Partial<AuthUser>) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [authStorage, setAuthStorage] = useState<AuthDataStorage>({
-    userId: null,
-    accessToken: null,
-    expiry: null,
-  });
+	const [authStorage, setAuthStorage] = useState<AuthDataStorage>({
+		userId: "",
+		accessToken: "",
+	});
 
-  const [user, setUser] = useState<User>(null);
+	const [user, setUser] = useState<AuthUser | undefined>(undefined);
 
-  //load stored data on startup
-  useEffect(() => {
-    const load = async () => {
-      const stored = await getStoredAuth();
-      setAuthStorage(stored);
-      //TODO: Pull full profile from backend using stored.userId
-    };
+	//load stored data on startup
+	useEffect(() => {
+		const load = async () => {
+			const stored = await getStoredAuth();
+			setAuthStorage(stored);
+			if (stored.userId && stored.accessToken) {
+				const importedUser = await userFetch(stored.userId, stored.accessToken);
+				if (importedUser) {
+					const mappedUser: AuthUser = {
+						user_id: importedUser.userId,
+						name: importedUser.name,
+						email: importedUser.email,
+					};
+					setUser(mappedUser);
+				}
+			}
+			
+		};
 
-    load();
-  }, []);
+		load();
+	}, []);
 
-  const login = async (user: User, accessToken: string, expiry: number) => {
-    setUser(user);
-    const storageData: AuthDataStorage = {
-      userId: user?.user_id || null,
-      accessToken,
-      expiry,
-    };
-    setAuthStorage(storageData);
-    await saveStoredAuth(storageData);
-  };
+	const login = async (user: AuthUser, accessToken: string) => {
+		setUser(user);
+		const storageData: AuthDataStorage = {
+			userId: user?.user_id,
+			accessToken,
+		};
+		setAuthStorage(storageData);
+		await saveStoredAuth(storageData);
+	};
 
-  const continueAsGuest = async (name: string, linkedin: string) => {
-    const guestUser: User = {
-      user_id: "guest-" + Date.now().toString(), //how to ID guests?
-      name: name,
-      linkedin: linkedin,
-      isGuest: true,
-    };
+	const continueAsGuest = async (name: string, linkedin: string) => {
+		const guestUser: AuthUser = {
+			user_id: "guest-" + Date.now().toString(), //TODO: how to ID guests?
+			name: name,
+			linkedin: linkedin,
+			isGuest: true,
+		};
 
-    setUser(guestUser);
+		setUser(guestUser);
 
-    const storageData: AuthDataStorage = {
-      userId: guestUser.user_id,
-      accessToken: null,
-      expiry: null,
-    };
+		const storageData: AuthDataStorage = {
+			userId: guestUser.user_id,
+			accessToken: "",
+		};
 
-    setAuthStorage(storageData);
-    await saveStoredAuth(storageData);
-  };
+		setAuthStorage(storageData);
+		await saveStoredAuth(storageData);
+	};
 
-  const logout = async () => {
-    setUser(null);
-    setAuthStorage({ userId: null, accessToken: null, expiry: null });
-    await clearStoredAuth();
-  };
+	const logout = async () => {
+		setUser(undefined);
+		setAuthStorage({ userId: "", accessToken: "" });
+		await clearStoredAuth();
+	};
 
-  //Upuate in-memory user
-  const updateUser = (updates: Partial<User>) => {
-    if (!user) return;
-    setUser({ ...user, ...updates });
-  };
+	//Update in-memory user
+	const updateUser = (updates: Partial<AuthUser>) => {
+		if (!user) return;
+		setUser({ ...user, ...updates });
+	};
 
-  return (
-    <AuthContext.Provider
-      value={{
-        authStorage,
-        user,
-        login,
-        continueAsGuest,
-        logout,
-        updateUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+	return (
+		<AuthContext.Provider
+			value={{
+				authStorage,
+				user,
+				login,
+				continueAsGuest,
+				logout,
+				updateUser,
+			}}
+		>
+			{children}
+		</AuthContext.Provider>
+	);
 };
 
 export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
+	const ctx = useContext(AuthContext);
+	if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+	return ctx;
 };
