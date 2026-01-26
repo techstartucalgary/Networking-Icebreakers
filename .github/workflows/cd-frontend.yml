@@ -48,7 +48,7 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_FRONTEND }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
         run: |
-          cd frontend  # deploy from frontend folder
+          cd shatter-web  # deploy from frontend folder
           vercel --prod \
             --token=$VERCEL_TOKEN \
             --scope=$VERCEL_ORG_ID_FRONTEND \
