@@ -23,9 +23,9 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
 });
 
 // Get all events a user has joined - must come before /:userId to avoid route conflict
-router.get('/:userId/events', getUserEvents);
+router.get('/:userId/events', authMiddleware, getUserEvents);
 
 // Get user by ID
-router.get('/:userId', getUserById);
+router.get('/:userId', authMiddleware, getUserById);
 
 export default router;
