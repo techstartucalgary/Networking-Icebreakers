@@ -5,7 +5,8 @@ import EventIdResponse from "@/src/interfaces/responses/GetEventByIdResponse";
 import EventJoinIdResponse from "@/src/interfaces/responses/JoinEventIdResponse";
 import axios, { AxiosResponse } from "axios";
 
-const API_BASE_URL: string = '/api/events'
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE
+const API_BASE_URL: string = `${API_BASE}/api/events`
 
 export async function GetEventByCodeApi(joinCode: string): Promise<EventResponse | undefined> {
     try{

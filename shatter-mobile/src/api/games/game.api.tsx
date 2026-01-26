@@ -2,7 +2,8 @@ import { mockEvents } from "@/src/api/mockDB";
 import BingoCategoriesResponse from "@/src/interfaces/responses/GetBingoCategoriesResponse";
 import NamesByEventIdResponse from "@/src/interfaces/responses/GetNamesByEventIdResponse";
 
-const API_BASE_URL: string = '/api/games'
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE
+const API_BASE_URL: string = `${API_BASE}/api/games`
 
 const mockCategories: string[] = [
   "Speaks 3 or more languages",
