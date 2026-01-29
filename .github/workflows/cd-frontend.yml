@@ -1,0 +1,55 @@
+name: CD - Deploy Frontend
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "Frontend build version to deploy"
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download artifact from CI workflow
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          echo "Fetching frontend artifact for build #${{ github.event.inputs.build_number }}"
+          CI_RUN_ID=$(gh run list \
+            --workflow "CI - Build Frontend" \
+            --json databaseId,number \
+            -q ".[] | select(.number == ${{ github.event.inputs.build_number }}) | .databaseId")
+          if [ -z "$CI_RUN_ID" ]; then
+            echo "Could not find CI run with build number: ${{ github.event.inputs.build_number }}"
+            exit 1
+          fi
+          echo "Found CI run ID: $CI_RUN_ID"
+          gh run download $CI_RUN_ID --name frontend-source-${{ github.event.inputs.build_number }}
+
+      - name: Extract artifact
+        run: |
+          tar -xzf frontend-source-${{ github.event.inputs.build_number }}.tar.gz
+          ls -la
+
+      - name: Setup Node.js & Vercel CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install -g vercel
+
+      - name: Deploy frontend to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_FRONTEND }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
+        run: |
+          cd shatter-web  # deploy from frontend folder
+          vercel --prod \
+            --token=$VERCEL_TOKEN \
+            --scope=$VERCEL_ORG_ID_FRONTEND \
+            --confirm

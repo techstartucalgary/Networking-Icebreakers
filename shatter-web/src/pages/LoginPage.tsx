@@ -110,15 +110,27 @@ export default function LoginPage() {
         className="w-full max-w-md backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20 relative z-10"
         style={{ backgroundColor: 'rgba(27, 37, 58, 0.6)' }}
       >
-        {/* Logo/Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-heading font-semibold text-white mb-2">
+      {/* Logo/Title */}
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          {/* Logo */}
+          <img
+            src="/src/assets/ShatterLogo_White.png"
+            alt="Shatter Logo"
+            className="w-10 h-10 opacity-90 drop-shadow-[0_0_15px_rgba(77,196,255,0.5)]"
+          />
+
+          {/* Title */}
+          <h1 className="text-4xl font-heading font-semibold text-white">
             Shatter
           </h1>
-          <p className="text-white/70 font-body">
-            {isLogin ? 'Welcome back!' : 'Create your account'}
-          </p>
         </div>
+
+        {/* Subtitle */}
+        <p className="text-white/70 font-body">
+          {isLogin ? 'Welcome back!' : 'Create your account'}
+        </p>
+      </div>
 
         {/* Error Message */}
         {error && (
