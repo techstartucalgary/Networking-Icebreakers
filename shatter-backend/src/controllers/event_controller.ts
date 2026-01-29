@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { Event } from "../models/event_model";
+import { pusher } from "../utils/pusher_websocket";
+
 import "../models/participant_model";
 
 import { generateJoinCode } from "../utils/event_utils";
@@ -92,8 +94,10 @@ export async function getEventByJoinCode(req: Request, res: Response) {
         .json({ success: false, error: "joinCode is required" });
     }
 
-    // const event = await Event.findOne({ joinCode }).populate("participantIds");
-    const event = await Event.findOne({ joinCode });
+    const event = await Event.findOne({ joinCode }).populate(
+      "participantIds",
+      "name userId",
+    );
 
     if (!event) {
       return res.status(404).json({ success: false, error: "Event not found" });
@@ -168,7 +172,7 @@ export async function joinEventAsUser(req: Request, res: Response) {
 
     const eventUpdate = await Event.updateOne(
       { _id: eventId },
-      { $addToSet: { participantIds: participantId } }
+      { $addToSet: { participantIds: participantId } },
     );
 
     if (eventUpdate.modifiedCount === 0) {
@@ -180,25 +184,20 @@ export async function joinEventAsUser(req: Request, res: Response) {
     // Add event to user history
     await User.updateOne(
       { _id: userId },
-      { $addToSet: { eventHistoryIds: eventId } }
+      { $addToSet: { eventHistoryIds: eventId } },
     );
 
     console.log("Room socket:", eventId);
     console.log("Participant data:", { participantId, name });
 
-    if (!req.io) {
-      console.error("ERROR: req.io is undefined!");
-    } else {
-      const room = req.io.to(eventId);
-      console.log("Room object:", room);
-
-      room.emit("participant-joined", {
+    await pusher.trigger(
+      `event-${eventId}`, // channel (room)
+      "participant-joined", // event name
+      {
         participantId,
         name,
-      });
-
-      console.log("Socket event emitted successfully");
-    }
+      },
+    );
 
     return res.json({
       success: true,
@@ -260,26 +259,21 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     // Add participant to event
     await Event.updateOne(
       { _id: eventId },
-      { $addToSet: { participantIds: participantId } }
+      { $addToSet: { participantIds: participantId } },
     );
 
     // Emit socket
     console.log("Room socket:", eventId);
     console.log("Participant data:", { participantId, name });
 
-    if (!req.io) {
-      console.error("ERROR: req.io is undefined!");
-    } else {
-      const room = req.io.to(eventId);
-      console.log("Room object:", room);
-
-      room.emit("participant-joined", {
+    await pusher.trigger(
+      `event-${eventId}`, // channel (room)
+      "participant-joined", // event name
+      {
         participantId,
         name,
-      });
-
-      console.log("Socket event emitted successfully");
-    }
+      },
+    );
 
     return res.json({
       success: true,
@@ -294,5 +288,43 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     }
     console.error("JOIN GUEST ERROR:", e);
     return res.status(500).json({ success: false, msg: "Internal error" });
+  }
+}
+
+/**
+ * GET /api/events/:eventId
+ * Get event details by event ID
+ *
+ * @param req.params.eventId - Event ID (required)
+ *
+ * @returns 200 with event details on success
+ * @returns 400 if eventId is missing
+ * @returns 404 if event is not found
+ */
+export async function getEventById(req: Request, res: Response) {
+  try {
+    const { eventId } = req.params;
+
+    if (!eventId) {
+      return res
+        .status(400)
+        .json({ success: false, error: "eventId is required" });
+    }
+
+    const event = await Event.findById(eventId).populate(
+      "participantIds",
+      "name userId",
+    );
+
+    if (!event) {
+      return res.status(404).json({ success: false, error: "Event not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      event,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
   }
 }

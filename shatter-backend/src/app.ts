@@ -1,4 +1,4 @@
-import express from 'express';
+import express from "express";
 import cors from "cors";
 
 import userRoutes from './routes/user_route'; // these routes define how to handle requests to /api/users
@@ -8,21 +8,35 @@ import bingoRoutes from './routes/bingo_routes';
 
 
 const app = express();
-
 app.use(express.json());
 
-app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true,
-}));
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
+  : [];
 
-app.use((req, _res, next) => {
-  req.io = app.get('socketio'); 
-  next();
-});
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
 
-app.get('/', (_req, res) => {
-  res.send('Hello');
+      if (allowedOrigins.length === 0) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked origin: ${origin}`));
+    },
+    credentials: true,
+  }),
+);
+
+app.get("/", (_req, res) => {
+  res.send("Hello");
 });
 
 app.use('/api/users', userRoutes);
