@@ -7,81 +7,143 @@ import { useNavigate } from "react-router-dom";
 function CreateEventPage() {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
-    const [maxParticipants, setMaxParticipants] = useState<number | undefined>(undefined);
+    const [startDate, setDate] = useState("");
+    const [maxParticipants, setMaxParticipants] = useState<number | undefined>(
+        undefined
+    );
+
     const navigate = useNavigate();
 
-    const handleCreateEvent = async () => { //To be used when "Create Event" button is pressed
+    const handleCreateEvent = async () => {
         const joinCode = await CreateEvent({
             name,
             description,
             startDate,
-            endDate,
-            maxParticipants: maxParticipants ?? 0, //If it is still undefined, default the value to zero.
+            maxParticipants: maxParticipants ?? 0,
         });
 
-        console.log("Event created. Join code: ", joinCode);
-        // Navigate to the EventPage page
-        navigate(`/events/${joinCode}`)
+        navigate(`/events/${joinCode}`);
     };
 
     return (
         <div
-            className="min-h-screen relative text-white"
+            className="min-h-screen text-white"
             style={{
                 background: "linear-gradient(to bottom, #0a0f1a, #1B253A, #0a0f1a)",
             }}
         >
             <Navbar />
 
-            <main className="max-w-xl mx-auto pt-28 pb-16 px-6">
-                <h1 className="text-3xl font-bold mb-8 text-center">
-                    Create New Event
-                </h1>
+            <main className="max-w-6xl mx-auto pt-28 pb-16 px-6">
 
-                <div className="space-y-4">
-                    <input
-                        className="w-full p-3 rounded bg-gray-800 border border-gray-700 focus:bg-blue-900"
-                        placeholder="Event Name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                    />
+                {/* Form Grid */}
+                <div className="grid grid-cols-4 gap-6">
+                    {/* Event Name */}
+                    <div>
+                        <label className="text-sm text-white">Event Name</label>
+                        <input
+                            className="w-full p-3 rounded bg-white border border-gray-700 text-black"
+                            placeholder="Enter Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                        />
+                    </div>
 
-                    <textarea
-                        className="w-full p-3 rounded bg-gray-800 border border-gray-700 focus:bg-blue-900"
-                        placeholder="Description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                    />
+                    {/* Event Type (mock) */}
+                    <div>
+                        <label className="text-sm text-white">Event Type</label>
+                        <select className="w-full p-3 rounded bg-white border border-gray-700 text-black">
+                            <option>Networking Event</option>
+                            <option>Career Fair</option>
+                            <option>Workshop</option>
+                        </select>
+                    </div>
 
-                    <input
-                        type="datetime-local"
-                        className="w-full p-3 rounded bg-gray-800 border border-gray-700 text-white cursor-pointer focus:bg-blue-900"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                    />
+                    {/* Key Interests (mock) */}
+                    <div>
+                        <label className="text-sm text-white">Key Interests</label>
+                        <select className="w-full p-3 rounded bg-white border border-gray-700 text-black">
+                            <option>AI</option>
+                            <option>Engineering</option>
+                            <option>Business</option>
+                            <option>Software</option>
+                        </select>
+                    </div>
 
-                    <input
-                        type="datetime-local"
-                        className="w-full p-3 rounded bg-gray-800 border border-gray-700 text-white cursor-pointer focus:bg-blue-900"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                    />
+                    {/* Institution (mock) */}
+                    <div>
+                        <label className="text-sm text-white">Institution</label>
+                        <select className="w-full p-3 rounded bg-white border border-gray-700 text-black">
+                            <option>University of Calgary</option>
+                        </select>
+                    </div>
 
-                    <input
-                        type="number"
-                        className="w-full p-3 rounded bg-gray-800 border border-gray-700 focus:bg-blue-900"
-                        placeholder="Max Participants"
-                        value={maxParticipants || ""}
-                        onChange={(e) => setMaxParticipants(Number(e.target.value))}
-                    />
+                    {/* Description */}
+                    <div className="col-span-2">
+                        <label className="text-sm text-white">Description</label>
+                        <textarea
+                            className="w-full h-48 p-3 rounded bg-white border border-gray-700 text-black"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                        />
+                    </div>
 
+                    {/* Date */}
+                    <div>
+                        <label className="text-sm text-white">Date</label>
+                        <input
+                            type="date"
+                            className="w-full p-3 rounded bg-white border border-gray-700 text-black"
+                            value={startDate}
+                            onChange={(e) => setDate(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Max Participants */}
+                    <div>
+                        <label className="text-sm text-white">Max Participants</label>
+                        <input
+                            type="number"
+                            placeholder="Max No."
+                            className="w-full p-3 rounded bg-white border border-gray-700 text-black"
+                            value={maxParticipants ?? ""}
+                            onChange={(e) => setMaxParticipants(Number(e.target.value))}
+                        />
+                    </div>
+                </div>
+
+                {/* Icebreakers */}
+                
+                <h2 className="text-xl font-semibold mt-12 mb-4">Icebreakers</h2>
+
+                <div className="flex gap-6">
+                    <div className="bg-gray-800 rounded-xl p-6 w-56 h-80 shadow-lg">
+                        <h3 className="font-semibold mb-2">Name Bingo</h3>
+                        <p className="text-sm text-white/70x">
+                            The ultimate icebreaker game where your bingo card is filled with
+                            the names of other players.
+                        </p>
+                    </div>
+
+                    <div className="bg-gray-800 rounded-xl p-6 w-56 shadow-lg">
+                        <h3 className="font-semibold mb-2">Scavenger Hunt</h3>
+                        <p className="text-sm text-white/70 ">
+                            A fun interactive hunt to get attendees talking and moving.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-4 mt-12">
                     <button
                         onClick={handleCreateEvent}
-                        className="w-full bg-blue-600 hover:bg-blue-700 transition p-3 rounded font-semibold"
+                        className="px-6 py-3 rounded-full bg-green-300 text-black font-semibold hover:opacity-90"
                     >
                         Create Event
+                    </button>
+
+                    <button className="px-6 py-3 rounded-full bg-red-300 text-black font-semibold hover:opacity-90">
+                        Discard Event
                     </button>
                 </div>
             </main>
@@ -89,6 +151,6 @@ function CreateEventPage() {
             <Footer />
         </div>
     );
-};
+}
 
 export default CreateEventPage;

@@ -2,7 +2,6 @@ export function CreateEvent(eventData: {
     name: string;
     description: string;
     startDate: string;
-    endDate: string;
     maxParticipants: number;
 }) {
     console.log("Creating event with:", eventData);
