@@ -6,6 +6,7 @@ import {
 	getStoredAuth,
 	saveStoredAuth,
 } from "../general/AsyncStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 //internal user for mobile
 export type AuthUser = {
@@ -32,6 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const [authStorage, setAuthStorage] = useState<AuthDataStorage>({
 		userId: "",
 		accessToken: "",
+		isGuest: true,
 	});
 
 	const [user, setUser] = useState<AuthUser | undefined>(undefined);
@@ -63,6 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		const storageData: AuthDataStorage = {
 			userId: user?.user_id,
 			accessToken,
+			isGuest: false,
 		};
 		setAuthStorage(storageData);
 		await saveStoredAuth(storageData);
@@ -81,6 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		const storageData: AuthDataStorage = {
 			userId: guestUser.user_id,
 			accessToken: "",
+			isGuest: true,
 		};
 
 		setAuthStorage(storageData);
@@ -89,7 +93,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 	const logout = async () => {
 		setUser(undefined);
-		setAuthStorage({ userId: "", accessToken: "" });
+		setAuthStorage({ userId: "", accessToken: "", isGuest: true});
+		await AsyncStorage.removeItem("guestEvents"); //If guest logs out
 		await clearStoredAuth();
 	};
 

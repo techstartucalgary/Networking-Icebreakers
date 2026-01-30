@@ -1,3 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import type EventIB from "@/src/interfaces/Event";
 import { getEventByCode, JoinEventIdGuest, JoinEventIdUser } from "@/src/services/event.service";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
@@ -29,9 +31,21 @@ export default function QRScannerBox({onClose,}: {onClose: () => void;}) {
     }
   };
 
+  const saveGuestEvent = async (event: EventIB) => {
+    const stored = await AsyncStorage.getItem("guestEvents");
+    const events: EventIB[] = stored ? JSON.parse(stored) : [];
+
+    //avoid duplicates
+    if (!events.some(e => e._id === event._id)) {
+      events.push(event);
+      await AsyncStorage.setItem("guestEvents", JSON.stringify(events));
+    }
+  };
+
   const joinEvent = async (joinCode: string) => {
     const userId = user?.user_id;
     const name = user?.name
+    const isGuest = authStorage.isGuest;
 
     const eventData = await getEventByCode(joinCode);
     const eventId = eventData?.event._id
@@ -49,11 +63,15 @@ export default function QRScannerBox({onClose,}: {onClose: () => void;}) {
 
     let eventJoinStatus;
     try {
-      if (!user?.isGuest) {
+      if (!isGuest) {
         let token = authStorage.accessToken;
         eventJoinStatus = await JoinEventIdUser(eventId, userId!, name, token);
       } else {
-        eventJoinStatus = await JoinEventIdGuest(eventId , name);
+        eventJoinStatus = await JoinEventIdGuest(eventId, name);
+
+        if (eventJoinStatus?.success) {
+          await saveGuestEvent(eventData.event);
+        }
       }
     } catch (error) {
       console.log("Error joining event:", error);
