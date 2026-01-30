@@ -1,32 +1,36 @@
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useEffect, useState, useCallback } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import EventCard from "../../src/components/events/EventCard";
 import type Event from "../../src/interfaces/Event";
 import { getUserEvents } from "../../src/services/event.service";
-import { useAuth } from "@/src/components/context/AuthContext";
 import { getStoredAuth } from "@/src/components/general/AsyncStorage";
 
 const NewEvents = () => {
-  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
 
   //reload event list
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     setLoading(true);
-    const stored = getStoredAuth()
-    const data = await getUserEvents(user?.user_id!, (await stored).accessToken);
-    const events: Event[] = data?.events || [];
-    setEvents(events);
-    setLoading(false);
-  };
+
+    try {
+      const stored = await getStoredAuth();
+      const data = await getUserEvents(stored.userId, stored.accessToken);
+      const events: Event[] = data?.events || [];
+      setEvents(events);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   //load list on page mount
-  useEffect(() => {
-    loadEvents();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadEvents();
+    }, [loadEvents])
+  );
 
   //dropdown of event
   const handlePress = (eventId: string) => {
@@ -55,16 +59,16 @@ const NewEvents = () => {
     <View style={styles.container}>
       <FlatList
         data={events}
-        keyExtractor={(item) => item.eventId}
+        keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <EventCard
             event={item}
-            expanded={expandedEventId === item.eventId}
-            onPress={() => handlePress(item.eventId)}
+            expanded={expandedEventId === item._id}
+            onPress={() => handlePress(item._id)}
             onJoinGame={() => {
               router.push({
                 pathname: "/Game",
-                params: { eventId: item.eventId }
+                params: { eventId: item._id }
               });
             }}
           />

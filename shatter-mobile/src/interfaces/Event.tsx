@@ -1,5 +1,5 @@
 export default interface EventIB {
-    eventId: string;
+    _id: string;
     name: string;
     description: string;
     joinCode: string | null;

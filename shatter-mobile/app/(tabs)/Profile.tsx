@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useState, useCallback } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../src/components/context/AuthContext";
 import LoginForm from "../../src/components/login-signup/LoginForm";
@@ -13,10 +14,12 @@ export default function Profile() {
   const [github, setGithub] = useState(user?.github || "");
 
   //update local form
-  useEffect(() => {
-    setLinkedin(user?.linkedin || "");
-    setGithub(user?.github || "");
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      setLinkedin(user?.linkedin || "");
+      setGithub(user?.github || "");
+    }, [user])
+  );
 
   const handleSave = () => {
     //TODO: Backend Logic --> Update user profile in backend
