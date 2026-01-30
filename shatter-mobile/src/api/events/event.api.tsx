@@ -40,7 +40,7 @@ export async function JoinEventByIdUserApi(eventId: string, userId: string, name
 export async function JoinEventByIdGuestApi(eventId: string, name: string): Promise<EventJoinIdResponse | undefined> {
     try{
         const body: JoinEventByIdGuestRequest = {name,};
-        const response: AxiosResponse<EventJoinIdResponse> = await axios.post(`${API_BASE_URL}/${eventId}/join/user`, body);
+        const response: AxiosResponse<EventJoinIdResponse> = await axios.post(`${API_BASE_URL}/${eventId}/join/guest`, body);
         return response.data;
     }catch(error){
         console.log('Error', error);

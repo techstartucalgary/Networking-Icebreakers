@@ -5,6 +5,8 @@ import EventCard from "../../src/components/events/EventCard";
 import type Event from "../../src/interfaces/Event";
 import { getUserEvents } from "../../src/services/event.service";
 import { getStoredAuth } from "@/src/components/general/AsyncStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import EventIB from "../../src/interfaces/Event";
 
 const NewEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -17,9 +19,16 @@ const NewEvents = () => {
 
     try {
       const stored = await getStoredAuth();
+
+      if (stored.isGuest) {
+        const local = await AsyncStorage.getItem("guestEvents");
+        const events: EventIB[] = local ? JSON.parse(local) : [];
+        setEvents(events);
+        return;
+      }
+
       const data = await getUserEvents(stored.userId, stored.accessToken);
-      const events: Event[] = data?.events || [];
-      setEvents(events);
+      setEvents(data?.events || []);
     } finally {
       setLoading(false);
     }
