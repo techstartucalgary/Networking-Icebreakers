@@ -5,6 +5,7 @@ import userRoutes from './routes/user_route'; // these routes define how to hand
 import authRoutes from './routes/auth_routes';
 import eventRoutes from './routes/event_routes';
 import bingoRoutes from './routes/bingo_routes';
+import userConnectionRoutes from './routes/user_connections_routes';
 
 
 const app = express();
@@ -43,5 +44,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/bingo', bingoRoutes);
+app.use('/api/userConnections', userConnectionRoutes);
 
 export default app;
