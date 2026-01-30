@@ -11,6 +11,10 @@ function CreateEventPage() {
     const [maxParticipants, setMaxParticipants] = useState<number | undefined>(
         undefined
     );
+    //new
+    const [eventType, setEventType] = useState("");
+    const [keyInterest, setKeyInterest] = useState("");
+    const [institution, setInstitution] = useState("");
 
     const navigate = useNavigate();
 
@@ -20,10 +24,19 @@ function CreateEventPage() {
             description,
             startDate,
             maxParticipants: maxParticipants ?? 0,
+            eventType,
+            keyInterest,
+            institution,
         });
 
         navigate(`/events/${joinCode}`);
     };
+
+    // So form cannot be submitted without field entries
+    const isFormValid = name.trim() != "" &&
+        description.trim() != "" &&
+        startDate.trim() != "" &&
+        maxParticipants != undefined && maxParticipants > 0;
 
     return (
         <div
@@ -35,9 +48,11 @@ function CreateEventPage() {
             <Navbar />
 
             <main className="max-w-6xl mx-auto pt-28 pb-16 px-6">
-
+                <h2 className="text-5xl font-heading font-semibold text-white mb-4 text-center">
+                    Create Event
+                </h2>
                 {/* Form Grid */}
-                <div className="grid grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 gap-6"> {/*was cols = 4 */}
                     {/* Event Name */}
                     <div>
                         <label className="text-sm text-white">Event Name</label>
@@ -49,20 +64,24 @@ function CreateEventPage() {
                         />
                     </div>
 
-                    {/* Event Type (mock) */}
+
+                    {/*
                     <div>
                         <label className="text-sm text-white">Event Type</label>
-                        <select className="w-full p-3 rounded bg-white border border-gray-700 text-black">
+                        <select className="w-full p-3 rounded bg-white border border-gray-700 text-black"
+                            onChange={(e) => setEventType(e.target.value)}
+                        >
                             <option>Networking Event</option>
                             <option>Career Fair</option>
                             <option>Workshop</option>
                         </select>
                     </div>
 
-                    {/* Key Interests (mock) */}
                     <div>
                         <label className="text-sm text-white">Key Interests</label>
-                        <select className="w-full p-3 rounded bg-white border border-gray-700 text-black">
+                        <select className="w-full p-3 rounded bg-white border border-gray-700 text-black"
+                            onChange={(e) => setKeyInterest(e.target.value)}
+                        >
                             <option>AI</option>
                             <option>Engineering</option>
                             <option>Business</option>
@@ -70,13 +89,15 @@ function CreateEventPage() {
                         </select>
                     </div>
 
-                    {/* Institution (mock) */}
                     <div>
                         <label className="text-sm text-white">Institution</label>
-                        <select className="w-full p-3 rounded bg-white border border-gray-700 text-black">
+                        <select className="w-full p-3 rounded bg-white border border-gray-700 text-black"
+                            onChange={(e) => setInstitution(e.target.value)}
+                        >
                             <option>University of Calgary</option>
                         </select>
                     </div>
+                    */}
 
                     {/* Description */}
                     <div className="col-span-2">
@@ -138,6 +159,7 @@ function CreateEventPage() {
                     <button
                         onClick={handleCreateEvent}
                         className="px-6 py-3 rounded-full bg-green-300 text-black font-semibold hover:opacity-90"
+                        disabled={!isFormValid}
                     >
                         Create Event
                     </button>

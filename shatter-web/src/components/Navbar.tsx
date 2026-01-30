@@ -6,11 +6,13 @@ export default function Navbar() {
       <div className="flex items-center gap-3">
         {/* Shatter Logo and Name (On the left)*/}
         <div className="w-10 h-10 flex items-center justify-center">
+          <a href = "/">
           <img 
             src="/src/assets/ShatterLogo_White.png" 
             alt="Shatter Logo" 
             className="w-full h-full object-contain"
           />
+          </a>
         </div>
         
         <div className="text-2xl font-heading font-semibold text-white">Shatter</div>
