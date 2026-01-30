@@ -16,7 +16,7 @@ const HomePage: React.FC = () => {
       <Navbar />
 
       <main>
-        <EventCardComponent name="Tech Meetup Calgary" joinCode="55844267" />
+        <EventCardComponent name="Tech Meetup Calgary" joinCode="13932624" />
         <Hero qrPayload="Test" />
         <About />
       </main>
