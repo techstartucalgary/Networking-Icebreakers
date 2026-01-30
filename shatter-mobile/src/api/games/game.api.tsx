@@ -1,9 +1,10 @@
 import { mockEvents } from "@/src/api/mockDB";
 import BingoCategoriesResponse from "@/src/interfaces/responses/GetBingoCategoriesResponse";
 import NamesByEventIdResponse from "@/src/interfaces/responses/GetNamesByEventIdResponse";
+import axios, { AxiosResponse } from "axios";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE
-const API_BASE_URL: string = `${API_BASE}/api/games`
+const API_BASE_URL: string = `${API_BASE}/api/`
 
 const mockCategories: string[] = [
   "Speaks 3 or more languages",
@@ -22,7 +23,7 @@ export async function GetNamesByEventIdApi(eventId: string): Promise<NamesByEven
   try {
     await new Promise((resolve) => setTimeout(resolve, 400));
 
-    const foundEvent = mockEvents.find((event) => event.eventId === eventId);
+    const foundEvent = mockEvents.find((event) => event._id === eventId);
     if (!foundEvent) return undefined;
 
     const names = foundEvent.participants.map((p) => p.username);
@@ -44,25 +45,10 @@ export async function GetNamesByEventIdApi(eventId: string): Promise<NamesByEven
 }
 
 export async function GetBingoCategoriesApi(eventId: string): Promise<BingoCategoriesResponse | undefined> {
-    //TODO: Remove mock data call
-    try {
-        await new Promise((resolve) => setTimeout(resolve, 300));
-
-        return {
-        success: true,
-        categories: mockCategories,
-        };
-    } catch (error) {
-        console.log("Error fetching bingo categories:", error);
-        return undefined;
-    }
-
-    /*
     try{
-        const response: AxiosResponse<BingoCategoriesResponse> = await axios.get(`${API_BASE_URL}/game/bingo/${eventId}`);
+        const response: AxiosResponse<BingoCategoriesResponse> = await axios.get(`${API_BASE_URL}/bingo/getBingo`);
         return response.data;
     }catch(error){
         console.log('Error', error);
     }
-    */
 }
