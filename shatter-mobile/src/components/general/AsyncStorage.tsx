@@ -5,11 +5,12 @@ const STORAGE_KEY = "AUTH_DATA";
 export type AuthDataStorage = {
 	userId: string;
 	accessToken: string;
+	isGuest: boolean;
 };
 
 export const getStoredAuth = async (): Promise<AuthDataStorage> => {
 	const json = await AsyncStorage.getItem(STORAGE_KEY);
-	return json ? JSON.parse(json) : { userId: "", accessToken: "" };
+	return json ? JSON.parse(json) : { userId: "", accessToken: "", isGuest: false};
 };
 
 export const saveStoredAuth = async (data: Partial<AuthDataStorage>) => {
