@@ -34,8 +34,8 @@ export default function QRScannerBox({onClose,}: {onClose: () => void;}) {
     const name = user?.name
 
     const eventData = await getEventByCode(joinCode);
-    const eventId = eventData?.event.eventId
-    console.log("Event returned successfully: ", eventData?.event.name);
+    const eventId = eventData?.event._id
+    console.log("Event returned successfully: ", eventData?.event);
 
     if (!eventData || !eventId) {
       console.log("No event found for join code!");
