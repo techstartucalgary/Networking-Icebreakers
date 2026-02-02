@@ -9,7 +9,7 @@ function CreateEventPage() {
     const [description, setDescription] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    const [maxParticipants, setMaxParticipants] = useState<number | undefined>(
+    const [maxParticipant, setMaxParticipant] = useState<number | undefined>(
         undefined
     );
     const [loading, setLoading] = useState(false);
@@ -27,7 +27,7 @@ function CreateEventPage() {
                 description,
                 startDate,
                 endDate,
-                maxParticipants: maxParticipants ?? 0,
+                maxParticipant: maxParticipant ?? 0,
             });
 
             // Navigate to the newly created event page
@@ -44,7 +44,7 @@ function CreateEventPage() {
         setDescription("");
         setStartDate("");
         setEndDate("");
-        setMaxParticipants(undefined);
+        setMaxParticipant(undefined);
         setError(null);
         // Or navigate back to home
         navigate("/");
@@ -55,8 +55,8 @@ function CreateEventPage() {
         name.trim() !== "" &&
         description.trim() !== "" &&
         startDate.trim() !== "" &&
-        maxParticipants !== undefined && 
-        maxParticipants > 0;
+        maxParticipant !== undefined && 
+        maxParticipant > 0;
 
     return (
         <div
@@ -148,7 +148,7 @@ function CreateEventPage() {
                         </p>
                     </div>
 
-                    {/* Max Participants */}
+                    {/* Max Participant */}
                     <div>
                         <label className="text-sm text-white font-body mb-2 block">
                             Max Participants *
@@ -157,8 +157,8 @@ function CreateEventPage() {
                             type="number"
                             placeholder="e.g., 50"
                             className="w-full p-3 rounded bg-white border border-gray-700 text-black font-body"
-                            value={maxParticipants ?? ""}
-                            onChange={(e) => setMaxParticipants(Number(e.target.value))}
+                            value={maxParticipant ?? ""}
+                            onChange={(e) => setMaxParticipant(Number(e.target.value))}
                             min="1"
                             disabled={loading}
                         />
