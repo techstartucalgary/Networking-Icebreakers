@@ -15,9 +15,11 @@ const HomePage: React.FC = () => {
     >
       <Navbar />
 
-      <main>
-        <EventCardComponent name="Tech Meetup Calgary" joinCode="13932624" />
-        <Hero qrPayload="Test" />
+      <main className="pt-16 lg:pt-24">
+        <Hero qrPayload="/events/13932624" />
+        <section className="my-16 flex justify-center">
+          <EventCardComponent name="Tech Meetup Calgary" joinCode="13932624" />
+        </section>
         <About />
       </main>
 
