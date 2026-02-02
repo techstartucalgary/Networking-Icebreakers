@@ -28,6 +28,6 @@ dist-ssr
 
 # omar personal files
 techstack.txt
-shatter-backend/docs/bingo_walkthrough.md
-shatter-backend/docs/feature_list.md
-shatter-backend/docs/project_roadmap.md
+docs/bingo_walkthrough.md
+docs/feature_list.md
+docs/project_roadmap.md
