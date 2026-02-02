@@ -7,10 +7,10 @@ on:
       - "shatter-web/**"
       - ".github/workflows/ci-frontend.yml"
   pull_request:
-    branches: [main]
     paths:
       - "shatter-web/**"
       - ".github/workflows/ci-frontend.yml"
+  workflow_dispatch:
 
 jobs:
   build:
@@ -37,11 +37,11 @@ jobs:
 
       - name: Compress frontend source for artifact
         run: |
-          cd shatter-web
-          tar -czf ../frontend-source-${{ github.run_number }}.tar.gz .
+          tar -czf frontend-source-${{ github.run_id }}.tar.gz shatter-web
 
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-source-${{ github.run_number }}
-          path: frontend-source-${{ github.run_number }}.tar.gz
+          name: frontend-source-${{ github.run_id }}
+          path: frontend-source-${{ github.run_id }}.tar.gz
+
