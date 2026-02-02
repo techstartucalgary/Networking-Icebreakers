@@ -27,7 +27,7 @@ function CreateEventPage() {
                 description,
                 startDate,
                 endDate,
-                maxParticipant: maxParticipant ?? 0,
+                maxParticipants: maxParticipant ?? 0,
             });
 
             // Navigate to the newly created event page
