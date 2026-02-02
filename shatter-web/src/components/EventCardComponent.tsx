@@ -7,7 +7,7 @@ interface EventCardComponentProps {
 
 const EventCardComponent = ({ name, joinCode }: EventCardComponentProps) => {
   return (
-    <div className="max-w-sm rounded-2xl shadow-lg bg-black p-6">
+    <div className="center max-w-sm rounded-2xl shadow-lg bg-black p-6">
       <h2 className="text-xl font-semibold">{name}</h2>
 
       <p className="mt-2 text-sm text-gray-600">
