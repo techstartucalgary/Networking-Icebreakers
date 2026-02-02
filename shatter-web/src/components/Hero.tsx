@@ -13,7 +13,7 @@ const Hero: React.FC<HeroProps> = ({ qrPayload = "hello" }) => {
   const words = [
     { text: "Expectations", color: "#4DC4FF" },
     { text: "Boundaries", color: "#C9FAD6" },
-    { text: "Awkward Silence", color: "#F8F7DE" }
+    { text: "Awkward Interactions", color: "#F8F7DE" }
   ];
 
   // Mouse parallax effect
