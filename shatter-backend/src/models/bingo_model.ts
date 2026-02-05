@@ -10,7 +10,6 @@ export interface BingoDocument extends Document {
 
 const bingoSchema = new Schema<BingoDocument>(
   {
-    _id: { type: String },
     _eventId: {
       type: Schema.Types.ObjectId,
       ref: "Event",
@@ -23,12 +22,5 @@ const bingoSchema = new Schema<BingoDocument>(
     versionKey: false,
   }
 );
-
-bingoSchema.pre("save", function (next) {
-  if (!this._id) {
-    this._id = `bingo_${Math.random().toString(36).slice(2, 10)}`;
-  }
-  next();
-});
 
 export const Bingo = model<BingoDocument>("Bingo", bingoSchema);
