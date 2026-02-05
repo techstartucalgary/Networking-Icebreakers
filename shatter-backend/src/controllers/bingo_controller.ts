@@ -40,7 +40,7 @@ export async function createBingo(req: Request, res: Response) {
         grid.every(
           (row: any) =>
             Array.isArray(row) &&
-            row.every((cell: any) => typeof cell === "string")
+            row.every((cell: any) => typeof cell === "string"),
         );
 
       if (!is2DStringArray) {
@@ -62,6 +62,11 @@ export async function createBingo(req: Request, res: Response) {
       grid,
     });
 
+    // update event with bingo id
+    await Event.findByIdAndUpdate(_eventId, {
+      bingoGameId: bingo._id,
+    });
+
     return res.status(201).json({
       success: true,
       bingoId: bingo._id,
@@ -71,7 +76,6 @@ export async function createBingo(req: Request, res: Response) {
     return res.status(500).json({ success: false, error: err.message });
   }
 }
-
 
 export async function getBingo(req: Request, res: Response) {
   try {
@@ -109,7 +113,6 @@ export async function getBingo(req: Request, res: Response) {
   }
 }
 
-
 /**
  * @param req.body.id - Bingo _id (string) OR Event _id (ObjectId string) (required)
  * @param req.body.description - New bingo description (string) (optional)
@@ -140,7 +143,7 @@ export async function updateBingo(req: Request, res: Response) {
         grid.every(
           (row: any) =>
             Array.isArray(row) &&
-            row.every((cell: any) => typeof cell === "string")
+            row.every((cell: any) => typeof cell === "string"),
         );
 
       if (!is2DStringArray) {
@@ -160,13 +163,17 @@ export async function updateBingo(req: Request, res: Response) {
       });
     }
 
-    let bingo = await Bingo.findByIdAndUpdate(id, { $set: update }, { new: true });
+    let bingo = await Bingo.findByIdAndUpdate(
+      id,
+      { $set: update },
+      { new: true },
+    );
 
     if (!bingo && Types.ObjectId.isValid(id)) {
       bingo = await Bingo.findOneAndUpdate(
         { _eventId: id },
         { $set: update },
-        { new: true }
+        { new: true },
       );
     }
 

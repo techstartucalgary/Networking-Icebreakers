@@ -13,6 +13,7 @@ export interface IEvent extends Document {
   participantIds: Schema.Types.ObjectId[];
   currentState: string;
   createdBy: Schema.Types.ObjectId;
+  bingoGameId?: Types.ObjectId | null;
 }
 
 const EventSchema = new Schema<IEvent>(
@@ -29,10 +30,15 @@ const EventSchema = new Schema<IEvent>(
       type: Schema.Types.ObjectId,
       required: true,
     },
+    bingoGameId: {
+      type: Types.ObjectId,
+      ref: "Bingo",
+      default: null,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Optional validation: ensure endDate is after startDate

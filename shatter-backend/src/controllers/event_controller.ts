@@ -94,10 +94,9 @@ export async function getEventByJoinCode(req: Request, res: Response) {
         .json({ success: false, error: "joinCode is required" });
     }
 
-    const event = await Event.findOne({ joinCode }).populate(
-      "participantIds",
-      "name userId",
-    );
+    const event = await Event.findOne({ joinCode })
+      .populate("participantIds", "name userId")
+      .populate("bingoGameId");
 
     if (!event) {
       return res.status(404).json({ success: false, error: "Event not found" });
@@ -311,10 +310,9 @@ export async function getEventById(req: Request, res: Response) {
         .json({ success: false, error: "eventId is required" });
     }
 
-    const event = await Event.findById(eventId).populate(
-      "participantIds",
-      "name userId",
-    );
+    const event = await Event.findById(eventId)
+      .populate("participantIds", "name userId")
+      .populate("bingoGameId");
 
     if (!event) {
       return res.status(404).json({ success: false, error: "Event not found" });
