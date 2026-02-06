@@ -3,7 +3,8 @@ import { Types } from "mongoose";
 
 import { check_req_fields } from "../utils/requests_utils";
 import { User } from "../models/user_model";
-import { UserConnection } from "../models/user_connection_model"; // <-- adjust path/name if needed
+import { UserConnection } from "../models/user_connection_model";
+import { Event } from "../models/event_model";
 
 
 
@@ -46,14 +47,23 @@ export async function createUserConnection(req: Request, res: Response) {
       User.exists({ _id: secondaryUserId }),
     ]);
 
-    if (!primaryExists) {
-      return res.status(404).json({ error: "Primary user not found" });
-    }
-    if (!secondaryExists) {
-      return res.status(404).json({ error: "Secondary user not found" });
+    if (!primaryExists) return res.status(404).json({ error: "Primary user not found" });
+    if (!secondaryExists) return res.status(404).json({ error: "Secondary user not found" });
+
+    // ✅ NEW: prevent duplicates with exact same (_eventId, primaryUserId, secondaryUserId)
+    const existing = await UserConnection.findOne({
+      _eventId,
+      primaryUserId,
+      secondaryUserId,
+    });
+
+    if (existing) {
+      return res.status(409).json({
+        error: "UserConnection already exists for this event and users",
+        existingConnection: existing,
+      });
     }
 
-    // Create the connection (schema pre-save will generate _id if missing)
     const newConnection = await UserConnection.create({
       _eventId,
       primaryUserId,
@@ -92,42 +102,43 @@ export async function createUserConnectionByEmails(req: Request, res: Response) 
 
     const { _eventId, primaryUserEmail, secondaryUserEmail, description } = req.body;
 
-    // Validate event id format
     if (!Types.ObjectId.isValid(_eventId)) {
       return res.status(400).json({ error: "Invalid _eventId" });
     }
 
-    // Normalize emails (your schema lowercases, so match that)
     const primaryEmail = String(primaryUserEmail).trim().toLowerCase();
     const secondaryEmail = String(secondaryUserEmail).trim().toLowerCase();
 
-    // Basic email check (optional but helpful)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    if (!emailRegex.test(primaryEmail)) {
-      return res.status(400).json({ error: "Invalid primaryUserEmail" });
-    }
-    if (!emailRegex.test(secondaryEmail)) {
-      return res.status(400).json({ error: "Invalid secondaryUserEmail" });
-    }
+    if (!emailRegex.test(primaryEmail)) return res.status(400).json({ error: "Invalid primaryUserEmail" });
+    if (!emailRegex.test(secondaryEmail)) return res.status(400).json({ error: "Invalid secondaryUserEmail" });
 
     if (primaryEmail === secondaryEmail) {
       return res.status(400).json({ error: "primaryUserEmail and secondaryUserEmail must be different" });
     }
 
-    // Lookup users by email (only need _id)
     const [primaryUser, secondaryUser] = await Promise.all([
       User.findOne({ email: primaryEmail }).select("_id"),
       User.findOne({ email: secondaryEmail }).select("_id"),
     ]);
 
-    if (!primaryUser) {
-      return res.status(404).json({ error: "Primary user not found" });
-    }
-    if (!secondaryUser) {
-      return res.status(404).json({ error: "Secondary user not found" });
+    if (!primaryUser) return res.status(404).json({ error: "Primary user not found" });
+    if (!secondaryUser) return res.status(404).json({ error: "Secondary user not found" });
+
+    // ✅ NEW: prevent duplicates with exact same (_eventId, primaryUserId, secondaryUserId)
+    const existing = await UserConnection.findOne({
+      _eventId,
+      primaryUserId: primaryUser._id,
+      secondaryUserId: secondaryUser._id,
+    });
+
+    if (existing) {
+      return res.status(409).json({
+        error: "UserConnection already exists for this event and users",
+        existingConnection: existing,
+      });
     }
 
-    // Create connection storing ObjectIds (not emails)
     const newConnection = await UserConnection.create({
       _eventId,
       primaryUserId: primaryUser._id,
@@ -159,7 +170,7 @@ export async function deleteUserConnection(req: Request, res: Response) {
     const { eventId, connectionId } = req.body;
 
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
-      return res.status(400).json({ error: "Invalid eventId" });
+      return res.status(400).json({ error: "Invalid eventId hmmm" });
     }
 
     if (!connectionId || typeof connectionId !== "string") {
