@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { CreateEvent } from "../service/CreateEvent";
 import { useNavigate } from "react-router-dom";
+
 
 function CreateEventPage() {
     const [name, setName] = useState("");

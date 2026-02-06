@@ -74,45 +74,75 @@ export default function Navbar() {
         <ul className="hidden md:flex gap-4 items-center">
           {/* About */}
           <li>
-            <a 
-              href="#about" 
-              className="px-4 py-2 text-white/90 hover:text-white transition-colors duration-200 font-body"
+            <button
+              onClick={() => navigate("/#about")}
+              className="px-4 py-2 rounded-full font-body transition-all duration-200 border border-transparent"
+              style={{ backgroundColor: "#4DC4FF", color: "#ffffff" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#F8F7DE";
+                e.currentTarget.style.color = "#1B253A";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#4DC4FF";
+                e.currentTarget.style.color = "#ffffff";
+              }}
             >
               About
-            </a>
+            </button>
           </li>
 
           {/* Create Event */}
           <li>
-            <a 
-              href="/create-event" 
+            <button
+              onClick={() => {
+                const token = localStorage.getItem("token");
+
+                if (!token) {
+                  // Not logged in → go to login
+                  navigate("/login");
+                } else {
+                  // Logged in → go to create event
+                  navigate("/create-event");
+                }
+              }}
               className="px-4 py-2 rounded-full font-body transition-all duration-200 border border-transparent"
-              style={{ backgroundColor: '#4DC4FF', color: '#ffffff' }}
+              style={{ backgroundColor: "#4DC4FF", color: "#ffffff" }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#F8F7DE';
-                e.currentTarget.style.color = '#1B253A';
+                e.currentTarget.style.backgroundColor = "#F8F7DE";
+                e.currentTarget.style.color = "#1B253A";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#4DC4FF';
-                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.backgroundColor = "#4DC4FF";
+                e.currentTarget.style.color = "#ffffff";
               }}
             >
               Create Event
-            </a>
+            </button>
           </li>
+
 
           {/* Conditional Login/Sign Out */}
           {isLoggedIn ? (
             <>
               {/* Dashboard - Optional */}
               <li>
-                <a 
-                  href="/dashboard" 
-                  className="px-4 py-2 text-white/90 hover:text-white transition-colors duration-200 font-body"
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="px-4 py-2 rounded-full font-body transition-all duration-200 border border-transparent"
+                  style={{ backgroundColor: '#4DC4FF', color: '#ffffff' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#F8F7DE';
+                    e.currentTarget.style.color = '#1B253A';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#4DC4FF';
+                    e.currentTarget.style.color = '#ffffff';
+                  }}
                 >
                   Dashboard
-                </a>
+                </button>
               </li>
+
 
               {/* Sign Out */}
               <li>
@@ -195,12 +225,13 @@ export default function Navbar() {
             </a>
           </li>
 
+          
+
           {/* Create Event */}
           <li>
             <a 
               href="/create-event" 
-              className="block px-4 py-3 rounded-lg font-body transition-all duration-200 text-center"
-              style={{ backgroundColor: '#4DC4FF', color: '#ffffff' }}
+              className="block px-4 py-3 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200 font-body"
               onClick={() => setIsMenuOpen(false)}
             >
               Create Event
