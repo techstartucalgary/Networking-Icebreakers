@@ -5,6 +5,7 @@ import {
   createUserConnectionByEmails,
   deleteUserConnection,
   getConnectionsByUserAndEvent,
+  getConnectionsByUserEmailAndEvent,
 } from "../controllers/user_connections_controller";
 
 const router = Router();
@@ -28,5 +29,9 @@ router.delete("/delete", deleteUserConnection);
 // Get all connections for (eventId + userId) where user is primary or secondary
 // PUT /api/userConnections/getByUserAndEvent
 router.put("/getByUserAndEvent", getConnectionsByUserAndEvent);
+
+// Get all connections for (eventId + userEmail) where user is primary or secondary
+// PUT /api/userConnections/getByUserEmailAndEvent
+router.put("/getByUserEmailAndEvent", getConnectionsByUserEmailAndEvent);
 
 export default router;

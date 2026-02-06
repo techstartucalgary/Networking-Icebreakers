@@ -232,3 +232,44 @@ export async function getConnectionsByUserAndEvent(req: Request, res: Response) 
     return res.status(500).json({ error: "Internal server error" });
   }
 }
+
+
+/**
+ * PUT /api/userConnections/getByUserEmailAndEvent
+ *
+ * Returns all UserConnections for an event where the given user is either:
+ * - primaryUserEmail OR
+ * - secondaryUserEmail
+ *
+ * @param req.body.eventId - MongoDB ObjectId of the event (required)
+ * @param req.body.userEmail - Email of the user (required)
+ *
+ * @returns 200 - Array of matching UserConnections
+ * @returns 400 - Missing/invalid body params
+ * @returns 500 - Internal server error
+ */
+export async function getConnectionsByUserEmailAndEvent(req: Request, res: Response) {
+  try {
+    const { eventId, userEmail } = req.body;
+
+    if (!eventId || !Types.ObjectId.isValid(eventId)) {
+      return res.status(400).json({ error: "Invalid eventId" });
+    }
+    
+    const user_Id= await User.findOne({email: userEmail}, '_id');
+
+    if (!user_Id) {
+      return res.status(400).json({ error: "Invalid userEmail" });
+    }
+
+
+    const connections = await UserConnection.find({
+      _eventId: eventId,
+      $or: [{ primaryUserId: user_Id._id }, { secondaryUserId: user_Id._id }],
+    });
+    return res.status(200).json(connections);
+
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
