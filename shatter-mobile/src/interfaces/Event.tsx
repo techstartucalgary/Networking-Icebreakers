@@ -1,6 +1,5 @@
 //TODO: Remove hardcoded Bingo
 export default interface EventIB {
-	bingoGameId: BingoGame;
     _id: string;
     name: string;
     description: string;
@@ -15,13 +14,6 @@ export default interface EventIB {
     updatedAt: string;
     eventImg: string;
     gameType: GameType;
-}
-
-export interface BingoGame {
-  _id: string;
-  _eventId: string;
-  description: string;
-  grid: string[][];
 }
 
 export interface Participant{
