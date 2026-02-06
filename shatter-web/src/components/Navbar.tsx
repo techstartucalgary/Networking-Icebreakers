@@ -1,10 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  // Check if user is logged in on component mount and when localStorage changes
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('token');
+      setIsLoggedIn(!!token);
+    };
+
+    checkAuthStatus();
+
+    // Listen for storage changes (logout from another tab)
+    window.addEventListener('storage', checkAuthStatus);
+    
+    // Custom event for login/logout within the same tab
+    window.addEventListener('authChange', checkAuthStatus);
+
+    return () => {
+      window.removeEventListener('storage', checkAuthStatus);
+      window.removeEventListener('authChange', checkAuthStatus);
+    };
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleSignOut = () => {
+    // Remove token from localStorage
+    localStorage.removeItem('token');
+    
+    // Update state
+    setIsLoggedIn(false);
+    
+    // Dispatch custom event for other components to react
+    window.dispatchEvent(new Event('authChange'));
+    
+    // Close mobile menu if open
+    setIsMenuOpen(false);
+    
+    // Redirect to home page
+    navigate('/');
   };
 
   return (
@@ -24,7 +65,9 @@ export default function Navbar() {
               />
             </a>
           </div>
-          <div className="text-2xl font-heading font-semibold text-white">Shatter</div>
+          <a href="/" className="text-2xl font-heading font-semibold text-white hover:opacity-80 transition-opacity">
+            Shatter
+          </a>
         </div>
         
         {/* Desktop Menu */}
@@ -58,15 +101,40 @@ export default function Navbar() {
             </a>
           </li>
 
-          {/* Login */}
-          <li>
-            <a 
-              href="/login" 
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-white font-body transition-all duration-200"
-            >
-              Login
-            </a>
-          </li>
+          {/* Conditional Login/Sign Out */}
+          {isLoggedIn ? (
+            <>
+              {/* Dashboard - Optional */}
+              <li>
+                <a 
+                  href="/dashboard" 
+                  className="px-4 py-2 text-white/90 hover:text-white transition-colors duration-200 font-body"
+                >
+                  Dashboard
+                </a>
+              </li>
+
+              {/* Sign Out */}
+              <li>
+                <button
+                  onClick={handleSignOut}
+                  className="px-4 py-2 bg-white/10 hover:bg-red-500/20 backdrop-blur-sm border border-white/30 hover:border-red-400/50 rounded-full text-white font-body transition-all duration-200"
+                >
+                  Sign Out
+                </button>
+              </li>
+            </>
+          ) : (
+            /* Login */
+            <li>
+              <a 
+                href="/login" 
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-white font-body transition-all duration-200"
+              >
+                Login
+              </a>
+            </li>
+          )}
         </ul>
 
         {/* Mobile Menu Button */}
@@ -139,16 +207,42 @@ export default function Navbar() {
             </a>
           </li>
 
-          {/* Login */}
-          <li>
-            <a 
-              href="/login" 
-              className="block px-4 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white font-body transition-all duration-200 text-center"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Login
-            </a>
-          </li>
+          {/* Conditional Login/Sign Out for Mobile */}
+          {isLoggedIn ? (
+            <>
+              {/* Dashboard - Optional */}
+              <li>
+                <a 
+                  href="/dashboard" 
+                  className="block px-4 py-3 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200 font-body"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </a>
+              </li>
+
+              {/* Sign Out */}
+              <li>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left px-4 py-3 bg-white/10 hover:bg-red-500/20 backdrop-blur-sm border border-white/30 hover:border-red-400/50 rounded-lg text-white font-body transition-all duration-200"
+                >
+                  Sign Out
+                </button>
+              </li>
+            </>
+          ) : (
+            /* Login */
+            <li>
+              <a 
+                href="/login" 
+                className="block px-4 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white font-body transition-all duration-200 text-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </a>
+            </li>
+          )}
         </ul>
       </div>
     </nav>
