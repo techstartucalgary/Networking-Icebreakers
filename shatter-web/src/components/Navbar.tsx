@@ -75,7 +75,23 @@ export default function Navbar() {
           {/* About */}
           <li>
             <button
-              onClick={() => navigate("/#about")}
+              onClick={() => {
+                if (window.location.pathname !== "/") {
+                  navigate("/");
+                  // wait for HomePage to render
+                  setTimeout(() => {
+                    document.getElementById("about")?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }, 100);
+                } else {
+                  document.getElementById("about")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }
+              }}
               className="px-4 py-2 rounded-full font-body transition-all duration-200 border border-transparent"
               style={{ backgroundColor: "#4DC4FF", color: "#ffffff" }}
               onMouseEnter={(e) => {
@@ -90,6 +106,8 @@ export default function Navbar() {
               About
             </button>
           </li>
+
+
 
           {/* Create Event */}
           <li>
