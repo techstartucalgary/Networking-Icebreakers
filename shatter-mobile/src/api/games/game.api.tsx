@@ -1,54 +1,38 @@
-import { mockEvents } from "@/src/api/mockDB";
 import BingoCategoriesResponse from "@/src/interfaces/responses/GetBingoCategoriesResponse";
+import EventIdResponse from "@/src/interfaces/responses/GetEventByIdResponse";
 import NamesByEventIdResponse from "@/src/interfaces/responses/GetNamesByEventIdResponse";
 import axios, { AxiosResponse } from "axios";
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE
-const API_BASE_URL: string = `${API_BASE}/api/`
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
+const API_BASE_URL: string = `${API_BASE}/api/`;
 
-const mockCategories: string[] = [
-  "Speaks 3 or more languages",
-  "Has traveled to 5+ countries",
-  "Works in the health sector",
-  "Has run a marathon",
-  "Plays a musical instrument",
-  "Has started a side business",
-  "Volunteers regularly",
-  "Has met a celebrity",
-  "Loves coffee more than tea",
-];
+export async function GetNamesByEventIdApi(
+	eventId: string,
+): Promise<NamesByEventIdResponse | undefined> {
+	try {
+		const response: AxiosResponse<EventIdResponse> = await axios.get(
+			`${API_BASE_URL}/${eventId}`,
+		);
+		const participantsList = response.data.event.participants;
+		const namesList = participantsList.map((p) => p.name);
 
-export async function GetNamesByEventIdApi(eventId: string): Promise<NamesByEventIdResponse | undefined> {
-  //TODO: Remove mock data call
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    const foundEvent = mockEvents.find((event) => event._id === eventId);
-    if (!foundEvent) return undefined;
-
-    const names = foundEvent.participants.map((p) => p.username);
-
-    return { success: true, names };
-  } catch (error) {
-    console.log("Error fetching names by event ID:", error);
-    return undefined;
-  }
-
-  /*
-  try{
-      const response: AxiosResponse<NamesByEventIdResponse> = await axios.get(`${API_BASE_URL}/game/${eventId}`);
-      return response.data;
-  }catch(error){
-      console.log('Error', error);
-  }
-  */
+		return { success: true, names: namesList };
+	} catch (error) {
+		console.log("Error", error);
+	}
 }
 
-export async function GetBingoCategoriesApi(eventId: string): Promise<BingoCategoriesResponse | undefined> {
-    try{
-        const response: AxiosResponse<BingoCategoriesResponse> = await axios.get(`${API_BASE_URL}/bingo/getBingo`);
-        return response.data;
-    }catch(error){
-        console.log('Error', error);
-    }
+export async function GetBingoCategoriesApi(
+	eventId: string,
+): Promise<BingoCategoriesResponse | undefined> {
+	try {
+		const response: AxiosResponse<EventIdResponse> = await axios.get(
+			`${API_BASE_URL}/${eventId}`,
+		);
+		const grid = response.data.event.bingoGameId.grid;
+		const categoryList: string[] = grid.flat();
+		return { success: true, categories: categoryList};
+	} catch (error) {
+		console.log("Error", error);
+	}
 }
