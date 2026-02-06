@@ -9,7 +9,6 @@ type IcebreakerGameProps = {
 const IcebreakerGame = ({ eventId, gameType }: IcebreakerGameProps) => {
   //Pick game-specific component
   const renderGame = () => {
-    console.log("IcebreakerGame eventId:", eventId);
     switch (gameType) {
       case "Name Bingo":
         return <NameBingo eventId={eventId} />;

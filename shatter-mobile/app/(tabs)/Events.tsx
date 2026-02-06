@@ -1,100 +1,101 @@
+import { getStoredAuth } from "@/src/components/general/AsyncStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useFocusEffect } from "expo-router";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import EventCard from "../../src/components/events/EventCard";
 import type Event from "../../src/interfaces/Event";
-import { getUserEvents } from "../../src/services/event.service";
-import { getStoredAuth } from "@/src/components/general/AsyncStorage";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import EventIB from "../../src/interfaces/Event";
+import { getUserEvents } from "../../src/services/event.service";
 
 const NewEvents = () => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+	const [events, setEvents] = useState<Event[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
 
-  //reload event list
-  const loadEvents = useCallback(async () => {
-    setLoading(true);
+	//reload event list
+	const loadEvents = useCallback(async () => {
+		setLoading(true);
 
-    try {
-      const stored = await getStoredAuth();
+		try {
+			const stored = await getStoredAuth();
 
-      if (stored.isGuest) {
-        const local = await AsyncStorage.getItem("guestEvents");
-        const events: EventIB[] = local ? JSON.parse(local) : [];
-        setEvents(events);
-        return;
-      }
+			if (stored.isGuest) {
+				const local = await AsyncStorage.getItem("guestEvents");
+				const events: EventIB[] = local ? JSON.parse(local) : [];
+				setEvents(events);
+				return;
+			}
 
-      const data = await getUserEvents(stored.userId, stored.accessToken);
-      setEvents(data?.events || []);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+			const data = await getUserEvents(stored.userId, stored.accessToken);
+			setEvents(data?.events || []);
+		} finally {
+			setLoading(false);
+		}
+	}, []);
 
-  //load list on page mount
-  useFocusEffect(
-    useCallback(() => {
-      loadEvents();
-    }, [loadEvents])
-  );
+	//load list on page mount
+	useFocusEffect(
+		useCallback(() => {
+			loadEvents();
+		}, [loadEvents]),
+	);
 
-  //dropdown of event
-  const handlePress = (eventId: string) => {
-    setExpandedEventId(prev =>
-      prev === eventId ? null : eventId
-    );
-  };
+	//dropdown of event
+	const handlePress = (eventId: string) => {
+		setExpandedEventId((prev) => (prev === eventId ? null : eventId));
+	};
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading events...</Text>
-      </View>
-    );
-  }
+	if (loading) {
+		return (
+			<View style={styles.container}>
+				<Text>Loading events...</Text>
+			</View>
+		);
+	}
 
-  if (events.length === 0) {
-    return (
-      <View style={[ styles.container, { justifyContent: "center", alignItems: "center" }]}>
-        <Text>No events joined</Text>
-      </View>
-    );
-  }
+	if (events.length === 0) {
+		return (
+			<View
+				style={[
+					styles.container,
+					{ justifyContent: "center", alignItems: "center" },
+				]}
+			>
+				<Text>No events joined</Text>
+			</View>
+		);
+	}
 
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={events}
-        keyExtractor={(item) => item._id}
-        renderItem={({ item }) => (
-          <EventCard
-            event={item}
-            expanded={expandedEventId === item._id}
-            onPress={() => handlePress(item._id)}
-            onJoinGame={() => {
-              router.push({
-                pathname: "/Game",
-                params: { eventId: item._id }
-              });
-            }}
-          />
-        )}
-      />
-    </View>
-  );
+	return (
+		<View style={styles.container}>
+			<FlatList
+				data={events}
+				keyExtractor={(item) => item._id}
+				renderItem={({ item }) => (
+					<EventCard
+						event={item}
+						expanded={expandedEventId === item._id}
+						onPress={() => handlePress(item._id)}
+						onJoinGame={() => {
+							router.push({
+								pathname: "/Game",
+								params: { eventId: item._id },
+							});
+						}}
+					/>
+				)}
+			/>
+		</View>
+	);
 };
 
 export default NewEvents;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f8f8f8",
-    padding: 20,
-  },
+	container: {
+		flex: 1,
+		backgroundColor: "#f8f8f8",
+		padding: 20,
+	},
 });

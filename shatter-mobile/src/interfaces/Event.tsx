@@ -7,7 +7,7 @@ export default interface EventIB {
     startDate: string;
     endDate: string;
     maxParticipants: number;
-    participants: Participant[];
+    participantIds: Participant[];
     currentState: EventState;
     createdBy: string;
     createdAt: string;

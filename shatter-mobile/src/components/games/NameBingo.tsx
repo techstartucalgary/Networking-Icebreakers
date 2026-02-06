@@ -1,17 +1,17 @@
 import {
-  getBingoCategories,
-  getBingoNamesByEventId,
+	getBingoCategories,
+	getBingoNamesByEventId,
 } from "@/src/services/game.service";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+	ActivityIndicator,
+	ScrollView,
+	StyleSheet,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
 } from "react-native";
 
 type NameBingoProps = {
@@ -36,10 +36,10 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 
 		try {
 			//fetch names
-			console.log("NameBingo eventId:", eventId);
 			const namesData = await getBingoNamesByEventId(eventId);
 			const participantsList =
 				namesData?.success && namesData.names ? namesData.names : [];
+			console.log(participantsList);
 
 			//fetch categories
 			const categoriesData = await getBingoCategories(eventId);
@@ -49,10 +49,12 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 					: [];
 
 			//map categories to cards
-			const initialCards: Card[] = categoriesList.map((cat, idx) => ({
-				cardId: `card-${idx + 1}`,
-				category: cat,
-			}));
+			const initialCards: Card[] = categoriesList.flatMap((row, rowIdx) =>
+				row.map((cat, colIdx) => ({
+					cardId: `card-${rowIdx}-${colIdx}`,
+					category: cat,
+				})),
+			);
 
 			setParticipants(participantsList);
 			setCards(initialCards);
@@ -141,7 +143,7 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 				</ScrollView>
 			)}
 
-			{/* 3x3 grid */}
+			{/* Card grid */}
 			<View style={styles.grid}>
 				{cards.map((card) => (
 					<TouchableOpacity
@@ -175,7 +177,7 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 	},
 	card: {
-		width: "30%",
+		width: "18%",
 		aspectRatio: 1,
 		backgroundColor: "#e0f7e0",
 		marginBottom: 10,

@@ -14,9 +14,10 @@ export async function GetNamesByEventIdApi(
 ): Promise<NamesByEventIdResponse | undefined> {
 	try {
 		const response: AxiosResponse<EventIdResponse> = await axios.get(
-			`${API_BASE_URL_EVENTS}/${eventId}`, 
+			`${API_BASE_URL_EVENTS}/${eventId}`,
 		);
-		const participantsList = response.data.event.participants;
+
+		const participantsList = response.data.event.participantIds;
 		const namesList = participantsList.map((p) => p.name);
 
 		return { success: true, names: namesList };
@@ -29,14 +30,18 @@ export async function GetBingoCategoriesApi(
 	eventId: string,
 ): Promise<BingoCategoriesResponse | undefined> {
 	try {
-		const body: BingoDataRequest = {eventId,};
+		const body: BingoDataRequest = { id: eventId };
 
-		const response: AxiosResponse<BingoDataResponse> = await axios.post(`${API_BASE_URL}/bingo/getBingo`, body);
-		console.log(response.data.bingoData);
-		
-		const grid = response.data.bingoData.grid;
-		const categoryList: string[] = grid.flat();
-		return { success: true, categories: categoryList };
+		const response: AxiosResponse<BingoDataResponse> = await axios.post(
+			`${API_BASE_URL}/bingo/getBingo`,
+			body,
+		);
+
+		const grid = response.data.bingo.grid;
+		const categoriesList: string[][] =
+			response.data.success && grid ? grid : [];
+
+		return { success: true, categories: categoriesList };
 	} catch (error) {
 		console.log("Error", error);
 	}

@@ -1,3 +1,3 @@
 export default interface BingoDataRequest {
-    eventId: string,
+    id: string,
 }
