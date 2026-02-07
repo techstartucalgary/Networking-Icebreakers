@@ -1,0 +1,48 @@
+name: CD - Deploy Frontend
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Frontend CI workflow run_id to deploy"
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download artifact from CI workflow
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          echo "Fetching frontend artifact from CI run ID: ${{ github.event.inputs.run_id }}"
+          gh run download ${{ github.event.inputs.run_id }} --name frontend-source-${{ github.event.inputs.run_id }}
+          ls -l
+
+      - name: Extract artifact
+        run: |
+          tar -xzf frontend-source-${{ github.event.inputs.run_id }}.tar.gz
+          ls -la
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy frontend to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_FRONTEND }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
+        run: |
+          cd shatter-web
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          vercel deploy --prod --yes --token=$VERCEL_TOKEN
