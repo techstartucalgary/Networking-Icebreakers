@@ -328,3 +328,41 @@ export async function getEventById(req: Request, res: Response) {
     res.status(500).json({ success: false, error: err.message });
   }
 }
+
+/**
+ * GET /api/events/createdEvents/user/:userId
+ * Get list of events created by a specific user
+ *
+ * @param req.params.userId - User ID (required)
+ *
+ * @returns 200 with list of events on success
+ * @returns 400 if userId is missing
+ * @returns 404 if no events are found for the user
+ */
+export async function getEventsByUserId(req: Request, res: Response) {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ success: false, error: "userId is required" });
+    }
+
+    const events = await Event.find({ createdBy: userId });
+
+    if (!events || events.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "No events found for this user",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      events,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
