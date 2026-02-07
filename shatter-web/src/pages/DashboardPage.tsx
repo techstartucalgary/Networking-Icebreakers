@@ -82,7 +82,8 @@ function DashboardPage() {
 
       // Your frontend expects a backend route that returns "my events".
       // This must be implemented server-side to query Event.find({ createdBy: userId })
-      const url = `${baseUrl}/users/${userId}/events`;
+      const url = `${baseUrl}/events/createdEvents/user/${userId}`;
+
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },

@@ -32,7 +32,7 @@ const QRCard: React.FC<QrCardProps> = ({ qrPayload, size = 220 }) => (
         className="mt-4 px-6 py-2.5 rounded-full font-semibold text-white hover:opacity-90 transition-opacity shadow-lg font-body"
         style={{ backgroundColor: '#4DC4FF' }}
       >
-        Join via Link
+        Join Code: {qrPayload}
       </a>
     </div>
   </div>

@@ -71,7 +71,7 @@ export default function EventPage() {
   };
 
   // Generate QR code payload (could be a deep link or web URL)
-  const qrPayload = `${window.location.origin}/events/${joinCode}`;
+  const qrPayload = joinCode;
 
   return (
     <div
