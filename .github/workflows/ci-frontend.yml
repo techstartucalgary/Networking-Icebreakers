@@ -7,10 +7,10 @@ on:
       - "shatter-web/**"
       - ".github/workflows/ci-frontend.yml"
   pull_request:
-    branches: [main]
     paths:
       - "shatter-web/**"
       - ".github/workflows/ci-frontend.yml"
+  workflow_dispatch:
 
 jobs:
   build:
