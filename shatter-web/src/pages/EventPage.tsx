@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEventData } from "../hooks/useEventData";
 import { useEventParticipants } from "../hooks/useEventParticipants";
+import { useState, useEffect } from "react";
 import QRCard from "../components/QRCard";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -20,6 +21,41 @@ export default function EventPage() {
     eventId,
     initialParticipants
   );
+
+    // Bingo state
+  const [bingoGame, setBingoGame] = useState<{
+    _id: string;
+    _eventId: string;
+    description: string;
+    grid: string[][];
+  } | null>(null);
+
+  // Fetch bingo game for this event
+  useEffect(() => {
+    if (!eventId) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    fetch(
+      `https://techstart-shatter-backend.vercel.app/api/bingo/getBingo/${eventId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.bingo) {
+          setBingoGame(data.bingo);
+        }
+      })
+      .catch(() => {
+        // Bingo is optional – fail silently
+      });
+  }, [eventId]);
+
 
   if (loading) {
     return (
@@ -305,6 +341,39 @@ export default function EventPage() {
           </div>
         </div>
       </main>
+
+      {/* Bingo Game Section (Bottom of Page) */}
+      {bingoGame && (
+        <div className="max-w-6xl mx-auto px-4 pb-16">
+          <div
+            className="backdrop-blur-lg border border-white/20 rounded-2xl p-6"
+            style={{ backgroundColor: "rgba(27, 37, 58, 0.5)" }}
+          >
+            <h2 className="text-2xl font-heading font-semibold text-white mb-4">
+              Bingo Networking
+            </h2>
+
+            <p className="text-white/70 font-body text-sm mb-6">
+              Bingo game associated with this event.
+            </p>
+
+            <div className="grid grid-cols-5 gap-3 max-w-md">
+              {bingoGame.grid.flat().map((cell, index) => (
+                <div
+                  key={index}
+                  className="aspect-square flex items-center justify-center
+                             border border-white/20 rounded-lg
+                             font-body font-semibold text-sm text-white"
+                  style={{ backgroundColor: "rgba(27, 37, 58, 0.6)" }}
+                >
+                  {cell}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
 
       <Footer />
     </div>

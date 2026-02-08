@@ -1,56 +1,43 @@
-type BingoGrid = string[][];
+// services/BingoGame.ts
 
-export async function bingoGame(eventData: {
-    _eventId: string;
-    description: string;
-    grid: BingoGrid;
-}) {
-    try {
-        const token = localStorage.getItem('token');
+const CREATE_BINGO_URL =
+  "https://techstart-shatter-backend.vercel.app/api/bingo/createBingo";
 
-        const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
-        };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+export interface BingoGame {
+  _id: string;
+  _eventId: string;
+  description: string;
+  grid: string[][];
+}
 
-        const bodyPayload = {
-            _eventId: eventData._eventId,
-            description: eventData.description,
-            grid: eventData.grid,
-        };
+export async function createBingoGame(
+  eventId: string,
+  token: string
+): Promise<BingoGame> {
+  const res = await fetch(CREATE_BINGO_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      _eventId: eventId, // ✅ THIS IS REQUIRED
+      description: "Name Bingo",
+      grid: [
+        ["A1", "B1", "C1", "D1", "E1"],
+        ["A2", "B2", "C2", "D2", "E2"],
+        ["A3", "B3", "C3", "D3", "E3"],
+        ["A4", "B4", "C4", "D4", "E4"],
+        ["A5", "B5", "C5", "D5", "E5"],
+      ],
+    }),
+  });
 
-        const apiUrl = "https://techstart-shatter-backend.vercel.app/api/bingo/createBingo";
+  const data = await res.json();
 
-        console.log("POST URL:", apiUrl);
-        console.log("Payload:", JSON.stringify(bodyPayload));
+  if (!res.ok || !data?.bingo) {
+    throw new Error("Failed to create bingo game");
+  }
 
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(bodyPayload),
-        });
-
-        console.log("HTTP status:", response.status);
-
-        const contentType = response.headers.get('content-type');
-        let data: any;
-
-        if (contentType?.includes('application/json')) {
-            data = await response.json();
-        } else {
-            throw new Error("Server did not return JSON.");
-        }
-
-        console.log("Backend response:", data);
-
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Failed to create bingo game.');
-        }
-
-        return data;
-
-    } catch (error) {
-        console.error("Error caught in BingoGame:", error);
-        throw error;
-    }
+  return data.bingo;
 }

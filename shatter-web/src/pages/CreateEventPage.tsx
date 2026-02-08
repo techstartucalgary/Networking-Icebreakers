@@ -3,8 +3,8 @@ import { useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { CreateEvent } from "../service/CreateEvent";
+import { createBingoGame } from "../service/BingoGame"; // ✅ NEW
 import { useNavigate } from "react-router-dom";
-
 
 function CreateEventPage() {
     const [name, setName] = useState("");
@@ -14,6 +14,10 @@ function CreateEventPage() {
     const [maxParticipant, setMaxParticipant] = useState<number | undefined>(
         undefined
     );
+
+    // ✅ NEW: Name Bingo selection
+    const [nameBingoSelected, setNameBingoSelected] = useState(false);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +28,8 @@ function CreateEventPage() {
             setLoading(true);
             setError(null);
 
-            const joinCode = await CreateEvent({
+            // 1️⃣ Create event
+            const { eventId, joinCode } = await CreateEvent({
                 name,
                 description,
                 startDate,
@@ -32,7 +37,17 @@ function CreateEventPage() {
                 maxParticipants: maxParticipant ?? 0,
             });
 
-            // Navigate to the newly created event page
+            // 2️⃣ If Name Bingo selected, create bingo game
+            if (nameBingoSelected) {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    throw new Error("Authentication required to create bingo game.");
+                }
+
+                await createBingoGame(eventId, token);
+            }
+
+            // 3️⃣ Navigate to the newly created event page
             navigate(`/events/${joinCode}`);
         } catch (err: any) {
             setError(err.message || "Failed to create event. Please try again.");
@@ -41,14 +56,13 @@ function CreateEventPage() {
     };
 
     const handleDiscard = () => {
-        // Reset all fields
         setName("");
         setDescription("");
         setStartDate("");
         setEndDate("");
         setMaxParticipant(undefined);
+        setNameBingoSelected(false);
         setError(null);
-        // Or navigate back to home
         navigate("/");
     };
 
@@ -173,12 +187,20 @@ function CreateEventPage() {
                         Icebreakers
                     </h2>
                     <p className="text-white/70 font-body mb-6 text-sm">
-                        Coming soon: Select icebreaker activities for your event
+                        Select icebreaker activities for your event
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* ✅ Name Bingo (ACTIVE) */}
                         <div 
-                            className="backdrop-blur-lg border border-white/20 rounded-xl p-6 opacity-50 cursor-not-allowed"
+                            onClick={() => setNameBingoSelected((prev) => !prev)}
+                            className={`
+                                backdrop-blur-lg border rounded-xl p-6 cursor-pointer transition
+                                ${nameBingoSelected
+                                    ? "border-[#4DC4FF] bg-[#4DC4FF]/10"
+                                    : "border-white/20 hover:border-white/40"
+                                }
+                            `}
                             style={{ backgroundColor: 'rgba(27, 37, 58, 0.5)' }}
                         >
                             <h3 className="font-heading font-semibold text-white mb-2">
@@ -190,6 +212,7 @@ function CreateEventPage() {
                             </p>
                         </div>
 
+                        {/* Disabled placeholders (unchanged) */}
                         <div 
                             className="backdrop-blur-lg border border-white/20 rounded-xl p-6 opacity-50 cursor-not-allowed"
                             style={{ backgroundColor: 'rgba(27, 37, 58, 0.5)' }}

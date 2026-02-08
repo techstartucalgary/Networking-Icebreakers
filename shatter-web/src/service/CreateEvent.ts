@@ -61,7 +61,11 @@ export async function CreateEvent(eventData: {
         }
 
         console.log("Event created successfully:", data.event);
-        return data.event.joinCode;
+        return {
+            eventId: data.event._id,
+            joinCode: data.event.joinCode,
+        };
+
 
     } catch (error: any) {
         console.error("Error caught in CreateEvent:", error);
