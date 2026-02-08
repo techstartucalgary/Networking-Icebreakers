@@ -72,9 +72,13 @@ export async function createBingo(req: Request, res: Response) {
   }
 }
 
+
+/**
+ * @param req.body.id - Bingo _id (string) OR Event _id (ObjectId string) (required)
+ */
 export async function getBingo(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const { id } = req.body;
 
     if (!id) {
       return res.status(400).json({
