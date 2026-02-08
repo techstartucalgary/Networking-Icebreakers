@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login } from '../controllers/auth_controller';
+import { signup, login, linkedinAuth, linkedinCallback } from '../controllers/auth_controller';
 
 const router = Router();
 
@@ -8,5 +8,9 @@ router.post('/signup', signup);
 
 // POST /api/auth/login - authenticate user
 router.post('/login', login);
+
+// LinkedIn OAuth routes
+router.get('/linkedin', linkedinAuth);
+router.get('/linkedin/callback', linkedinCallback);
 
 export default router;
