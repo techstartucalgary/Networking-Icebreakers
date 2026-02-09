@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+import logo from "../assets/ShatterLogo_White.png";
+
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -59,7 +61,7 @@ export default function Navbar() {
           <div className="w-10 h-10 flex items-center justify-center">
             <a href="/">
               <img 
-                src="/src/assets/ShatterLogo_White.png" 
+                src={logo} 
                 alt="Shatter Logo" 
                 className="w-full h-full object-contain"
               />
