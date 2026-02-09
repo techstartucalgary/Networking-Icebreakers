@@ -56,7 +56,7 @@ export default function EventPage() {
       });
   }, [eventId]);
 
-
+  // loading event state
   if (loading) {
     return (
       <div
@@ -70,6 +70,7 @@ export default function EventPage() {
     );
   }
 
+  // error state 
   if (error || !eventId || !eventDetails) {
     return (
       <div
@@ -86,7 +87,7 @@ export default function EventPage() {
     );
   }
 
-  // Format the date
+  // Format the date and time
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -106,9 +107,11 @@ export default function EventPage() {
     });
   };
 
-  // Generate QR code payload (could be a deep link or web URL)
+  // Generate QR code payload (which is just the join code in this case)
+  // TODO: In the future, we could encode a URL or more complex data here
   const qrPayload = joinCode;
 
+  // Main render
   return (
     <div
       className="min-h-screen text-white"
@@ -148,6 +151,7 @@ export default function EventPage() {
                 eventDetails.currentState.slice(1)}
             </span>
             
+            {/* Join Code Display */}
             <span className="text-white/60 font-body text-sm">
               Join Code: <span className="font-mono font-semibold text-white">{joinCode}</span>
             </span>
@@ -184,6 +188,7 @@ export default function EventPage() {
                 {/* Start Date */}
                 <div className="flex items-start gap-3">
                   <div className="mt-1">
+                    {/* Calendar Icon */}
                     <svg
                       className="w-5 h-5 text-[#4DC4FF]"
                       fill="none"
@@ -212,6 +217,7 @@ export default function EventPage() {
                 {/* End Date */}
                 <div className="flex items-start gap-3">
                   <div className="mt-1">
+                    {/* Calendar Icon */}
                     <svg
                       className="w-5 h-5 text-[#4DC4FF]"
                       fill="none"
@@ -253,6 +259,7 @@ export default function EventPage() {
                 </span>
               </div>
 
+              {/* Participant List */}
               {participants.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-white/60 font-body">
