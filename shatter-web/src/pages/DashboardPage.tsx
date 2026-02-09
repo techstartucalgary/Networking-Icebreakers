@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -13,7 +13,7 @@ interface Event {
   currentState: string;
   maxParticipant?: number;
   participantIds?: any[];
-  createdBy?: string; // matches your backend payload
+  createdBy?: string;
 }
 
 function getUserIdFromToken(token: string): string | null {
@@ -21,7 +21,6 @@ function getUserIdFromToken(token: string): string | null {
     const parts = token.split(".");
     if (parts.length < 2) return null;
 
-    // JWT payload is base64url (not base64). Convert to base64 first.
     const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
     const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
 
@@ -58,6 +57,13 @@ function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Auto-select first event when events are loaded
+  useEffect(() => {
+    if (events.length > 0 && !selectedEvent) {
+      setSelectedEvent(events[0]);
+    }
+  }, [events, selectedEvent]);
+
   const fetchUserEvents = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
@@ -71,7 +77,6 @@ function DashboardPage() {
 
       const userId = getUserIdFromToken(token);
       if (!userId) {
-        // Token exists but can’t be decoded / doesn’t contain user id
         localStorage.removeItem("token");
         window.dispatchEvent(new Event("authChange"));
         navigate("/login");
@@ -79,11 +84,7 @@ function DashboardPage() {
       }
 
       const baseUrl = import.meta.env.VITE_API_URL;
-
-      // Your frontend expects a backend route that returns "my events".
-      // This must be implemented server-side to query Event.find({ createdBy: userId })
       const url = `${baseUrl}/events/createdEvents/user/${userId}`;
-
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -114,22 +115,27 @@ function DashboardPage() {
     }
   };
 
-  const handleEditClick = (event: Event) => {
+  const handleEventSelect = (event: Event) => {
     setSelectedEvent(event);
+    setIsEditing(false);
+  };
+
+  const handleEditClick = () => {
+    if (!selectedEvent) return;
+    
     setIsEditing(true);
     setEditForm({
-      name: event.name,
-      description: event.description,
-      startDate: event.startDate?.substring(0, 16) || "",
-      endDate: event.endDate?.substring(0, 16) || "",
-      maxParticipant: event.maxParticipant || 0,
-      currentState: event.currentState || "upcoming",
+      name: selectedEvent.name,
+      description: selectedEvent.description,
+      startDate: selectedEvent.startDate?.substring(0, 16) || "",
+      endDate: selectedEvent.endDate?.substring(0, 16) || "",
+      maxParticipant: selectedEvent.maxParticipant || 0,
+      currentState: selectedEvent.currentState || "upcoming",
     });
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setSelectedEvent(null);
   };
 
   const handleSaveEdit = async () => {
@@ -165,7 +171,12 @@ function DashboardPage() {
 
       await fetchUserEvents();
       setIsEditing(false);
-      setSelectedEvent(null);
+      
+      // Update selected event with new data
+      const updatedEvent = events.find(e => e._id === selectedEvent._id);
+      if (updatedEvent) {
+        setSelectedEvent(updatedEvent);
+      }
     } catch (err: any) {
       console.error("Error updating event:", err);
       alert(err?.message || "Failed to update event. The backend may not support updates yet.");
@@ -212,9 +223,10 @@ function DashboardPage() {
       <Navbar />
 
       <main className="container mx-auto px-4 pt-28 pb-16 max-w-7xl">
-        <div className="mb-12">
-          <h1 className="text-5xl md:text-6xl font-heading font-semibold text-white mb-4">My Events</h1>
-          <p className="text-white/70 font-body text-lg">Manage your hosted events and track participants</p>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl md:text-5xl font-heading font-semibold text-white mb-2">My Events</h1>
+          <p className="text-white/70 font-body">Manage your hosted events and track participants</p>
         </div>
 
         {error && (
@@ -226,6 +238,7 @@ function DashboardPage() {
           </div>
         )}
 
+        {/* No Events State */}
         {!loading && events.length === 0 && (
           <div className="backdrop-blur-lg border border-white/20 rounded-2xl p-12 text-center" style={{ backgroundColor: "rgba(27, 37, 58, 0.5)" }}>
             <div className="mb-6">
@@ -235,175 +248,313 @@ function DashboardPage() {
             </div>
             <h2 className="text-2xl font-heading font-semibold text-white mb-3">No Events Yet</h2>
             <p className="text-white/60 font-body mb-6">You haven't created any events. Start by creating your first event!</p>
-
-            <Link
-              to="/create-event"
+            <button
+              onClick={() => navigate("/create-event")}
               className="inline-block px-6 py-3 rounded-full font-semibold font-body transition-all duration-200 shadow-lg hover:scale-105"
               style={{ backgroundColor: "#4DC4FF", color: "#ffffff" }}
             >
               Create Your First Event
-            </Link>
+            </button>
           </div>
         )}
 
-        {events.length > 0 && !isEditing && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => {
-              const statusColors = getStatusColor(event.currentState);
-              return (
+        {/* Dashboard Layout - Left Sidebar + Right Panel */}
+        {events.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Sidebar - Events List */}
+            <div className="lg:col-span-4 xl:col-span-3">
+              <div
+                className="backdrop-blur-lg border border-white/20 rounded-2xl p-4 sticky top-28"
+                style={{ backgroundColor: "rgba(27, 37, 58, 0.5)", maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-heading font-semibold text-white">Your Events</h2>
+                  <button
+                    onClick={() => navigate("/create-event")}
+                    className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                    title="Create new event"
+                  >
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {events.map((event) => {
+                    const statusColors = getStatusColor(event.currentState);
+                    const isSelected = selectedEvent?._id === event._id;
+                    
+                    return (
+                      <button
+                        key={event._id}
+                        onClick={() => handleEventSelect(event)}
+                        className={`w-full text-left p-3 rounded-xl transition-all duration-200 ${
+                          isSelected ? 'bg-white/10 border-2' : 'hover:bg-white/5 border-2 border-transparent'
+                        }`}
+                        style={isSelected ? { borderColor: '#4DC4FF' } : {}}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="font-heading font-semibold text-white text-sm line-clamp-1 flex-1">
+                            {event.name}
+                          </h3>
+                          <span
+                            className="px-2 py-0.5 rounded-full text-xs font-body font-semibold whitespace-nowrap"
+                            style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
+                          >
+                            {event.currentState}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-white/60 font-body">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {formatDate(event.startDate)}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Panel - Event Details */}
+            <div className="lg:col-span-8 xl:col-span-9">
+              {selectedEvent && (
                 <div
-                  key={event._id}
-                  className="backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:border-white/40 transition-all duration-300 group"
+                  className="backdrop-blur-lg border border-white/20 rounded-2xl p-6"
                   style={{ backgroundColor: "rgba(27, 37, 58, 0.5)" }}
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <span
-                      className="px-3 py-1 rounded-full text-xs font-body font-semibold"
-                      style={{ backgroundColor: statusColors.bg, color: statusColors.text, border: `1px solid ${statusColors.border}` }}
-                    >
-                      {event.currentState.charAt(0).toUpperCase() + event.currentState.slice(1)}
-                    </span>
-                    <span className="text-xs text-white/50 font-mono font-body">{event.joinCode}</span>
-                  </div>
-
-                  <h3 className="text-xl font-heading font-semibold text-white mb-2 line-clamp-1">{event.name}</h3>
-                  <p className="text-white/70 font-body text-sm mb-4 line-clamp-2">{event.description}</p>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-white/60 font-body">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      {formatDate(event.startDate)} at {formatTime(event.startDate)}
+                  {/* Event Header */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex-1">
+                      <h2 className="text-3xl font-heading font-semibold text-white mb-2">
+                        {selectedEvent.name}
+                      </h2>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span
+                          className="px-3 py-1 rounded-full text-sm font-body font-semibold"
+                          style={{
+                            backgroundColor: getStatusColor(selectedEvent.currentState).bg,
+                            color: getStatusColor(selectedEvent.currentState).text,
+                            border: `1px solid ${getStatusColor(selectedEvent.currentState).border}`
+                          }}
+                        >
+                          {selectedEvent.currentState.charAt(0).toUpperCase() + selectedEvent.currentState.slice(1)}
+                        </span>
+                        <span className="text-sm text-white/50 font-mono font-body">
+                          Code: {selectedEvent.joinCode}
+                        </span>
+                      </div>
                     </div>
-
-                    {event.participantIds && (
-                      <div className="flex items-center gap-2 text-sm text-white/60 font-body">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
-                        {event.participantIds.length} / {event.maxParticipant || "∞"} Participants
+                    
+                    {!isEditing && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => navigate(`/events/${selectedEvent.joinCode}`)}
+                          className="px-4 py-2 rounded-lg font-body font-semibold text-sm transition-all duration-200"
+                          style={{ backgroundColor: "#4DC4FF", color: "#ffffff" }}
+                        >
+                          View Event
+                        </button>
+                        <button
+                          onClick={handleEditClick}
+                          className="px-4 py-2 rounded-lg font-body font-semibold text-sm bg-white/10 hover:bg-white/20 border border-white/30 text-white transition-all duration-200"
+                        >
+                          Edit
+                        </button>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => navigate(`/events/${event.joinCode}`)}
-                      className="flex-1 px-4 py-2 rounded-lg font-body font-semibold text-sm transition-all duration-200 hover:opacity-90"
-                      style={{ backgroundColor: "#4DC4FF", color: "#ffffff" }}
-                    >
-                      View Event
-                    </button>
-                    <button
-                      onClick={() => handleEditClick(event)}
-                      className="px-4 py-2 rounded-lg font-body font-semibold text-sm bg-white/10 hover:bg-white/20 border border-white/30 text-white transition-all duration-200"
-                    >
-                      Edit
-                    </button>
-                  </div>
+                  {/* Edit Form */}
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm text-white font-body mb-2">Event Name</label>
+                        <input
+                          type="text"
+                          value={editForm.name}
+                          onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                          className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm text-white font-body mb-2">Description</label>
+                        <textarea
+                          value={editForm.description}
+                          onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                          rows={4}
+                          className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm text-white font-body mb-2">Start Date & Time</label>
+                          <input
+                            type="datetime-local"
+                            value={editForm.startDate}
+                            onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
+                            className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm text-white font-body mb-2">End Date & Time</label>
+                          <input
+                            type="datetime-local"
+                            value={editForm.endDate}
+                            onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
+                            className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm text-white font-body mb-2">Max Participants</label>
+                        <input
+                          type="number"
+                          value={editForm.maxParticipant}
+                          onChange={(e) => setEditForm({ ...editForm, maxParticipant: Number(e.target.value) })}
+                          min="1"
+                          className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm text-white font-body mb-2">Event Status</label>
+                        <select
+                          value={editForm.currentState}
+                          onChange={(e) => setEditForm({ ...editForm, currentState: e.target.value })}
+                          className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
+                        >
+                          <option value="upcoming">Upcoming</option>
+                          <option value="ongoing">Ongoing</option>
+                          <option value="completed">Completed</option>
+                        </select>
+                      </div>
+
+                      <div className="flex gap-3 pt-4">
+                        <button
+                          onClick={handleSaveEdit}
+                          className="flex-1 px-6 py-3 rounded-full font-semibold font-body transition-all duration-200 shadow-lg hover:scale-105"
+                          style={{ backgroundColor: "#4DC4FF", color: "#ffffff" }}
+                        >
+                          Save Changes
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="px-6 py-3 rounded-full font-semibold font-body bg-white/10 hover:bg-white/20 border border-white/30 text-white transition-all duration-200"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Event Details View */
+                    <div className="space-y-6">
+                      {/* Description */}
+                      <div>
+                        <h3 className="text-lg font-heading font-semibold text-white mb-2">Description</h3>
+                        <p className="text-white/80 font-body">{selectedEvent.description}</p>
+                      </div>
+
+                      {/* Event Info Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                          <div className="flex items-center gap-2 text-white/60 mb-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-sm font-body">Start Date</span>
+                          </div>
+                          <p className="text-white font-body font-semibold">{formatDate(selectedEvent.startDate)}</p>
+                          <p className="text-white/70 text-sm font-body">{formatTime(selectedEvent.startDate)}</p>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                          <div className="flex items-center gap-2 text-white/60 mb-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-sm font-body">End Date</span>
+                          </div>
+                          <p className="text-white font-body font-semibold">{formatDate(selectedEvent.endDate)}</p>
+                          <p className="text-white/70 text-sm font-body">{formatTime(selectedEvent.endDate)}</p>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                          <div className="flex items-center gap-2 text-white/60 mb-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span className="text-sm font-body">Participants</span>
+                          </div>
+                          <p className="text-white font-body font-semibold">
+                            {selectedEvent.participantIds?.length || 0} / {selectedEvent.maxParticipant || "∞"}
+                          </p>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                          <div className="flex items-center gap-2 text-white/60 mb-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                            <span className="text-sm font-body">Join Code</span>
+                          </div>
+                          <p className="text-white font-mono font-semibold text-lg">{selectedEvent.joinCode}</p>
+                        </div>
+                      </div>
+
+                      {/* Icebreaker Selection */}
+                      <div className="pt-4 border-t border-white/10">
+                        <h3 className="text-lg font-heading font-semibold text-white mb-4">Networking Icebreakers</h3>
+                        <p className="text-white/60 text-sm font-body mb-4">Select activities to help participants connect</p>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <button className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-10 h-10 rounded-lg bg-[#4DC4FF]/20 flex items-center justify-center group-hover:bg-[#4DC4FF]/30 transition-colors">
+                                <svg className="w-6 h-6 text-[#4DC4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                              </div>
+                              <h4 className="font-heading font-semibold text-white">Name Bingo</h4>
+                            </div>
+                            <p className="text-sm text-white/70 font-body">Find people who match the descriptions on your bingo card</p>
+                          </button>
+
+                          <button className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group opacity-50 cursor-not-allowed">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                                <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                              </div>
+                              <h4 className="font-heading font-semibold text-white/60">Scavenger Hunt</h4>
+                            </div>
+                            <p className="text-sm text-white/50 font-body">Coming soon - Hunt for specific items or complete challenges</p>
+                          </button>
+
+                          <button className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group opacity-50 cursor-not-allowed">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                                <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                              <h4 className="font-heading font-semibold text-white/60">Speed Networking</h4>
+                            </div>
+                            <p className="text-sm text-white/50 font-body">Coming soon - Timed one-on-one conversations</p>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
-
-        {isEditing && selectedEvent && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div
-              className="w-full max-w-2xl backdrop-blur-lg border border-white/20 rounded-2xl p-8 max-h-[90vh] overflow-y-auto"
-              style={{ backgroundColor: "rgba(27, 37, 58, 0.95)" }}
-            >
-              <h2 className="text-3xl font-heading font-semibold text-white mb-6">Edit Event</h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-white font-body mb-2">Event Name</label>
-                  <input
-                    type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-white font-body mb-2">Description</label>
-                  <textarea
-                    value={editForm.description}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    rows={4}
-                    className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-white font-body mb-2">Start Date & Time</label>
-                    <input
-                      type="datetime-local"
-                      value={editForm.startDate}
-                      onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
-                      className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-white font-body mb-2">End Date & Time</label>
-                    <input
-                      type="datetime-local"
-                      value={editForm.endDate}
-                      onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
-                      className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm text-white font-body mb-2">Max Participants</label>
-                  <input
-                    type="number"
-                    value={editForm.maxParticipant}
-                    onChange={(e) => setEditForm({ ...editForm, maxParticipant: Number(e.target.value) })}
-                    min="1"
-                    className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-white font-body mb-2">Event Status</label>
-                  <select
-                    value={editForm.currentState}
-                    onChange={(e) => setEditForm({ ...editForm, currentState: e.target.value })}
-                    className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
-                  >
-                    <option value="upcoming">Upcoming</option>
-                    <option value="ongoing">Ongoing</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={handleSaveEdit}
-                    className="flex-1 px-6 py-3 rounded-full font-semibold font-body transition-all duration-200 shadow-lg hover:scale-105"
-                    style={{ backgroundColor: "#4DC4FF", color: "#ffffff" }}
-                  >
-                    Save Changes
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="px-6 py-3 rounded-full font-semibold font-body bg-white/10 hover:bg-white/20 border border-white/30 text-white transition-all duration-200"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}

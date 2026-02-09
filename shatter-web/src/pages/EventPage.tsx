@@ -109,7 +109,7 @@ export default function EventPage() {
 
   // Generate QR code payload (which is just the join code in this case)
   // TODO: In the future, we could encode a URL or more complex data here
-  const qrPayload = joinCode;
+  const qrPayload = joinCode || "";
 
   // Main render
   return (
@@ -305,7 +305,7 @@ export default function EventPage() {
           {/* Right Column - QR Code */}
           <div className="lg:col-span-1">
             <div className="sticky top-28">
-              <QRCard qrPayload={qrPayload} />
+              {qrPayload && <QRCard qrPayload={qrPayload} />}
               
               {/* Additional Info */}
               <div
