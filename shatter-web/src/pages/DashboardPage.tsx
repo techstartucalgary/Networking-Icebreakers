@@ -48,6 +48,17 @@ function DashboardPage() {
     currentState: "upcoming",
   });
 
+  const [selectedIcebreaker, setSelectedIcebreaker] = useState<string | null>(null);
+  const [bingoGrid, setBingoGrid] = useState<string[][]>([
+    ["", "", "", "", ""],
+    ["", "", "", "", ""],
+    ["", "", "", "", ""],
+    ["", "", "", "", ""],
+    ["", "", "", "", ""],
+  ]);
+  const [bingoDescription, setBingoDescription] = useState("");
+  const [isSavingBingo, setIsSavingBingo] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -118,6 +129,57 @@ function DashboardPage() {
   const handleEventSelect = (event: Event) => {
     setSelectedEvent(event);
     setIsEditing(false);
+    setSelectedIcebreaker(null);
+    
+    // Load bingo data if it exists
+    loadBingoData(event._id);
+  };
+
+  const loadBingoData = async (eventId: string) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/bingo/getBingo`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: eventId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.bingo) {
+          setBingoGrid(data.bingo.grid || [
+            ["", "", "", "", ""],
+            ["", "", "", "", ""],
+            ["", "", "", "", ""],
+            ["", "", "", "", ""],
+            ["", "", "", "", ""],
+          ]);
+          setBingoDescription(data.bingo.description || "");
+        }
+      } else {
+        // No bingo exists yet, reset to empty
+        setBingoGrid([
+          ["", "", "", "", ""],
+          ["", "", "", "", ""],
+          ["", "", "", "", ""],
+          ["", "", "", "", ""],
+          ["", "", "", "", ""],
+        ]);
+        setBingoDescription("");
+      }
+    } catch (err) {
+      console.error("Error loading bingo data:", err);
+      // Reset to empty on error
+      setBingoGrid([
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+        ["", "", "", "", ""],
+      ]);
+      setBingoDescription("");
+    }
   };
 
   const handleEditClick = () => {
@@ -180,6 +242,85 @@ function DashboardPage() {
     } catch (err: any) {
       console.error("Error updating event:", err);
       alert(err?.message || "Failed to update event. The backend may not support updates yet.");
+    }
+  };
+
+  const handleBingoGridChange = (row: number, col: number, value: string) => {
+    const newGrid = [...bingoGrid];
+    newGrid[row][col] = value;
+    setBingoGrid(newGrid);
+  };
+
+  const handleSaveBingo = async () => {
+    if (!selectedEvent) return;
+
+    try {
+      setIsSavingBingo(true);
+      const token = localStorage.getItem("token");
+
+      // Check if all grid cells are filled
+      const hasEmptyCells = bingoGrid.some(row => row.some(cell => !cell.trim()));
+      if (hasEmptyCells) {
+        alert("Please fill in all bingo grid cells before saving.");
+        setIsSavingBingo(false);
+        return;
+      }
+
+      // Try to update first, then create if update fails
+      let response = await fetch(`${import.meta.env.VITE_API_URL}/bingo/updateBingo`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          id: selectedEvent._id,
+          description: bingoDescription,
+          grid: bingoGrid,
+        }),
+      });
+
+      // If update fails (404), try creating new bingo
+      if (response.status === 404) {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/bingo/createBingo`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({
+            _eventId: selectedEvent._id,
+            description: bingoDescription,
+            grid: bingoGrid,
+          }),
+        });
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to save bingo game");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        alert("Bingo game saved successfully!");
+        setSelectedIcebreaker(null);
+      } else {
+        throw new Error(data.message || "Failed to save bingo game");
+      }
+    } catch (err: any) {
+      console.error("Error saving bingo:", err);
+      alert(err?.message || "Failed to save bingo game");
+    } finally {
+      setIsSavingBingo(false);
+    }
+  };
+
+  const handleCancelBingo = () => {
+    setSelectedIcebreaker(null);
+    // Reload bingo data to reset any unsaved changes
+    if (selectedEvent) {
+      loadBingoData(selectedEvent._id);
     }
   };
 
@@ -511,45 +652,150 @@ function DashboardPage() {
                       {/* Icebreaker Selection */}
                       <div className="pt-4 border-t border-white/10">
                         <h3 className="text-lg font-heading font-semibold text-white mb-4">Networking Icebreakers</h3>
-                        <p className="text-white/60 text-sm font-body mb-4">Select activities to help participants connect</p>
+                        <p className="text-white/60 text-sm font-body mb-4">Select and configure activities to help participants connect</p>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <button className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-10 h-10 rounded-lg bg-[#4DC4FF]/20 flex items-center justify-center group-hover:bg-[#4DC4FF]/30 transition-colors">
-                                <svg className="w-6 h-6 text-[#4DC4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                </svg>
+                        {!selectedIcebreaker && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <button 
+                              onClick={() => setSelectedIcebreaker('bingo')}
+                              className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group"
+                            >
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 rounded-lg bg-[#4DC4FF]/20 flex items-center justify-center group-hover:bg-[#4DC4FF]/30 transition-colors">
+                                  <svg className="w-6 h-6 text-[#4DC4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                  </svg>
+                                </div>
+                                <h4 className="font-heading font-semibold text-white">Name Bingo</h4>
                               </div>
-                              <h4 className="font-heading font-semibold text-white">Name Bingo</h4>
-                            </div>
-                            <p className="text-sm text-white/70 font-body">Find people who match the descriptions on your bingo card</p>
-                          </button>
+                              <p className="text-sm text-white/70 font-body">Find people who match the descriptions on your bingo card</p>
+                            </button>
 
-                          <button className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group opacity-50 cursor-not-allowed">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
+                            <button className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group opacity-50 cursor-not-allowed">
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                  </svg>
+                                </div>
+                                <h4 className="font-heading font-semibold text-white/60">Scavenger Hunt</h4>
                               </div>
-                              <h4 className="font-heading font-semibold text-white/60">Scavenger Hunt</h4>
-                            </div>
-                            <p className="text-sm text-white/50 font-body">Coming soon - Hunt for specific items or complete challenges</p>
-                          </button>
+                              <p className="text-sm text-white/50 font-body">Coming soon - Hunt for specific items or complete challenges</p>
+                            </button>
 
-                          <button className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group opacity-50 cursor-not-allowed">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                            <button className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group opacity-50 cursor-not-allowed">
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                                <h4 className="font-heading font-semibold text-white/60">Speed Networking</h4>
                               </div>
-                              <h4 className="font-heading font-semibold text-white/60">Speed Networking</h4>
+                              <p className="text-sm text-white/50 font-body">Coming soon - Timed one-on-one conversations</p>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Bingo Editor */}
+                        {selectedIcebreaker === 'bingo' && (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-[#4DC4FF]/20 flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-[#4DC4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                  </svg>
+                                </div>
+                                <h4 className="text-xl font-heading font-semibold text-white">Edit Name Bingo</h4>
+                              </div>
+                              <button
+                                onClick={handleCancelBingo}
+                                className="text-white/60 hover:text-white transition-colors"
+                              >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
                             </div>
-                            <p className="text-sm text-white/50 font-body">Coming soon - Timed one-on-one conversations</p>
-                          </button>
-                        </div>
+
+                            <div>
+                              <label className="block text-sm text-white font-body mb-2">Bingo Description</label>
+                              <input
+                                type="text"
+                                value={bingoDescription}
+                                onChange={(e) => setBingoDescription(e.target.value)}
+                                placeholder="e.g., Find someone who..."
+                                className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm text-white font-body mb-3">
+                                Bingo Grid (5x5)
+                                <span className="text-white/60 text-xs ml-2">Fill in each box with a question or trait</span>
+                              </label>
+                              
+                              <div className="grid grid-cols-5 gap-2">
+                                {bingoGrid.map((row, rowIndex) =>
+                                  row.map((cell, colIndex) => (
+                                    <div key={`${rowIndex}-${colIndex}`} className="relative group">
+                                      <input
+                                        type="text"
+                                        value={cell}
+                                        onChange={(e) => handleBingoGridChange(rowIndex, colIndex, e.target.value)}
+                                        placeholder={`${rowIndex + 1}-${colIndex + 1}`}
+                                        className="w-full h-24 p-2 rounded-lg bg-white/5 border border-white/20 text-white text-xs placeholder-white/30 focus:outline-none focus:border-[#4DC4FF] focus:ring-2 focus:ring-[#4DC4FF]/20 transition-all font-body resize-none"
+                                        style={{ 
+                                          fontSize: '0.75rem',
+                                          lineHeight: '1.2',
+                                        }}
+                                      />
+                                      <div className="absolute -top-2 -left-2 w-5 h-5 rounded-full bg-[#4DC4FF]/80 text-white text-xs flex items-center justify-center font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {rowIndex * 5 + colIndex + 1}
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="bg-[#4DC4FF]/10 border border-[#4DC4FF]/30 rounded-lg p-4">
+                              <div className="flex items-start gap-3">
+                                <svg className="w-5 h-5 text-[#4DC4FF] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div className="text-sm text-white/80 font-body">
+                                  <p className="font-semibold mb-1">Tips for creating good bingo questions:</p>
+                                  <ul className="space-y-1 text-white/70">
+                                    <li>• Use "Find someone who..." format (e.g., "has traveled to 5+ countries")</li>
+                                    <li>• Mix easy and challenging traits to keep it interesting</li>
+                                    <li>• Include professional and personal topics</li>
+                                    <li>• Keep questions short and clear</li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                              <button
+                                onClick={handleSaveBingo}
+                                disabled={isSavingBingo}
+                                className="flex-1 px-6 py-3 rounded-full font-semibold font-body transition-all duration-200 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ backgroundColor: "#4DC4FF", color: "#ffffff" }}
+                              >
+                                {isSavingBingo ? "Saving..." : "Save Bingo Game"}
+                              </button>
+                              <button
+                                onClick={handleCancelBingo}
+                                disabled={isSavingBingo}
+                                className="px-6 py-3 rounded-full font-semibold font-body bg-white/10 hover:bg-white/20 border border-white/30 text-white transition-all duration-200 disabled:opacity-50"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
