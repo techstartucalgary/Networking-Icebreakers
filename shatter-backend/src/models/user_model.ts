@@ -9,7 +9,11 @@ import { Schema, model } from "mongoose";
 export interface IUser {
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
+  linkedinId?: string;
+  linkedinUrl?: string;
+  profilePhoto?: string;
+  authProvider: 'local' | 'linkedin';
   lastLogin?: Date;
   passwordChangedAt?: Date;
   createdAt?: Date;
@@ -42,8 +46,27 @@ const UserSchema = new Schema<IUser>(
     },
     passwordHash: {
       type: String,
-      required: true,
+      required: false,
       select: false, // Don't return in queries by default
+    },
+    linkedinId: {
+      type: String,
+      unique: true,
+      sparse: true, // allows null but enforces uniqueness when set
+    },
+    linkedinUrl: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    profilePhoto: {
+      type: String,
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'linkedin'],
+      default: 'local',
+      required: true,
     },
     lastLogin: {
       type: Date,
@@ -68,7 +91,15 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-// Add middleware to auto-update passwordChangedAt
+// Ensure local auth users have a password
+UserSchema.pre("save", function (next) {
+  if (this.authProvider === "local" && !this.passwordHash) {
+    return next(new Error("Password required for local authentication"));
+  }
+  next();
+});
+
+// Auto-update passwordChangedAt
 UserSchema.pre("save", function (next) {
   if (this.isModified("passwordHash") && !this.isNew) {
     this.passwordChangedAt = new Date();

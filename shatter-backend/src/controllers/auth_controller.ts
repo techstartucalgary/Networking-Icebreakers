@@ -1,7 +1,12 @@
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { User } from '../models/user_model';
 import { hashPassword, comparePassword } from '../utils/password_hash';
 import { generateToken } from '../utils/jwt_utils';
+import { getLinkedInAuthUrl, getLinkedInAccessToken, getLinkedInProfile } from '../utils/linkedin_oauth';
+
+const JWT_SECRET = process.env.JWT_SECRET || '';
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -140,7 +145,12 @@ export const login = async (req: Request, res: Response) => {
 	    });
 	}
 
-	// 7 - verify password
+	// 7 - verify password (OAuth users won't have a passwordHash)
+	if (!user.passwordHash) {
+	    return res.status(401).json({
+		error: 'This account uses LinkedIn login. Please sign in with LinkedIn.',
+	    });
+	}
 	const isPasswordValid = await comparePassword(password, user.passwordHash);
 
 	if (!isPasswordValid) {
@@ -170,6 +180,120 @@ export const login = async (req: Request, res: Response) => {
 	res.status(500).json({
 	    error: 'Login failed'
 	});
+    }
+};
+
+
+/**
+ * GET /api/auth/linkedin
+ * Initiates LinkedIn OAuth flow by redirecting to LinkedIn
+ */
+export const linkedinAuth = async (req: Request, res: Response) => {
+    try {
+	// Generate CSRF protection state token
+	const state = crypto.randomBytes(16).toString('hex');
+
+	// Encode state as JWT with 5-minute expiration (stateless validation)
+	const stateToken = jwt.sign({ state }, JWT_SECRET, { expiresIn: '5m' });
+
+	// Build LinkedIn authorization URL and redirect
+	const authUrl = getLinkedInAuthUrl(stateToken);
+	res.redirect(authUrl);
+    } catch (error) {
+	console.error('LinkedIn auth initiation error:', error);
+	res.status(500).json({ error: 'Failed to initiate LinkedIn authentication' });
+    }
+};
+
+
+/**
+ * GET /api/auth/linkedin/callback
+ * LinkedIn redirects here after user authorization
+ */
+export const linkedinCallback = async (req: Request, res: Response) => {
+    try {
+	const { code, state, error: oauthError } = req.query as {
+	    code?: string;
+	    state?: string;
+	    error?: string;
+	};
+
+	const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:19006';
+
+	// Handle user denial
+	if (oauthError === 'user_cancelled_authorize') {
+	    return res.redirect(`${frontendUrl}/auth/error?message=Authorization cancelled`);
+	}
+
+	// Validate required parameters
+	if (!code || !state) {
+	    return res.status(400).json({ error: 'Missing code or state parameter' });
+	}
+
+	// Verify state token (CSRF protection)
+	try {
+	    jwt.verify(state, JWT_SECRET);
+	} catch {
+	    return res.status(401).json({ error: 'Invalid state parameter' });
+	}
+
+	// Exchange code for access token
+	const accessToken = await getLinkedInAccessToken(code);
+
+	// Fetch user profile from LinkedIn
+	const linkedinProfile = await getLinkedInProfile(accessToken);
+
+	// Validate email is provided
+	if (!linkedinProfile.email) {
+	    return res.status(400).json({
+		error: 'Email address required',
+		suggestion: 'Please make your email visible to third-party apps in LinkedIn settings',
+	    });
+	}
+
+	// Find existing user by LinkedIn ID
+	let user = await User.findOne({ linkedinId: linkedinProfile.sub });
+
+	if (!user) {
+	    // Check if email already exists with password auth (email conflict)
+	    const existingEmailUser = await User.findOne({
+		email: linkedinProfile.email.toLowerCase().trim(),
+	    });
+
+	    if (existingEmailUser) {
+		return res.redirect(
+		    `${frontendUrl}/auth/error?message=Email already registered with password&suggestion=Please login with your password`
+		);
+	    }
+
+	    // Create new user from LinkedIn data
+	    user = await User.create({
+		name: linkedinProfile.name,
+		email: linkedinProfile.email.toLowerCase().trim(),
+		linkedinId: linkedinProfile.sub,
+		profilePhoto: linkedinProfile.picture,
+		authProvider: 'linkedin',
+		lastLogin: new Date(),
+	    });
+	} else {
+	    // Update existing user's last login
+	    user.lastLogin = new Date();
+	    await user.save();
+	}
+
+	// Generate JWT token and redirect to frontend
+	const token = generateToken(user._id.toString());
+	return res.redirect(`${frontendUrl}/auth/callback?token=${token}&userId=${user._id}`);
+
+    } catch (error: any) {
+	console.error('LinkedIn callback error:', error);
+
+	const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:19006';
+	if (error.message?.includes('LinkedIn')) {
+	    return res.redirect(`${frontendUrl}/auth/error?message=LinkedIn authentication failed`);
+	}
+
+	res.status(500).json({ error: 'Authentication failed. Please try again.' });
     }
 };
 
