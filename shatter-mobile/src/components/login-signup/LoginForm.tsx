@@ -8,10 +8,13 @@ import { ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { loginFormStyles as styles } from "@/src/styles/loginForm.styles";
 const ShatterLogo = require("@/src/images/Shatter-logo-white.png");
+import AuthHeader from "./AuthHeader"
+import AuthCard from "./AuthCard";
+import { KeyboardAvoidingView, Platform } from "react-native";
 
 
 
-
+// want to create a seperate auth page for this ?
 //used in profile to swap page
 type Props = {
   switchToSignUp: () => void;
@@ -67,64 +70,28 @@ export default function LoginForm({ switchToSignUp }: Props) {
   };
 
   return (
-    <SafeAreaView style= {styles.safe}>
-      <ScrollView contentContainerStyle={styles.scrollContent} 
-      keyboardShouldPersistTaps="handled" 
-      showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-        <View style={styles.header}>
-          <Image source={ShatterLogo} style={styles.headerLogoBg} />
-          <Image source={ShatterLogo} style={styles.headerLogoTopRight} />
-          <Text style={styles.brandTitle}>Shatter</Text>
-          <Text style={styles.brandSubtitle}>Break the ice.</Text>
-        </View>
+    <SafeAreaView style={styles.safe}edges = {["left","right"]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+      >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        automaticallyAdjustKeyboardInsets
+      >
+        <AuthHeader
+          title="Shatter"
+          subtitle="Break the ice."
+          backgroundLogo={ShatterLogo}
+          cornerLogo={ShatterLogo}
+        />
 
-        <View style={styles.card}>
-          <Text style={styles.title}>Log In</Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholderTextColor="#888"
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            placeholderTextColor="#888"
-          />
-
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Log In</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={switchToSignUp} style={{ marginTop: 16 }}>
-            <Text style={styles.linkText}>
-              Don’t have an account? Sign Up
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={{ marginTop: 12 }}>
-            <Text style={styles.guestText}>Continue as Guest</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
+        <AuthCard switchToSignUp={switchToSignUp} />
       </ScrollView>
-
+      </KeyboardAvoidingView>
     </SafeAreaView>
     
   );
