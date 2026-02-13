@@ -1,0 +1,9 @@
+Generate a Name Bingo game.
+
+Requirements:
+- Return ONLY valid JSON (no markdown, no commentary).
+- The ONLY top-level field must be "grid".
+- "grid" must be a 1D array of exactly {{TOTAL_CELLS}} strings.
+- Each element must be a RANDOM full name (first + last).
+- All names should be unique.
+- If you cannot generate valid JSON, return {"grid": {{EMPTY_GRID}} }.
