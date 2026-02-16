@@ -5,6 +5,7 @@ import { pusher } from "../utils/pusher_websocket";
 import "../models/participant_model";
 
 import { generateJoinCode } from "../utils/event_utils";
+import { generateToken } from "../utils/jwt_utils";
 import { Participant } from "../models/participant_model";
 import { User } from "../models/user_model";
 import { Types } from "mongoose";
@@ -247,19 +248,32 @@ export async function joinEventAsGuest(req: Request, res: Response) {
       return res.status(400).json({ success: false, msg: "Event is full" });
     }
 
-    // Create guest participant (userId is null)
+    // Create a guest user account so they get a JWT and can complete their profile later
+    const user = await User.create({
+      name,
+      authProvider: 'guest',
+    });
+
+    const userId = user._id as Types.ObjectId;
+    const token = generateToken(userId.toString());
+
+    // Create participant linked to the new user
     const participant = await Participant.create({
-      userId: null,
+      userId,
       name,
       eventId,
     });
 
     const participantId = participant._id as Types.ObjectId;
 
-    // Add participant to event
+    // Add participant to event and event to user history
     await Event.updateOne(
       { _id: eventId },
       { $addToSet: { participantIds: participantId } },
+    );
+    await User.updateOne(
+      { _id: userId },
+      { $addToSet: { eventHistoryIds: eventId } },
     );
 
     // Emit socket
@@ -278,6 +292,8 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     return res.json({
       success: true,
       participant,
+      userId,
+      token,
     });
   } catch (e: any) {
     if (e.code === 11000) {
