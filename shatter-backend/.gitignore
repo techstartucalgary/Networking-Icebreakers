@@ -25,3 +25,9 @@ dist-ssr
 
 .env
 .vercel
+
+# omar personal files
+techstack.txt
+docs/bingo_walkthrough.md
+docs/feature_list.md
+docs/project_roadmap.md

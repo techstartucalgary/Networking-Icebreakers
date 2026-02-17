@@ -8,8 +8,18 @@ import { Schema, model } from "mongoose";
 
 export interface IUser {
   name: string;
-  email: string;
-  passwordHash: string;
+  email?: string;
+  passwordHash?: string;
+  linkedinId?: string;
+  linkedinUrl?: string;
+  bio?: string;
+  profilePhoto?: string;
+  socialLinks?: {
+    linkedin?: string;
+    github?: string;
+    other?: string;
+  };
+  authProvider: 'local' | 'linkedin' | 'guest';
   lastLogin?: Date;
   passwordChangedAt?: Date;
   createdAt?: Date;
@@ -30,10 +40,11 @@ const UserSchema = new Schema<IUser>(
     },
     email: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
       lowercase: true,
       unique: true,
+      sparse: true, // allows multiple users without email (guests)
       index: true,
       match: [
         /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
@@ -42,8 +53,36 @@ const UserSchema = new Schema<IUser>(
     },
     passwordHash: {
       type: String,
-      required: true,
+      required: false,
       select: false, // Don't return in queries by default
+    },
+    linkedinId: {
+      type: String,
+      unique: true,
+      sparse: true, // allows null but enforces uniqueness when set
+    },
+    linkedinUrl: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    bio: {
+      type: String,
+      trim: true,
+    },
+    profilePhoto: {
+      type: String,
+    },
+    socialLinks: {
+      linkedin: { type: String },
+      github: { type: String },
+      other: { type: String },
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'linkedin', 'guest'],
+      default: 'local',
+      required: true,
     },
     lastLogin: {
       type: Date,
@@ -68,7 +107,15 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-// Add middleware to auto-update passwordChangedAt
+// Ensure local auth users have a password
+UserSchema.pre("save", function (next) {
+  if (this.authProvider === "local" && !this.passwordHash) {
+    return next(new Error("Password required for local authentication"));
+  }
+  next();
+});
+
+// Auto-update passwordChangedAt
 UserSchema.pre("save", function (next) {
   if (this.isModified("passwordHash") && !this.isNew) {
     this.passwordChangedAt = new Date();
