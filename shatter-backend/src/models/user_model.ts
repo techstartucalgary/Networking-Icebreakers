@@ -8,12 +8,18 @@ import { Schema, model } from "mongoose";
 
 export interface IUser {
   name: string;
-  email: string;
+  email?: string;
   passwordHash?: string;
   linkedinId?: string;
   linkedinUrl?: string;
+  bio?: string;
   profilePhoto?: string;
-  authProvider: 'local' | 'linkedin';
+  socialLinks?: {
+    linkedin?: string;
+    github?: string;
+    other?: string;
+  };
+  authProvider: 'local' | 'linkedin' | 'guest';
   lastLogin?: Date;
   passwordChangedAt?: Date;
   createdAt?: Date;
@@ -34,10 +40,11 @@ const UserSchema = new Schema<IUser>(
     },
     email: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
       lowercase: true,
       unique: true,
+      sparse: true, // allows multiple users without email (guests)
       index: true,
       match: [
         /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
@@ -59,12 +66,21 @@ const UserSchema = new Schema<IUser>(
       unique: true,
       sparse: true,
     },
+    bio: {
+      type: String,
+      trim: true,
+    },
     profilePhoto: {
       type: String,
     },
+    socialLinks: {
+      linkedin: { type: String },
+      github: { type: String },
+      other: { type: String },
+    },
     authProvider: {
       type: String,
-      enum: ['local', 'linkedin'],
+      enum: ['local', 'linkedin', 'guest'],
       default: 'local',
       required: true,
     },
