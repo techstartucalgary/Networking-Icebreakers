@@ -8,6 +8,7 @@ export default function EventLobby() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const [status, setStatus] = useState(EventState.UPCOMING);
 
+  //TODO: Websocket for game loading
   useEffect(() => {
     const interval = setInterval(async () => {
       const res = await getEventById(eventId);

@@ -147,6 +147,7 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 				<TouchableOpacity
 					style={[styles.submitButton]}
 					onPress={() => handleAssign(search.trim())}
+					disabled={!selectedCardId || !isValidParticipant}
 				>
 					<Text style={styles.submitText}>Submit</Text>
 				</TouchableOpacity>
