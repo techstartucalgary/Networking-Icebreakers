@@ -39,7 +39,6 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 			const namesData = await getBingoNamesByEventId(eventId);
 			const participantsList =
 				namesData?.success && namesData.names ? namesData.names : [];
-			console.log(participantsList);
 
 			//fetch categories
 			const categoriesData = await getBingoCategories(eventId);

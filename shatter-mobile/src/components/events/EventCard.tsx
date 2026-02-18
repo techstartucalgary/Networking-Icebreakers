@@ -1,5 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import Event, { EventState } from '../../interfaces/Event';
+import Event from '../../interfaces/Event';
 
 type EventCardProps = {
   event: Event;
@@ -9,7 +9,7 @@ type EventCardProps = {
 };
 
 const EventCard = ({ event, expanded, onPress, onJoinGame, }: EventCardProps) => {
-  const live = true //(event.currentState === EventState.IN_PROGRESS);
+  const live = true //(event.currentState === EventState.IN_PROGRESS); //TODO: Remove hard-coded live state
 
   return (
     <Pressable onPress={onPress} style={styles.card}>
