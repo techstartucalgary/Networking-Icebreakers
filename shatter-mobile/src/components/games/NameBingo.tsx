@@ -2,6 +2,7 @@ import {
 	getBingoCategories,
 	getBingoNamesByEventId,
 } from "@/src/services/game.service";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -31,8 +32,24 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 	const [search, setSearch] = useState("");
 	const [loading, setLoading] = useState(true);
 
+	const storageKey = `bingo-cards-${eventId}`;
+
+	//if left game and re-entered
+	const loadSavedCards = async () => {
+		const saved = await AsyncStorage.getItem(storageKey);
+		if (saved) {
+			setCards(JSON.parse(saved));
+			setLoading(false);
+			return true;
+		}
+		return false;
+	};
+
 	const fetchGameData = useCallback(async () => {
 		setLoading(true);
+
+		const hasSaved = await loadSavedCards();
+		if (hasSaved) return;
 
 		try {
 			//fetch names
@@ -57,6 +74,8 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 
 			setParticipants(participantsList);
 			setCards(initialCards);
+
+			await AsyncStorage.setItem(storageKey, JSON.stringify(initialCards));
 		} catch (err) {
 			console.log("Error fetching bingo data:", err);
 			setParticipants([]);
@@ -72,13 +91,17 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 		}, [fetchGameData]),
 	);
 
-	const handleAssign = (name: string) => {
+	const handleAssign = async (name: string) => {
 		if (!selectedCardId || name === "") return;
 
 		const trimmed = name.trim();
 
 		if (!isValidParticipant(trimmed)) return;
 		if (isAlreadyAssigned(trimmed)) return;
+
+		const updatedCards = cards.map((c) =>
+			c.cardId === selectedCardId ? { ...c, assignedName: name } : c,
+		);
 
 		setCards((prev) =>
 			prev.map((c) =>
@@ -87,6 +110,8 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 		);
 		setSearch("");
 		setSelectedCardId(null);
+
+		await AsyncStorage.setItem(storageKey, JSON.stringify(updatedCards));
 	};
 
 	const isValidParticipant = (name: string) =>
