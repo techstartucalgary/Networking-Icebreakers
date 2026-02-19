@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import NameBingo from "./NameBingo";
+import { useRouter } from "expo-router";
 
 type IcebreakerGameProps = {
   eventId: string;
@@ -7,6 +8,8 @@ type IcebreakerGameProps = {
 };
 
 const IcebreakerGame = ({ eventId, gameType }: IcebreakerGameProps) => {
+  const router = useRouter();
+
   //Pick game-specific component
   const renderGame = () => {
     switch (gameType) {
@@ -21,6 +24,14 @@ const IcebreakerGame = ({ eventId, gameType }: IcebreakerGameProps) => {
     <View style={styles.container}>
       <View style={styles.border}>
         {renderGame()}
+
+        {/* Leave Game Button */}
+        <TouchableOpacity
+          style={styles.leaveButton}
+          onPress={() => router.replace("/Events")}
+        >
+          <Text style={styles.leaveButtonText}>Leave Game</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -49,6 +60,18 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 5,
     elevation: 3,
+  },
+  leaveButton: {
+    backgroundColor: "#ef4444",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  leaveButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
   },
   timer: {
     fontSize: 16,

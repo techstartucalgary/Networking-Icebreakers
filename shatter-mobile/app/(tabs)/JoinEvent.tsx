@@ -43,9 +43,9 @@ export default function JoinEventPage() {
 				<Button
 					title="Join Event"
 					onPress={async () => {
-						const status = await joinEvent(eventCode);
+						const joinRes = await joinEvent(eventCode);
 
-						switch (status) {
+						switch (joinRes.status) {
 							case "event-not-found":
 								setErrorMessage("We couldn’t find an event with that code.");
 								break;

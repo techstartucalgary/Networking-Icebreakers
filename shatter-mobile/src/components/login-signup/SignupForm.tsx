@@ -5,12 +5,7 @@ import { ActivityIndicator, Button, StyleSheet, Text, TextInput, TouchableOpacit
 import { useAuth, AuthUser } from "../context/AuthContext";
 import { userSignup } from "@/src/services/user.service";
 
-//used in profile to swap page
-type Props = {
-  switchToLogin: () => void;
-};
-
-export default function SignUpForm({ switchToLogin }: Props) {
+export default function SignUpForm() {
   const { login, user } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -80,16 +75,14 @@ export default function SignUpForm({ switchToLogin }: Props) {
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign Up</Text>}
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={switchToLogin} style={{ marginTop: 16 }}>
+      <TouchableOpacity onPress={() => router.push("/UserPages/Login")} style={{ marginTop: 16 }}>
         <Text style={{ textAlign: "center", color: "#1C1DEF" }}>Already have an account? Log In</Text>
-        {!user?.isGuest && (
-          <Button
-            title="Continue as Guest"
-            onPress={() => router.push("/(tabs)/Guest")}
-          />
-        )}
       </TouchableOpacity>
       <Text style={{ textAlign: "center", color: "#afafaf" }}>Password must be at least 8 characters long</Text>
+      <Button
+					title="Continue as Guest"
+					onPress={() => router.push("/UserPages/Guest")}
+				/>
       {err && <Text style={{ textAlign: "center", color: "#e63232" }}>{err}</Text>}
     </View>
   );

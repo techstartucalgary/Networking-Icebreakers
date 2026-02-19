@@ -1,4 +1,3 @@
-//TODO: Remove hardcoded Bingo
 export default interface EventIB {
     _id: string;
     name: string;

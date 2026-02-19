@@ -9,7 +9,7 @@ type EventCardProps = {
 };
 
 const EventCard = ({ event, expanded, onPress, onJoinGame, }: EventCardProps) => {
-  const live = true //(event.currentState === EventState.IN_PROGRESS);
+  const live = true//(event.currentState === EventState.IN_PROGRESS); //TODO: Remove hard coded live status
 
   return (
     <Pressable onPress={onPress} style={styles.card}>

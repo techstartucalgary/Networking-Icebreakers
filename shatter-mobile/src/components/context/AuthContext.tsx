@@ -2,7 +2,6 @@ import { userFetch } from "@/src/services/user.service";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
 	AuthDataStorage,
-	clearStoredAuth,
 	getStoredAuth,
 	saveStoredAuth,
 } from "../general/AsyncStorage";
@@ -94,8 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const logout = async () => {
 		setUser(undefined);
 		setAuthStorage({ userId: "", accessToken: "", isGuest: true});
-		await AsyncStorage.removeItem("guestEvents"); //If guest logs out
-		await clearStoredAuth();
+		await AsyncStorage.clear()
 	};
 
 	//Update in-memory user

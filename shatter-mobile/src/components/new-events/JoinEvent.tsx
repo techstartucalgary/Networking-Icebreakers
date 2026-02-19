@@ -7,12 +7,12 @@ import {
 } from "@/src/services/event.service";
 import { useAuth } from "@/src/components/context/AuthContext";
 
-export type JoinStatus =
-	| "success"
-	| "event-not-found"
-	| "no-user"
-	| "no-user-id"
-	| "join-error";
+export type JoinResult =
+  | { status: "success"; eventId: string }
+  | { status: "event-not-found" }
+  | { status: "no-user" }
+  | { status: "no-user-id" }
+  | { status: "join-error" };
 
 export function useJoinEvent() {
 	const { user, authStorage } = useAuth();
@@ -27,7 +27,7 @@ export function useJoinEvent() {
 		}
 	};
 
-	const joinEvent = async (joinCode: string): Promise<JoinStatus> => {
+	const joinEvent = async (joinCode: string): Promise<JoinResult> => {
 		const userId = user?.user_id;
 		const name = user?.name;
 		const isGuest = authStorage.isGuest;
@@ -36,9 +36,9 @@ export function useJoinEvent() {
 		const eventData = await getEventByCode(normalizedCode);
 		const eventId = eventData?.event._id;
 
-		if (!userId) return "no-user-id";
-		if (!eventData || !eventId) return "event-not-found";
-		if (!name) return "no-user";
+		if (!userId) return { status: "no-user-id" };
+		if (!eventData || !eventId) return { status: "event-not-found"};
+		if (!name) return { status: "no-user" };
 
 		try {
 			if (!isGuest) {
@@ -55,10 +55,10 @@ export function useJoinEvent() {
 				}
 			}
 		} catch {
-			return "join-error";
+			return { status:  "join-error" };
 		}
 
-		return "success";
+		return { status: "success", "eventId": eventId };
 	};
 
 	return { joinEvent };
