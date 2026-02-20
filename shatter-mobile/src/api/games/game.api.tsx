@@ -30,11 +30,8 @@ export async function GetBingoCategoriesApi(
 	eventId: string,
 ): Promise<BingoCategoriesResponse | undefined> {
 	try {
-		const body: BingoDataRequest = { id: eventId };
-
-		const response: AxiosResponse<BingoDataResponse> = await axios.post(
-			`${API_BASE_URL}/bingo/getBingo`,
-			body,
+		const response: AxiosResponse<BingoDataResponse> = await axios.get(
+			`${API_BASE_URL}/bingo/getBingo/${eventId}`,
 		);
 
 		const grid = response.data.bingo.grid;

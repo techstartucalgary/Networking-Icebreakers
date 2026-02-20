@@ -37,6 +37,7 @@ export default function GuestPage() {
       />
 
       <Button title="Continue" onPress={handleContinue} />
+      <Button title="Back" onPress={() => router.push("/UserPages/Login")} />
     </View>
   );
 }
