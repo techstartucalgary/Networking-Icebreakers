@@ -55,7 +55,7 @@ export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 		try {
 			const result = await joinEvent(joinCode);
 
-			switch (result) {
+			switch (result.status) {
 				case "no-user":
 					Alert.alert(
 						"No User Found",
@@ -73,13 +73,15 @@ export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 					break;
 
 				case "success":
-					router.push("/Events");
-					break;
+				router.push({
+					pathname: "/EventPages/EventLobby",
+					params: { eventId: result.eventId },
+				});
+				break;
 			}
 
 			setScanned(true);
 			onClose();
-			router.push({ pathname: "/Events" }); //navigate to event page after scanning
 		} catch (err: any) {
 			Alert.alert("Error", err.message);
 			onClose();

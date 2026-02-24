@@ -7,6 +7,21 @@ const MONGODB_URI = process.env.MONGO_URI;
 
 async function start() {
   try {
+    // Validate required environment variables
+    const requiredEnvVars = [
+      'MONGO_URI',
+      'JWT_SECRET',
+      'LINKEDIN_CLIENT_ID',
+      'LINKEDIN_CLIENT_SECRET',
+      'LINKEDIN_CALLBACK_URL',
+    ];
+
+    for (const envVar of requiredEnvVars) {
+      if (!process.env[envVar]) {
+        throw new Error(`Missing required environment variable: ${envVar}`);
+      }
+    }
+
     if (!MONGODB_URI) {
       throw new Error("MONGO_URI is not set");
     }

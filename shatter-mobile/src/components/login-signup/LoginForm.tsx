@@ -13,12 +13,7 @@ import {
 } from "react-native";
 import { useAuth, AuthUser } from "../context/AuthContext";
 
-//used in profile to swap page
-type Props = {
-	switchToSignUp: () => void;
-};
-
-export default function LoginForm({ switchToSignUp }: Props) {
+export default function LoginForm() {
 	const { login } = useAuth();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -81,6 +76,7 @@ export default function LoginForm({ switchToSignUp }: Props) {
 			setError("Login Failure: " + e);
 		} finally {
 			setLoading(false);
+			router.push("/JoinEvent")
 		}
 	};
 
@@ -113,15 +109,10 @@ export default function LoginForm({ switchToSignUp }: Props) {
 					<Text style={styles.buttonText}>Log In</Text>
 				)}
 			</TouchableOpacity>
-
-			<TouchableOpacity onPress={switchToSignUp} style={{ marginTop: 16 }}>
+			<TouchableOpacity onPress={() => router.push("/UserPages/Signup")} style={{ marginTop: 16 }}>
 				<Text style={{ textAlign: "center", color: "#1C1DEF" }}>
 					Don&apos;t have an account? Sign Up
 				</Text>
-				<Button
-					title="Continue as Guest"
-					onPress={() => router.push("/(tabs)/Guest")}
-				/>
 			</TouchableOpacity>
 			{err && (
 				<Text style={{ textAlign: "center", color: "#e63232" }}>{err}</Text>

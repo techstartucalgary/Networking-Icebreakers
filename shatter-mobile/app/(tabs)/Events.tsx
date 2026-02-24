@@ -79,7 +79,7 @@ const NewEvents = () => {
 						onPress={() => handlePress(item._id)}
 						onJoinGame={() => {
 							router.push({
-								pathname: "/Game",
+								pathname: "/GamePages/Game",
 								params: { eventId: item._id },
 							});
 						}}

@@ -72,25 +72,21 @@ export async function createBingo(req: Request, res: Response) {
   }
 }
 
-
-/**
- * @param req.body.id - Bingo _id (string) OR Event _id (ObjectId string) (required)
- */
 export async function getBingo(req: Request, res: Response) {
   try {
-    const { id } = req.body;
+    const { eventId } = req.params;
 
-    if (!id) {
+    if (!eventId) {
       return res.status(400).json({
         success: false,
-        msg: "id is required",
+        msg: "eventId is required",
       });
     }
 
-    let bingo = await Bingo.findById(id);
+    let bingo = await Bingo.findById(eventId);
 
-    if (!bingo && Types.ObjectId.isValid(id)) {
-      bingo = await Bingo.findOne({ _eventId: id });
+    if (!bingo && Types.ObjectId.isValid(eventId)) {
+      bingo = await Bingo.findOne({ _eventId: eventId });
     }
 
     if (!bingo) {

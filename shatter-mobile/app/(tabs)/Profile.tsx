@@ -1,13 +1,11 @@
-import { useFocusEffect } from "expo-router";
-import { useState, useCallback } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useState, useCallback, useEffect } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../src/components/context/AuthContext";
-import LoginForm from "../../src/components/login-signup/LoginForm";
-import SignUpForm from "../../src/components/login-signup/SignupForm";
 
 export default function Profile() {
   const { user, updateUser, logout } = useAuth();
-  const [form, setForm] = useState<"login" | "signup">("login");
+  const router = useRouter();
 
   //other profile info
   const [linkedin, setLinkedin] = useState(user?.linkedin || "");
@@ -28,6 +26,17 @@ export default function Profile() {
     //update auth state with new info
     updateUser({ linkedin, github });
   };
+
+  //not logged in
+  useEffect(() => {
+    if (!user) {
+      router.replace("/UserPages/Login");
+    }
+  }, [user]);
+
+  if (!user) {
+    return null; //don't render profile content while redirecting
+  }
 
   //logged in
   if (user && !user.isGuest) {
@@ -64,10 +73,6 @@ export default function Profile() {
     );
   }
 
-  if (form === "signup") {
-    return <SignUpForm switchToLogin={() => setForm("login")} />;
-  }
-
   if (user?.isGuest) {
     return (
         <View style={styles.container}>
@@ -78,7 +83,7 @@ export default function Profile() {
     
             <TouchableOpacity
               style={styles.saveButton}
-              onPress={() => setForm("signup")}
+              onPress={() => router.push("/UserPages/Signup")}
             >
             <Text style={styles.buttonText}>Create Account</Text>
           </TouchableOpacity>
@@ -89,17 +94,6 @@ export default function Profile() {
         </View>
       );
   }
-
-  //not logged in, show pages for signup or login
-  return (
-    <View style={styles.container}>
-      {form === "login" ? (
-        <LoginForm switchToSignUp={() => setForm("signup")} />
-      ) : (
-        <SignUpForm switchToLogin={() => setForm("login")} />
-      )}
-    </View>
-  );
 };
 
 const styles = StyleSheet.create({

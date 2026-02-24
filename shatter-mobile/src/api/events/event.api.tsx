@@ -1,4 +1,4 @@
-import { GameType } from "@/src/interfaces/Event";
+import { EventState, GameType } from "@/src/interfaces/Event";
 import JoinEventByIdGuestRequest from "@/src/interfaces/requests/JoinEventByIdGuestRequest";
 import JoinEventByIdUserRequest from "@/src/interfaces/requests/JoinEventByIdUserRequest";
 import EventResponse from "@/src/interfaces/responses/GetEventByCodeResponse";
