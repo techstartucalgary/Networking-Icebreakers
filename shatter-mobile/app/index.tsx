@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "expo-router";
-import { getStoredAuth } from "@/src/components/general/AsyncStorage";
+import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 import { ActivityIndicator, View } from "react-native";
 
 export default function Index() {

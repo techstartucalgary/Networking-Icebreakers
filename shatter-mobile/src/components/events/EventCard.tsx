@@ -1,5 +1,8 @@
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import Event, { EventState } from '../../interfaces/Event';
+import { useAuth } from "../context/AuthContext";
+import { useEffect, useState } from "react";
+import { fetchConnections } from "@/src/services/user.service";
 
 type EventCardProps = {
   event: Event;
@@ -10,6 +13,40 @@ type EventCardProps = {
 
 const EventCard = ({ event, expanded, onPress, onJoinGame, }: EventCardProps) => {
   const live = true//(event.currentState === EventState.IN_PROGRESS); //TODO: Remove hard coded live status
+  const { user, authStorage } = useAuth();
+  const [connections, setConnections] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setError] = useState("");
+
+  useEffect(() => {
+    if (expanded) {
+      loadConnections(event._id);
+    }
+  }, [expanded]);
+
+  const loadConnections = async (eventId: string) => {
+    try {
+      setLoading(true);
+      const userId = user?.user_id;
+      const accessToken = authStorage.accessToken
+
+      if (!userId) {
+        return {status: "no-user"};
+      }
+
+      const res = await fetchConnections(userId, eventId, accessToken);
+      if (!res) {
+        return {status: "connection-error"};
+      }
+
+      setConnections(res.connections)
+    } catch {
+      setError("Unable to find connections.");
+    } finally {
+      setLoading(false);
+      setError("")
+    }
+  };
 
   return (
     <Pressable onPress={onPress} style={styles.card}>
@@ -42,6 +79,20 @@ const EventCard = ({ event, expanded, onPress, onJoinGame, }: EventCardProps) =>
               <Text style={styles.joinButtonText}>Join Game</Text>
             </Pressable>
           )}
+
+          {loading && <Text>Loading connections...</Text>}
+
+          {/* Connection List */}
+          {!loading && <Text style={styles.connectionsTitle}>Connections:</Text>}
+          <FlatList
+            data={connections}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <Text style={styles.item}>{item}</Text>
+            )}
+          />
+
+          <Text style={styles.err}>{err}</Text>
         </View>
       )}
     </Pressable>
@@ -115,10 +166,24 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 15,
   },
+  connectionsTitle: {
+    fontSize: 13, 
+    color: "#777",
+    fontWeight: "bold",
+  },
+  item: {
+    fontSize: 12,
+    color: "#777",
+  },
   liveText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 12,
     zIndex: 1,
+  },
+  err: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#ef4444",
   },
 });

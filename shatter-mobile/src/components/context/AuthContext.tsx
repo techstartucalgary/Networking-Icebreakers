@@ -4,9 +4,8 @@ import {
 	AuthDataStorage,
 	getStoredAuth,
 	saveStoredAuth,
-} from "../general/AsyncStorage";
+} from "./AsyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { User } from "@/src/interfaces/User";
 
 type SocialLink = {
   label: string;

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { useAuth } from "../../src/components/context/AuthContext";
 import { userUpdate } from "@/src/services/user.service";
-import { getStoredAuth } from "@/src/components/general/AsyncStorage";
+import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 
 export default function UpdateProfile() {
   const { user, updateUser } = useAuth();

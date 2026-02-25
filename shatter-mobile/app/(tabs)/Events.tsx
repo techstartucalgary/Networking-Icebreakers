@@ -1,15 +1,14 @@
-import { getStoredAuth } from "@/src/components/general/AsyncStorage";
+import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import EventCard from "../../src/components/events/EventCard";
-import type Event from "../../src/interfaces/Event";
 import EventIB from "../../src/interfaces/Event";
 import { getUserEvents } from "../../src/services/event.service";
 
 const NewEvents = () => {
-	const [events, setEvents] = useState<Event[]>([]);
+	const [events, setEvents] = useState<EventIB[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
 

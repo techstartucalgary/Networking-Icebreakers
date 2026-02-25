@@ -3,11 +3,12 @@ import {
     UserLoginApi,
     UserSignupApi,
 	UserUpdateApi,
+	UserConnectionsApi,
 } from "../api/users/user.api";
 import { AuthUser } from "../components/context/AuthContext";
-import UserInfoUpdateResponse from "../interfaces/responses/UpdateUserInfoResponse";
 import UserLoginResponse from "../interfaces/responses/UserLoginResponse";
 import UserSignupResponse from "../interfaces/responses/UserSignupResponse";
+import UserConnectionsResponse from "../interfaces/responses/GetUserConnectionsResponse";
 import { User } from "../interfaces/User";
 
 export async function userLogin(
@@ -34,6 +35,16 @@ export async function userFetch(
 	const res = await UserFetchApi(userId, token);
 	if (!res || !res.success) return undefined;
 	return res.user;
+}
+
+export async function fetchConnections(
+	userId: string,
+	eventId: string,
+	token: string,
+): Promise<UserConnectionsResponse | undefined> {
+	const res = await UserConnectionsApi(userId, eventId, token);
+	if (!res || !res.success) return {success: false, connections: []};
+	return {success: true, connections: res.connections};
 }
 
 export async function userUpdate(

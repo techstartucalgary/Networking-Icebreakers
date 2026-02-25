@@ -1,10 +1,13 @@
 import UserLoginRequest from '@/src/interfaces/requests/UserLoginRequest';
 import UserSignupRequest from '@/src/interfaces/requests/UserSignupRequest';
+import UserConnectionsRequest from '@/src/interfaces/requests/GetUserConnectionsRequest';
 import UserDataResponse from '@/src/interfaces/responses/GetUserDataResponse';
 import GetUserEventsResponse from '@/src/interfaces/responses/GetUserEventsResponse';
 import UserInfoUpdateResponse from '@/src/interfaces/responses/UpdateUserInfoResponse';
 import UserLoginResponse from '@/src/interfaces/responses/UserLoginResponse';
 import UserSignupResponse from '@/src/interfaces/responses/UserSignupResponse';
+import UserConnectionsResponse from '@/src/interfaces/responses/GetUserConnectionsResponse';
+
 import { User } from '@/src/interfaces/User';
 import axios, { type AxiosResponse } from 'axios';
 
@@ -45,6 +48,17 @@ export async function UserFetchApi(userId: string, token: string): Promise<UserD
 export async function GetUserEventsApi(userId: string, token: string): Promise<GetUserEventsResponse | undefined> {
     try{
         const response: AxiosResponse<GetUserEventsResponse> = await axios.get(`${API_BASE_URL_USER}/${userId}/events`, 
+            {headers: {Authorization: `Bearer ${token}`, },});;
+        return response.data;
+    } catch (error){
+        console.log('Error', error);
+    }
+}
+
+export async function UserConnectionsApi(userId: string, eventId: string, token: string): Promise<UserConnectionsResponse | undefined> {
+    try{
+        const body: UserConnectionsRequest = {userId, eventId,};
+        const response: AxiosResponse<UserConnectionsResponse> = await axios.post(`${API_BASE_URL_USER}/blah`, body, 
             {headers: {Authorization: `Bearer ${token}`, },});;
         return response.data;
     } catch (error){
