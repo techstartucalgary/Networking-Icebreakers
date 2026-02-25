@@ -65,8 +65,7 @@ export default function LoginForm() {
 				user_id: userResponse.userId,
 				name: userData?.name,
 				email,
-				linkedin: "",
-				github: "",
+				socialLinks: userData.socialLinks,
 				isGuest: false,
 			};
 

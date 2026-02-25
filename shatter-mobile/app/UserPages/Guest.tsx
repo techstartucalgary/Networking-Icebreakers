@@ -6,12 +6,19 @@ import { useAuth } from "../../src/components/context/AuthContext";
 export default function GuestPage() {
   const { continueAsGuest } = useAuth();
   const [name, setName] = useState("");
-  const [linkedin, setLinkedin] = useState("");
+  const [contactLink, setContactLink] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleContinue = async () => {
-    if (!name.trim()) return;
-    await continueAsGuest(name.trim(), linkedin);
+    //need name and social link
+    if (!name.trim() || !contactLink) {
+      setError("Name and Social Link Cannot Be Empty")
+      return;
+    }
+
+    setError("");
+    await continueAsGuest(name.trim(), "Contact Link", contactLink);
     router.replace("/JoinEvent"); 
   };
 
@@ -31,13 +38,15 @@ export default function GuestPage() {
 
       <TextInput
         style={styles.input}
-        placeholder="Your Linkedin"
-        value={linkedin}
-        onChangeText={setLinkedin}
+        placeholder="Contact Link"
+        value={contactLink}
+        onChangeText={setContactLink}
       />
 
       <Button title="Continue" onPress={handleContinue} />
       <Button title="Back" onPress={() => router.push("/UserPages/Login")} />
+      <Text style={styles.inputInfo}>Your contact link can be your email, your LinkedIn profile URL, or another relevant, personal link.</Text>
+      {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 }
@@ -53,4 +62,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 20,
   },
+  error: {
+    textAlign: "center", 
+    color: "#e63232"
+  },
+  inputInfo: {
+    textAlign: "center", 
+    color: "#afafaf"
+  }
 });

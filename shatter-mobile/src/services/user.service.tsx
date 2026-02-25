@@ -2,7 +2,10 @@ import {
     UserFetchApi,
     UserLoginApi,
     UserSignupApi,
+	UserUpdateApi,
 } from "../api/users/user.api";
+import { AuthUser } from "../components/context/AuthContext";
+import UserInfoUpdateResponse from "../interfaces/responses/UpdateUserInfoResponse";
 import UserLoginResponse from "../interfaces/responses/UserLoginResponse";
 import UserSignupResponse from "../interfaces/responses/UserSignupResponse";
 import { User } from "../interfaces/User";
@@ -29,6 +32,16 @@ export async function userFetch(
 	token: string,
 ): Promise<User | undefined> {
 	const res = await UserFetchApi(userId, token);
+	if (!res || !res.success) return undefined;
+	return res.user;
+}
+
+export async function userUpdate(
+	userId: string,
+	updates: Partial<AuthUser>,
+	token: string
+): Promise<User | undefined> {
+	const res = await UserUpdateApi(userId, updates, token);
 	if (!res || !res.success) return undefined;
 	return res.user;
 }

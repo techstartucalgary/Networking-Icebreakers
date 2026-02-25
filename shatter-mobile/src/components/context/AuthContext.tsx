@@ -6,14 +6,21 @@ import {
 	saveStoredAuth,
 } from "../general/AsyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { User } from "@/src/interfaces/User";
+
+type SocialLink = {
+  label: string;
+  url: string;
+};
 
 //internal user for mobile
 export type AuthUser = {
 	user_id: string;
 	name?: string;
 	email?: string;
-	linkedin?: string;
-	github?: string;
+	bio?: string;
+	profilePhoto?: string;
+	socialLinks?: SocialLink[]
 	isGuest?: boolean;
 };
 
@@ -21,9 +28,9 @@ type AuthContextType = {
 	authStorage: AuthDataStorage;
 	user: AuthUser | undefined;
 	login: (user: AuthUser, accessToken: string) => Promise<void>;
-	continueAsGuest: (name: string, linkedin: string) => Promise<void>;
+	continueAsGuest: (name: string, label: string, socialLink: string) => Promise<void>;
 	logout: () => Promise<void>;
-	updateUser: (updates: Partial<AuthUser>) => void;
+	updateUser: (updates: Partial<AuthUser>) => AuthUser | undefined;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,11 +77,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		await saveStoredAuth(storageData);
 	};
 
-	const continueAsGuest = async (name: string, linkedin: string) => {
+	const continueAsGuest = async (name: string, label: string, socialLink: string) => {
 		const guestUser: AuthUser = {
 			user_id: "guest-" + Date.now().toString(), //TODO: how to ID guests?
 			name: name,
-			linkedin: linkedin,
+			socialLinks: [{label, url: socialLink}],
 			isGuest: true,
 		};
 
@@ -97,9 +104,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	};
 
 	//Update in-memory user
-	const updateUser = (updates: Partial<AuthUser>) => {
-		if (!user) return;
-		setUser({ ...user, ...updates });
+	const updateUser = (updates: Partial<AuthUser>): AuthUser | undefined => {
+		if (!user) return undefined;
+		const newUser = { ...user, ...updates };
+		setUser(newUser);
+		return newUser;
 	};
 
 	return (

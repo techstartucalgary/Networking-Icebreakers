@@ -3,9 +3,12 @@ export interface User {
     name: string,
     email: string,
     password: string,
-    profilePicture: string,
+    profilePhoto: string,
     bio: string,
-    socialLinks: string,
+    socialLinks: {
+        label: string;
+        url: string;
+    }[],
     userType: UserType
 }
 

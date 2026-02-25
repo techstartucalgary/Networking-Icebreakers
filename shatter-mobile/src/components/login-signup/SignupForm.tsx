@@ -50,8 +50,7 @@ export default function SignUpForm() {
         user_id: userResponse.userId,
         name,
         email,
-        linkedin: "",
-        github: "",
+        socialLinks: [],
         isGuest: false,
       };
 
@@ -78,12 +77,12 @@ export default function SignUpForm() {
       <TouchableOpacity onPress={() => router.push("/UserPages/Login")} style={{ marginTop: 16 }}>
         <Text style={{ textAlign: "center", color: "#1C1DEF" }}>Already have an account? Log In</Text>
       </TouchableOpacity>
-      <Text style={{ textAlign: "center", color: "#afafaf" }}>Password must be at least 8 characters long</Text>
+      <Text style={styles.inputInfo}>Password must be at least 8 characters long</Text>
       <Button
 					title="Continue as Guest"
 					onPress={() => router.push("/UserPages/Guest")}
 				/>
-      {err && <Text style={{ textAlign: "center", color: "#e63232" }}>{err}</Text>}
+      {err && <Text style={styles.error}>{err}</Text>}
     </View>
   );
 };
@@ -111,4 +110,12 @@ const styles = StyleSheet.create({
     color: "#fff", 
     fontWeight: "600", 
     fontSize: 16 },
+  inputInfo: {
+    textAlign: "center", 
+    color: "#afafaf"
+  },
+  error: {
+    textAlign: "center", 
+    color: "#e63232"
+  },
 });

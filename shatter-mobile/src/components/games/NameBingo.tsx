@@ -214,9 +214,10 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 
 			{/* Search bar with type-ahead */}
 			<View style={styles.inputRow}>
+				<Text style={styles.inputFlex}>Who did you find?</Text>
 				<TextInput
 					style={styles.inputFlex}
-					placeholder="Search participant"
+					placeholder="Enter their name."
 					value={search}
 					onChangeText={setSearch}
 				/>
@@ -249,6 +250,7 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 				{cards.map((card) => {
 					let isWinningCard = false;
 
+					//check for winning bingo line
 					if (winningLine) {
 						const [rowIdx, colIdx] = card.cardId
 						.replace("card-", "")
@@ -315,6 +317,7 @@ const styles = StyleSheet.create({
 	category: { fontWeight: "bold", textAlign: "center" },
 	assignedName: { fontSize: 12, textAlign: "center", marginTop: 2 },
 	inputRow: { flexDirection: "row", marginBottom: 5 },
+	inputTitle: { color: "#d4d4d4", fontWeight: "bold" },
 	inputFlex: {
 		flex: 1,
 		borderWidth: 1,

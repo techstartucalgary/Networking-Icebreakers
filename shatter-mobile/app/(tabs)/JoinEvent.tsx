@@ -47,7 +47,7 @@ export default function JoinEventPage() {
 
 						switch (joinRes.status) {
 							case "event-not-found":
-								setErrorMessage("We couldn’t find an event with that code.");
+								setErrorMessage("We couldn’t find that event. Double-check the code.");
 								break;
 							case "no-user":
 								setErrorMessage("Your profile is missing a name.");
@@ -59,8 +59,11 @@ export default function JoinEventPage() {
 								setErrorMessage("Something went wrong joining the event.");
 								break;
 							case "success":
-								setErrorMessage(null);
-								router.push({ pathname: "/Events" });
+								setErrorMessage("");
+								router.push({
+									pathname: "/EventPages/EventLobby",
+									params: { eventId: joinRes.eventId },
+								});
 								break;
 						}
 					}}
