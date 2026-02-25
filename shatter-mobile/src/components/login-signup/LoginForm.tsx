@@ -46,15 +46,15 @@ export default function LoginForm() {
 
 			const user: User = {
 				user_id: userResponse.userId,
-				name: userData?.name,
+				name: userData?.user.name,
 				email,
-				socialLinks: userData?.socialLinks ?? [],
+				socialLinks: userData?.user.socialLinks ?? [],
 				isGuest: false,
 			};
 
-			await authenticate(user, userResponse.token);
+			await authenticate(user, userResponse.token, false);
 
-			router.push("/JoinEvent")
+			router.push("/JoinEventPage")
 		} catch (err) {
 			console.log("Login failed:", err);
 			setError((err as Error).message || "Uh Oh! Please check your login info and try again.");

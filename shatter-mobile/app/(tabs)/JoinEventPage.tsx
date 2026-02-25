@@ -13,6 +13,7 @@ export default function JoinEventPage() {
 	const [loading, setLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+	//for manual code entry
 	const handleJoinEvent = async () => {
 		setLoading(true);
 		try {
@@ -27,7 +28,7 @@ export default function JoinEventPage() {
 		} finally {
 			setLoading(false);
 		}
-	}
+	};
 
 	return (
 		<View style={styles.container}>
@@ -95,6 +96,7 @@ const styles = StyleSheet.create({
 	},
 	errorText: {
 		color: "#d32f2f",
+		textAlign: "center",
 		marginTop: 8,
 		fontSize: 14,
 		justifyContent: "center",

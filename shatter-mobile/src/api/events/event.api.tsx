@@ -84,10 +84,12 @@ export async function JoinEventByIdUserApi(
 		if (err.response) {
 			switch (err.response.status) {
 				case 400:
-					throw new Error("A required field is missing, or the event is full. Please try again later.");
+					throw new Error(
+						"A required field is missing, or the event is full. Please try again later.",
+					);
 				case 404:
 					throw new Error("The event cannot be found. Please try again later.");
-                case 409:
+				case 409:
 					throw new Error("You're already signed up for this event!");
 				case 500:
 					throw new Error("Server error. Please try again later.");
@@ -117,13 +119,17 @@ export async function JoinEventByIdGuestApi(
 		if (err.response) {
 			switch (err.response.status) {
 				case 400:
-					throw new Error("A required field is missing, or the event is full. Please try again later.");
+					throw new Error(
+						"A required field is missing, or the event is full. Please try again later.",
+					);
 				case 404:
 					throw new Error("The event cannot be found. Please try again later.");
 				case 500:
 					throw new Error("Server error. Please try again later.");
 				default:
-					throw new Error("Signup failed.");
+					throw new Error(
+						"Event joining failed." + err.response.status + err.response.config,
+					);
 			}
 		}
 

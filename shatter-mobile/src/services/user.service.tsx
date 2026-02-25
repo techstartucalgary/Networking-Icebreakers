@@ -9,6 +9,8 @@ import UserLoginResponse from "../interfaces/responses/UserLoginResponse";
 import UserSignupResponse from "../interfaces/responses/UserSignupResponse";
 import UserConnectionsResponse from "../interfaces/responses/GetUserConnectionsResponse";
 import { User } from "../interfaces/User";
+import GetUserDataResponse from "../interfaces/responses/GetUserDataResponse";
+import UserInfoUpdateResponse from "../interfaces/responses/UpdateUserInfoResponse";
 
 export async function userLogin(
   email: string,
@@ -28,28 +30,22 @@ export async function userSignup(
 export async function userFetch(
 	userId: string,
 	token: string,
-): Promise<User | undefined> {
-	const res = await UserFetchApi(userId, token);
-	if (!res || !res.success) return undefined;
-	return res.user;
+): Promise<GetUserDataResponse> {
+	return await UserFetchApi(userId, token);
 }
 
 export async function fetchConnections(
 	userId: string,
 	eventId: string,
 	token: string,
-): Promise<UserConnectionsResponse | undefined> {
-	const res = await UserConnectionsApi(userId, eventId, token);
-	if (!res || !res.success) return {success: false, connections: []};
-	return {success: true, connections: res.connections};
+): Promise<UserConnectionsResponse> {
+	return await UserConnectionsApi(userId, eventId, token);
 }
 
 export async function userUpdate(
 	userId: string,
 	updates: Partial<User>,
 	token: string
-): Promise<User | undefined> {
-	const res = await UserUpdateApi(userId, updates, token);
-	if (!res || !res.success) return undefined;
-	return res.user;
+): Promise<UserInfoUpdateResponse> {
+	return await UserUpdateApi(userId, updates, token);
 }

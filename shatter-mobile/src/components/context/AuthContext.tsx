@@ -1,18 +1,18 @@
+import { SocialLink, User } from "@/src/interfaces/User";
 import { userFetch } from "@/src/services/user.service";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import {
-	AuthDataStorage,
-	getStoredAuth,
-	saveStoredAuth,
-} from "./AsyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { User } from "@/src/interfaces/User";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { AuthDataStorage, getStoredAuth, saveStoredAuth } from "./AsyncStorage";
 
 type AuthContextType = {
 	authStorage: AuthDataStorage;
 	user: User | undefined;
-	authenticate: (user: User, accessToken: string) => Promise<void>;
-	continueAsGuest: (name: string, label: string, socialLink: string) => Promise<void>;
+	authenticate: (
+		user: User,
+		accessToken: string,
+		isGuest: boolean,
+	) => Promise<void>;
+	continueAsGuest: (name: string, socialLink: SocialLink) => Promise<void>;
 	logout: () => Promise<void>;
 	updateUser: (updates: Partial<User>) => User | undefined;
 };
@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		userId: "",
 		accessToken: "",
 		isGuest: true,
+		guestInfo: { name: "", socialLinks: [] },
 	});
 
 	const [user, setUser] = useState<User | undefined>(undefined);
@@ -33,39 +34,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		const load = async () => {
 			const stored = await getStoredAuth();
 			setAuthStorage(stored);
-			if (stored.userId && stored.accessToken) {
-				const importedUser = await userFetch(stored.userId, stored.accessToken);
-				if (importedUser) {
+			if (!stored.isGuest && stored.userId && stored.accessToken) {
+				//user is logged in, fetch most current data
+				const res = await userFetch(stored.userId, stored.accessToken);
+				if (res) {
 					const mappedUser: User = {
-						user_id: importedUser.user_id,
-						name: importedUser.name,
-						email: importedUser.email,
+						user_id: res.user.user_id,
+						name: res.user.name,
+						email: res.user.email,
+						isGuest: res.user.isGuest,
+						socialLinks: res.user.socialLinks,
+					};
+					setUser(mappedUser);
+				}
+			} else {
+				//user is guest, fetch last saved in local
+				const savedData = await getStoredAuth();
+				if (savedData) {
+					const mappedUser: User = {
+						user_id: savedData.userId,
+						name: savedData.guestInfo.name,
+						email: "",
+						isGuest: savedData.isGuest,
+						socialLinks: savedData.guestInfo.socialLinks,
 					};
 					setUser(mappedUser);
 				}
 			}
-			
 		};
 
 		load();
 	}, []);
 
-	const authenticate = async (user: User, accessToken: string) => {
+	const authenticate = async (
+		user: User,
+		accessToken: string,
+		isGuest: boolean,
+	) => {
 		setUser(user);
 		const storageData: AuthDataStorage = {
 			userId: user?.user_id,
 			accessToken,
-			isGuest: false,
+			isGuest: isGuest,
+			guestInfo: { name: user.name, socialLinks: user.socialLinks },
 		};
 		setAuthStorage(storageData);
 		await saveStoredAuth(storageData);
 	};
 
-	const continueAsGuest = async (name: string, label: string, socialLink: string) => {
+	const continueAsGuest = async (name: string, socialLink: SocialLink) => {
 		const guestUser: User = {
-			user_id: "guest-" + Date.now().toString(), //TODO: how to ID guests?
+			user_id: "GUEST",
 			name: name,
-			socialLinks: [{label, url: socialLink}],
+			socialLinks: [{ label: socialLink.label, url: socialLink.url }],
 			isGuest: true,
 		};
 
@@ -75,6 +96,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			userId: guestUser.user_id,
 			accessToken: "",
 			isGuest: true,
+			guestInfo: { name: guestUser.name, socialLinks: guestUser.socialLinks },
 		};
 
 		setAuthStorage(storageData);
@@ -83,8 +105,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 	const logout = async () => {
 		setUser(undefined);
-		setAuthStorage({ userId: "", accessToken: "", isGuest: true});
-		await AsyncStorage.clear()
+		setAuthStorage({
+			userId: "",
+			accessToken: "",
+			isGuest: true,
+			guestInfo: { name: "", socialLinks: [] },
+		});
+		await AsyncStorage.clear();
 	};
 
 	//Update in-memory user

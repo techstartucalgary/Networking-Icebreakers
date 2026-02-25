@@ -114,7 +114,7 @@ export async function GetUserEventsApi(userId: string, token: string): Promise<G
     }
 }
 
-export async function UserConnectionsApi(userId: string, eventId: string, token: string): Promise<UserConnectionsResponse | undefined> {
+export async function UserConnectionsApi(userId: string, eventId: string, token: string): Promise<UserConnectionsResponse> {
     try{
         const body: UserConnectionsRequest = {userId, eventId,};
         const response: AxiosResponse<UserConnectionsResponse> = await axios.post(`${API_BASE_URL_USER}/blah`, body, 
@@ -138,7 +138,7 @@ export async function UserConnectionsApi(userId: string, eventId: string, token:
     }
 }
 
-export async function UserUpdateApi(userId: string, updates: Partial<User>, token: string): Promise<UserInfoUpdateResponse | undefined> {
+export async function UserUpdateApi(userId: string, updates: Partial<User>, token: string): Promise<UserInfoUpdateResponse> {
     try{
         const body = {
             name: updates.name,

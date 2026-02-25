@@ -1,4 +1,4 @@
-type SocialLink = {
+export type SocialLink = {
   label: string;
   url: string;
 };
@@ -6,12 +6,13 @@ type SocialLink = {
 //internal user for mobile
 export type User = {
 	user_id: string;
-	name?: string;
+	name: string;
 	email?: string;
+	password?: string
 	bio?: string;
 	profilePhoto?: string;
-	socialLinks?: SocialLink[]
-	isGuest?: boolean;
+	socialLinks: SocialLink[]
+	isGuest: boolean;
 };
 
 export enum UserType{

@@ -1,5 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import EventIB from "@/src/interfaces/Event";
 import {
 	getEventByCode,
 	JoinEventIdGuest,
@@ -8,17 +6,7 @@ import {
 import { useAuth } from "@/src/components/context/AuthContext";
 
 export function useJoinEvent() {
-	const { user, authStorage } = useAuth();
-
-	const saveGuestEvent = async (event: EventIB) => {
-		const stored = await AsyncStorage.getItem("guestEvents");
-		const events: EventIB[] = stored ? JSON.parse(stored) : [];
-
-		if (!events.some(e => e._id === event._id)) {
-			events.push(event);
-			await AsyncStorage.setItem("guestEvents", JSON.stringify(events));
-		}
-	};
+	const { user, authStorage, authenticate } = useAuth();
 
 	const joinEvent = async (joinCode: string): Promise<string> => {
 		const normalizedCode = joinCode.trim().toUpperCase();
@@ -36,13 +24,11 @@ export function useJoinEvent() {
 
 		try {
 			if (!authStorage.isGuest) {
-			await JoinEventIdUser(eventId, user.user_id, user.name, authStorage.accessToken);
+				await JoinEventIdUser(eventId, user.user_id, user.name, authStorage.accessToken);
 			} else {
-			const result = await JoinEventIdGuest(eventId, user.name);
-			if (!result?.success) {
-				throw new Error("Something went wrong joining the event as a guest.");
-			}
-			await saveGuestEvent(eventData.event);
+				const guestInfo = await JoinEventIdGuest(eventId, user.name);
+				user.user_id = guestInfo.userId //update local user ID
+				authenticate(user, guestInfo.token, true) //update guest account in local context
 			}
 		} catch (err) {
 			console.log("Join event error:", err);
@@ -50,7 +36,7 @@ export function useJoinEvent() {
 		}
 
 		return eventId; //success returns eventId
-		}
+	}
 
 	return { joinEvent };
 }

@@ -18,16 +18,10 @@ const NewEvents = () => {
 
 		try {
 			const stored = await getStoredAuth();
-
-			if (stored.isGuest) {
-				const local = await AsyncStorage.getItem("guestEvents");
-				const events: EventIB[] = local ? JSON.parse(local) : [];
-				setEvents(events);
-				return;
+			if (stored.userId !== "GUEST") { //guest user that hasn't joined event
+				const data = await getUserEvents(stored.userId, stored.accessToken);
+				setEvents(data?.events || []);
 			}
-
-			const data = await getUserEvents(stored.userId, stored.accessToken);
-			setEvents(data?.events || []);
 		} finally {
 			setLoading(false);
 		}

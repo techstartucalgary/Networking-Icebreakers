@@ -28,7 +28,7 @@ const IcebreakerGame = ({ eventId, gameType }: IcebreakerGameProps) => {
         {/* Leave Game Button */}
         <TouchableOpacity
           style={styles.leaveButton}
-          onPress={() => router.replace("/Events")}
+          onPress={() => router.replace("/EventsPage")}
         >
           <Text style={styles.leaveButtonText}>Leave Game</Text>
         </TouchableOpacity>
