@@ -11,20 +11,18 @@ import UserConnectionsResponse from "../interfaces/responses/GetUserConnectionsR
 import { User } from "../interfaces/User";
 
 export async function userLogin(
-	email: string,
-	password: string,
-): Promise<UserLoginResponse | undefined> {
-	const userInfo = await UserLoginApi(email, password);
-	return userInfo;
+  email: string,
+  password: string,
+): Promise<UserLoginResponse> {
+  return await UserLoginApi(email, password);
 }
 
 export async function userSignup(
 	name: string,
 	email: string,
 	password: string,
-): Promise<UserSignupResponse | undefined> {
-	const userInfo = await UserSignupApi(name, email, password);
-	return userInfo;
+): Promise<UserSignupResponse> {
+	return await UserSignupApi(name, email, password);
 }
 
 export async function userFetch(

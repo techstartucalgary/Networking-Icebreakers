@@ -11,7 +11,7 @@ import { User } from "@/src/interfaces/User";
 type AuthContextType = {
 	authStorage: AuthDataStorage;
 	user: User | undefined;
-	login: (user: User, accessToken: string) => Promise<void>;
+	authenticate: (user: User, accessToken: string) => Promise<void>;
 	continueAsGuest: (name: string, label: string, socialLink: string) => Promise<void>;
 	logout: () => Promise<void>;
 	updateUser: (updates: Partial<User>) => User | undefined;
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		load();
 	}, []);
 
-	const login = async (user: User, accessToken: string) => {
+	const authenticate = async (user: User, accessToken: string) => {
 		setUser(user);
 		const storageData: AuthDataStorage = {
 			userId: user?.user_id,
@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			value={{
 				authStorage,
 				user,
-				login,
+				authenticate,
 				continueAsGuest,
 				logout,
 				updateUser,

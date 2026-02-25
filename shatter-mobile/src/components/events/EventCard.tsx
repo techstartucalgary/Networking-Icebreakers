@@ -27,24 +27,28 @@ const EventCard = ({ event, expanded, onPress, onJoinGame, }: EventCardProps) =>
   const loadConnections = async (eventId: string) => {
     try {
       setLoading(true);
+
       const userId = user?.user_id;
-      const accessToken = authStorage.accessToken
+      const accessToken = authStorage.accessToken;
 
       if (!userId) {
-        return {status: "no-user"};
+        throw new Error("No user logged in.");
       }
 
       const res = await fetchConnections(userId, eventId, accessToken);
-      if (!res) {
-        return {status: "connection-error"};
+
+      if (!res || !res.connections) {
+        throw new Error("Unable to load connections for this event.");
       }
 
-      setConnections(res.connections)
-    } catch {
-      setError("Unable to find connections.");
+      setConnections(res.connections);
+
+    } catch (err) {
+      console.log("Load connections error:", err);
+      setError((err as Error).message);
+
     } finally {
       setLoading(false);
-      setError("")
     }
   };
 

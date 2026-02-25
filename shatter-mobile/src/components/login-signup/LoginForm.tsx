@@ -14,7 +14,7 @@ import { useAuth } from "../context/AuthContext";
 import { User } from "@/src/interfaces/User";
 
 export default function LoginForm() {
-	const { login } = useAuth();
+	const { authenticate } = useAuth();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -42,40 +42,22 @@ export default function LoginForm() {
 		try {
 			const userResponse = await userLogin(email, password);
 
-			if (!userResponse) {
-				throw new Error("No response from server");
-			}
-
-			if (!userResponse.userId) {
-				throw new Error("No user found.");
-			}
-
-			if (!userResponse.token) {
-				throw new Error("No access token passed.");
-			}
-
 			const userData = await userFetch(userResponse.userId, userResponse.token);
-
-			if (!userData) {
-				throw new Error("No response from server");
-			}
-
-			console.log(userData.socialLinks)
 
 			const user: User = {
 				user_id: userResponse.userId,
 				name: userData?.name,
 				email,
-				socialLinks: userData.socialLinks,
+				socialLinks: userData?.socialLinks ?? [],
 				isGuest: false,
 			};
 
-			await login(user, userResponse.token);
+			await authenticate(user, userResponse.token);
 
 			router.push("/JoinEvent")
-		} catch (e) {
-			console.log("Login failed:", e);
-			setError("Uh Oh! Please check your login info and try again.");
+		} catch (err) {
+			console.log("Login failed:", err);
+			setError((err as Error).message || "Uh Oh! Please check your login info and try again.");
 		} finally {
 			setLoading(false);
 		}

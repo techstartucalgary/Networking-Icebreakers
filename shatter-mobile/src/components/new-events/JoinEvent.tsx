@@ -7,13 +7,6 @@ import {
 } from "@/src/services/event.service";
 import { useAuth } from "@/src/components/context/AuthContext";
 
-export type JoinResult =
-  | { status: "success"; eventId: string }
-  | { status: "event-not-found" }
-  | { status: "no-user" }
-  | { status: "no-user-id" }
-  | { status: "join-error" };
-
 export function useJoinEvent() {
 	const { user, authStorage } = useAuth();
 
@@ -27,39 +20,37 @@ export function useJoinEvent() {
 		}
 	};
 
-	const joinEvent = async (joinCode: string): Promise<JoinResult> => {
-		const userId = user?.user_id;
-		const name = user?.name;
-		const isGuest = authStorage.isGuest;
-
+	const joinEvent = async (joinCode: string): Promise<string> => {
 		const normalizedCode = joinCode.trim().toUpperCase();
 		const eventData = await getEventByCode(normalizedCode);
-		const eventId = eventData?.event._id;
 
-		if (!userId) return { status: "no-user-id" };
-		if (!eventData || !eventId) return { status: "event-not-found"};
-		if (!name) return { status: "no-user" };
+		if (!user) throw new Error("No user logged in.");
+		if (!user.user_id) throw new Error("Missing user ID.");
+		if (!user.name) throw new Error("Your profile is missing a name.");
 
-		try {
-			if (!isGuest) {
-				await JoinEventIdUser(
-					eventId,
-					userId,
-					name,
-					authStorage.accessToken
-				);
-			} else {
-				const result = await JoinEventIdGuest(eventId, name);
-				if (result?.success) {
-					await saveGuestEvent(eventData.event);
-				}
-			}
-		} catch {
-			return { status:  "join-error" };
+		if (!eventData || !eventData.event?._id) {
+			throw new Error("We couldn’t find that event. Double-check the code.");
 		}
 
-		return { status: "success", "eventId": eventId };
-	};
+		const eventId = eventData.event._id;
+
+		try {
+			if (!authStorage.isGuest) {
+			await JoinEventIdUser(eventId, user.user_id, user.name, authStorage.accessToken);
+			} else {
+			const result = await JoinEventIdGuest(eventId, user.name);
+			if (!result?.success) {
+				throw new Error("Something went wrong joining the event as a guest.");
+			}
+			await saveGuestEvent(eventData.event);
+			}
+		} catch (err) {
+			console.log("Join event error:", err);
+			throw new Error("Something went wrong joining the event.");
+		}
+
+		return eventId; //success returns eventId
+		}
 
 	return { joinEvent };
 }

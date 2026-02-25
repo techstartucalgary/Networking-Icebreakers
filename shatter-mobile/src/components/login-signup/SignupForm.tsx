@@ -7,7 +7,7 @@ import { userSignup } from "@/src/services/user.service";
 import { User } from "@/src/interfaces/User";
 
 export default function SignUpForm() {
-  const { login } = useAuth();
+  const { authenticate } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,10 +43,6 @@ export default function SignUpForm() {
     try {
       const userResponse = await userSignup(name, email, password);
 
-      if (!userResponse) {
-        throw new Error("No response from server");
-      }
-
       const user: User = {
         user_id: userResponse.userId,
         name,
@@ -55,12 +51,12 @@ export default function SignUpForm() {
         isGuest: false,
       };
 
-      await login(user, userResponse.token); 
+      await authenticate(user, userResponse.token); 
 
       router.push("/(tabs)/JoinEvent")
-    } catch (e) {
-      console.log("Signup failed:", e);
-      setError("Signup Failure");
+    } catch (err) {
+      console.log("Signup failed:", err);
+      setError((err as Error).message || "Uh Oh! Please check your signup info and try again.");
     } finally {
       setLoading(false);
     }
