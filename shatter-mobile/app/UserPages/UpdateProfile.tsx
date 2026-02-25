@@ -44,7 +44,7 @@ export default function UpdateProfile() {
   };
 
   const handleCancel = () => {
-    router.back();
+    router.push("/(tabs)/Profile");
   }
 
   return (

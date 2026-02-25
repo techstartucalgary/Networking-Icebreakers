@@ -45,7 +45,7 @@ export default function GuestPage() {
 
       <Button title="Continue" onPress={handleContinue} />
       <Button title="Back" onPress={() => router.push("/UserPages/Login")} />
-      <Text style={styles.inputInfo}>Your contact link can be your email, your LinkedIn profile URL, or another relevant, personal link.</Text>
+      <Text style={styles.inputInfo}>Your contact link can be your email, your LinkedIn profile URL, or another relevant personal link.</Text>
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );

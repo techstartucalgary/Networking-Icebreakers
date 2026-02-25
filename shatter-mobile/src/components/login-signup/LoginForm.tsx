@@ -39,7 +39,6 @@ export default function LoginForm() {
 			return;
 		}
 
-		//TODO: Social Link storing?
 		try {
 			const userResponse = await userLogin(email, password);
 
@@ -70,12 +69,13 @@ export default function LoginForm() {
 			};
 
 			await login(user, userResponse.token);
+
+			router.push("/JoinEvent")
 		} catch (e) {
 			console.log("Login failed:", e);
-			setError("Login Failure: " + e);
+			setError("Uh Oh! Please check your login info and try again.");
 		} finally {
 			setLoading(false);
-			router.push("/JoinEvent")
 		}
 	};
 
