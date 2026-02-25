@@ -5,7 +5,6 @@ import {
 	UserUpdateApi,
 	UserConnectionsApi,
 } from "../api/users/user.api";
-import { AuthUser } from "../components/context/AuthContext";
 import UserLoginResponse from "../interfaces/responses/UserLoginResponse";
 import UserSignupResponse from "../interfaces/responses/UserSignupResponse";
 import UserConnectionsResponse from "../interfaces/responses/GetUserConnectionsResponse";
@@ -49,7 +48,7 @@ export async function fetchConnections(
 
 export async function userUpdate(
 	userId: string,
-	updates: Partial<AuthUser>,
+	updates: Partial<User>,
 	token: string
 ): Promise<User | undefined> {
 	const res = await UserUpdateApi(userId, updates, token);

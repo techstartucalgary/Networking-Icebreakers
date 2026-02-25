@@ -4,14 +4,14 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Button,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAuth, AuthUser } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import { User } from "@/src/interfaces/User";
 
 export default function LoginForm() {
 	const { login } = useAuth();
@@ -60,7 +60,9 @@ export default function LoginForm() {
 				throw new Error("No response from server");
 			}
 
-			const user: AuthUser = {
+			console.log(userData.socialLinks)
+
+			const user: User = {
 				user_id: userResponse.userId,
 				name: userData?.name,
 				email,

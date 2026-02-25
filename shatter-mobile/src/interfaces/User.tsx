@@ -1,16 +1,18 @@
-export interface User {
-    userId: string,
-    name: string,
-    email: string,
-    password: string,
-    profilePhoto: string,
-    bio: string,
-    socialLinks: {
-        label: string;
-        url: string;
-    }[],
-    userType: UserType
-}
+type SocialLink = {
+  label: string;
+  url: string;
+};
+
+//internal user for mobile
+export type User = {
+	user_id: string;
+	name?: string;
+	email?: string;
+	bio?: string;
+	profilePhoto?: string;
+	socialLinks?: SocialLink[]
+	isGuest?: boolean;
+};
 
 export enum UserType{
     Networker = "networker",

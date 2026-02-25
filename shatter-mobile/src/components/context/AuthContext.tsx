@@ -6,30 +6,15 @@ import {
 	saveStoredAuth,
 } from "./AsyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-type SocialLink = {
-  label: string;
-  url: string;
-};
-
-//internal user for mobile
-export type AuthUser = {
-	user_id: string;
-	name?: string;
-	email?: string;
-	bio?: string;
-	profilePhoto?: string;
-	socialLinks?: SocialLink[]
-	isGuest?: boolean;
-};
+import { User } from "@/src/interfaces/User";
 
 type AuthContextType = {
 	authStorage: AuthDataStorage;
-	user: AuthUser | undefined;
-	login: (user: AuthUser, accessToken: string) => Promise<void>;
+	user: User | undefined;
+	login: (user: User, accessToken: string) => Promise<void>;
 	continueAsGuest: (name: string, label: string, socialLink: string) => Promise<void>;
 	logout: () => Promise<void>;
-	updateUser: (updates: Partial<AuthUser>) => AuthUser | undefined;
+	updateUser: (updates: Partial<User>) => User | undefined;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,7 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		isGuest: true,
 	});
 
-	const [user, setUser] = useState<AuthUser | undefined>(undefined);
+	const [user, setUser] = useState<User | undefined>(undefined);
 
 	//load stored data on startup
 	useEffect(() => {
@@ -51,8 +36,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			if (stored.userId && stored.accessToken) {
 				const importedUser = await userFetch(stored.userId, stored.accessToken);
 				if (importedUser) {
-					const mappedUser: AuthUser = {
-						user_id: importedUser.userId,
+					const mappedUser: User = {
+						user_id: importedUser.user_id,
 						name: importedUser.name,
 						email: importedUser.email,
 					};
@@ -65,7 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		load();
 	}, []);
 
-	const login = async (user: AuthUser, accessToken: string) => {
+	const login = async (user: User, accessToken: string) => {
 		setUser(user);
 		const storageData: AuthDataStorage = {
 			userId: user?.user_id,
@@ -77,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	};
 
 	const continueAsGuest = async (name: string, label: string, socialLink: string) => {
-		const guestUser: AuthUser = {
+		const guestUser: User = {
 			user_id: "guest-" + Date.now().toString(), //TODO: how to ID guests?
 			name: name,
 			socialLinks: [{label, url: socialLink}],
@@ -103,7 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	};
 
 	//Update in-memory user
-	const updateUser = (updates: Partial<AuthUser>): AuthUser | undefined => {
+	const updateUser = (updates: Partial<User>): User | undefined => {
 		if (!user) return undefined;
 		const newUser = { ...user, ...updates };
 		setUser(newUser);

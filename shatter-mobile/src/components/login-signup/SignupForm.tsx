@@ -2,11 +2,12 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useAuth, AuthUser } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { userSignup } from "@/src/services/user.service";
+import { User } from "@/src/interfaces/User";
 
 export default function SignUpForm() {
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,7 +47,7 @@ export default function SignUpForm() {
         throw new Error("No response from server");
       }
 
-      const user: AuthUser = {
+      const user: User = {
         user_id: userResponse.userId,
         name,
         email,
@@ -55,6 +56,8 @@ export default function SignUpForm() {
       };
 
       await login(user, userResponse.token); 
+
+      router.push("/(tabs)/JoinEvent")
     } catch (e) {
       console.log("Signup failed:", e);
       setError("Signup Failure");
