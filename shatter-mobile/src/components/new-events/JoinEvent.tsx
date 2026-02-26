@@ -23,9 +23,17 @@ export function useJoinEvent() {
 		const eventId = eventData.event._id;
 
 		try {
-			if (!authStorage.isGuest) {
+			if (!authStorage.isGuest) { //first time joining event as guest
 				await JoinEventIdUser(eventId, user.user_id, user.name, authStorage.accessToken);
-			} else {
+			} else { //guest joining event
+				if (!user.user_id) { //first time joining event
+					const guestInfo = await JoinEventIdGuest(eventId, user.name);
+					user.user_id = guestInfo.userId;
+					await authenticate(user, guestInfo.token, true);
+
+				} else { //returning guest joining another event
+					await JoinEventIdUser(eventId, user.user_id, user.name, authStorage.accessToken);
+				}
 				const guestInfo = await JoinEventIdGuest(eventId, user.name);
 				user.user_id = guestInfo.userId //update local user ID
 				authenticate(user, guestInfo.token, true) //update guest account in local context

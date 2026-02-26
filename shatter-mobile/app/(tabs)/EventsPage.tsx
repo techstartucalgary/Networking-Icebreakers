@@ -18,7 +18,7 @@ const NewEvents = () => {
 
 		try {
 			const stored = await getStoredAuth();
-			if (stored.userId !== "GUEST") { //guest user that hasn't joined event
+			if (stored.userId) { //guest user that hasn't joined event
 				const data = await getUserEvents(stored.userId, stored.accessToken);
 				setEvents(data?.events || []);
 			}

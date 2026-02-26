@@ -60,7 +60,7 @@ export default function Profile() {
 		);
 	}
 
-	if (user?.isGuest) {
+	if (user.isGuest) {
 		return (
 			<View style={styles.container}>
 				<Text style={styles.title}>Welcome, {user?.name || "Guest"}!</Text>
@@ -72,7 +72,7 @@ export default function Profile() {
 					To upgrade your account, join an event and then come back here to set it up!
 				</Text>
 
-        {socialLinks.length === 0 && (
+        		{socialLinks.length === 0 && (
 					<Text style={styles.emptyText}>No social links added yet.</Text>
 				)}
 
@@ -86,7 +86,7 @@ export default function Profile() {
 				))}
 
 				{/* Guest user who has joined event / has userId */}
-				{user?.user_id && user.user_id !== "GUEST" && (
+				{user.user_id && (
 					<View>
 						<TouchableOpacity
 							style={styles.editButton}

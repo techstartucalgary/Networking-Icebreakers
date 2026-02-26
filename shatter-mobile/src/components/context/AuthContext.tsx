@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 	const continueAsGuest = async (name: string, socialLink: SocialLink) => {
 		const guestUser: User = {
-			user_id: "GUEST",
+			user_id: null,
 			name: name,
 			socialLinks: [{ label: socialLink.label, url: socialLink.url }],
 			isGuest: true,

@@ -4,17 +4,22 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const STORAGE_KEY = "AUTH_DATA";
 
 export type AuthDataStorage = {
-	userId: string;
+	userId: string | null;
 	accessToken: string;
 	isGuest: boolean;
-	guestInfo: {name: string, socialLinks: SocialLink[]};
+	guestInfo: { name: string; socialLinks: SocialLink[] };
 };
 
 export const getStoredAuth = async (): Promise<AuthDataStorage> => {
 	const json = await AsyncStorage.getItem(STORAGE_KEY);
 	return json
 		? JSON.parse(json)
-		: { userId: "", accessToken: "", isGuest: false, guestInfo: {name: "", socialLinks: []} };
+		: {
+				userId: "",
+				accessToken: "",
+				isGuest: false,
+				guestInfo: { name: "", socialLinks: [] },
+			};
 };
 
 export const saveStoredAuth = async (data: Partial<AuthDataStorage>) => {
