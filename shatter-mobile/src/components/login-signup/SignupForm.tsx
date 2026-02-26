@@ -4,13 +4,13 @@ import { userSignup } from "@/src/services/user.service";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  Button,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+	ActivityIndicator,
+	Button,
+	StyleSheet,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
@@ -112,7 +112,7 @@ export default function SignUpForm() {
 			</TouchableOpacity>
 
 			<TouchableOpacity
-				onPress={() => router.push("/UserPages/Signup")}
+				onPress={() => router.push("/UserPages/Login")}
 				style={{ marginTop: 16 }}
 			>
 				<Text style={{ textAlign: "center", color: "#1C1DEF" }}>
