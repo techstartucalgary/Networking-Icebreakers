@@ -50,11 +50,11 @@ router.post("/by-emails", authMiddleware, createParticipantConnectionByEmails);
 router.delete("/delete", authMiddleware, deleteParticipantConnection);
 
 // Get all connections for (eventId + participantId) where participant is primary or secondary
-// PUT /api/participantConnections/getByParticipantAndEvent
-router.put("/getByParticipantAndEvent", authMiddleware, getConnectionsByParticipantAndEvent);
+// GET /api/participantConnections/getByParticipantAndEvent
+router.get("/getByParticipantAndEvent", authMiddleware, getConnectionsByParticipantAndEvent);
 
 // Get all connections for (eventId + userEmail) where user's participant is primary or secondary
-// PUT /api/participantConnections/getByUserEmailAndEvent
-router.put("/getByUserEmailAndEvent", authMiddleware, getConnectionsByUserEmailAndEvent);
+// GET /api/participantConnections/getByUserEmailAndEvent
+router.get("/getByUserEmailAndEvent", authMiddleware, getConnectionsByUserEmailAndEvent);
 
 export default router;
