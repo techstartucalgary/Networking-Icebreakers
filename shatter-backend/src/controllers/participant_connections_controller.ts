@@ -231,34 +231,24 @@ export async function deleteParticipantConnection(req: Request, res: Response) {
   }
 }
 
-/**
- * PUT /api/participantConnections/getByParticipantAndEvent
- *
- * Returns all ParticipantConnections for an event where the given participant is either:
- * - primaryParticipantId OR
- * - secondaryParticipantId
- *
- * @param req.body.eventId - MongoDB ObjectId of the event (required)
- * @param req.body.participantId - MongoDB ObjectId of the participant (required)
- *
- * @returns 200 - Array of matching ParticipantConnections
- * @returns 400 - Missing/invalid body params
- * @returns 500 - Internal server error
- */
 export async function getConnectionsByParticipantAndEvent(req: Request, res: Response) {
   try {
-    const { eventId, participantId } = req.body;
+    const { eventId, participantId } = req.query;
 
-    if (!eventId || !Types.ObjectId.isValid(eventId)) {
+    if (!eventId || typeof eventId !== "string" || !Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({ error: "Invalid eventId" });
     }
-    if (!participantId || !Types.ObjectId.isValid(participantId)) {
+
+    if (!participantId || typeof participantId !== "string" || !Types.ObjectId.isValid(participantId)) {
       return res.status(400).json({ error: "Invalid participantId" });
     }
 
     const connections = await ParticipantConnection.find({
       _eventId: eventId,
-      $or: [{ primaryParticipantId: participantId }, { secondaryParticipantId: participantId }],
+      $or: [
+        { primaryParticipantId: participantId },
+        { secondaryParticipantId: participantId },
+      ],
     });
 
     return res.status(200).json(connections);
@@ -267,34 +257,19 @@ export async function getConnectionsByParticipantAndEvent(req: Request, res: Res
   }
 }
 
-/**
- * PUT /api/participantConnections/getByUserEmailAndEvent
- *
- * Returns all ParticipantConnections for an event where the given user's PARTICIPANT is either:
- * - primaryParticipantId OR
- * - secondaryParticipantId
- *
- * @param req.body.eventId - MongoDB ObjectId of the event (required)
- * @param req.body.userEmail - Email of the user (required)
- *
- * Behavior notes:
- * - Maps userEmail -> User -> Participant (for that event)
- * - Then returns ParticipantConnections where that participant appears
- *
- * @returns 200 - Array of matching ParticipantConnections
- * @returns 400 - Missing/invalid body params or invalid userEmail (no matching user)
- * @returns 404 - Participant not found for this event (even though user exists)
- * @returns 500 - Internal server error
- */
 export async function getConnectionsByUserEmailAndEvent(req: Request, res: Response) {
   try {
-    const { eventId, userEmail } = req.body;
+    const { eventId, userEmail } = req.query;
 
-    if (!eventId || !Types.ObjectId.isValid(eventId)) {
+    if (!eventId || typeof eventId !== "string" || !Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({ error: "Invalid eventId" });
     }
 
-    const email = String(userEmail).trim().toLowerCase();
+    if (!userEmail || typeof userEmail !== "string") {
+      return res.status(400).json({ error: "Invalid userEmail" });
+    }
+
+    const email = userEmail.trim().toLowerCase();
     const user = await User.findOne({ email }).select("_id");
 
     if (!user) {
@@ -302,13 +277,17 @@ export async function getConnectionsByUserEmailAndEvent(req: Request, res: Respo
     }
 
     const participant = await Participant.findOne({ eventId, userId: user._id }).select("_id");
+
     if (!participant) {
       return res.status(404).json({ error: "Participant not found for this event (by user email)" });
     }
 
     const connections = await ParticipantConnection.find({
       _eventId: eventId,
-      $or: [{ primaryParticipantId: participant._id }, { secondaryParticipantId: participant._id }],
+      $or: [
+        { primaryParticipantId: participant._id },
+        { secondaryParticipantId: participant._id }
+      ],
     });
 
     return res.status(200).json(connections);
