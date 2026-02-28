@@ -8,6 +8,7 @@ import {
   getConnectionsByParticipantAndEvent,
   getConnectionsByUserEmailAndEvent,
 } from "../controllers/participant_connections_controller";
+import { authMiddleware } from "../middleware/auth_middleware";
 
 const router = Router();
 
@@ -38,22 +39,22 @@ const router = Router();
 
 // Create connection by participant ObjectIds
 // POST /api/participantConnections
-router.post("/", createParticipantConnection);
+router.post("/", authMiddleware, createParticipantConnection);
 
 // Create connection by user emails (controller converts to participant ObjectIds)
 // POST /api/participantConnections/by-emails
-router.post("/by-emails", createParticipantConnectionByEmails);
+router.post("/by-emails", authMiddleware, createParticipantConnectionByEmails);
 
 // Delete connection (eventId + connectionId in request body)
 // DELETE /api/participantConnections/delete
-router.delete("/delete", deleteParticipantConnection);
+router.delete("/delete", authMiddleware, deleteParticipantConnection);
 
 // Get all connections for (eventId + participantId) where participant is primary or secondary
 // PUT /api/participantConnections/getByParticipantAndEvent
-router.put("/getByParticipantAndEvent", getConnectionsByParticipantAndEvent);
+router.put("/getByParticipantAndEvent", authMiddleware, getConnectionsByParticipantAndEvent);
 
 // Get all connections for (eventId + userEmail) where user's participant is primary or secondary
 // PUT /api/participantConnections/getByUserEmailAndEvent
-router.put("/getByUserEmailAndEvent", getConnectionsByUserEmailAndEvent);
+router.put("/getByUserEmailAndEvent", authMiddleware, getConnectionsByUserEmailAndEvent);
 
 export default router;
