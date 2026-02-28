@@ -1,3 +1,5 @@
+import { useGame } from "@/src/components/context/GameContext";
+import { EventState } from "@/src/interfaces/Event";
 import {
 	getBingoCategories,
 	getBingoNamesByEventId,
@@ -32,6 +34,7 @@ type WinningLine = {
 };
 
 const NameBingo = ({ eventId }: NameBingoProps) => {
+	const { gameState, setGameData, setGameStatus } = useGame();
 	const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 	const [participants, setParticipants] = useState<string[]>([]);
 	const [categories, setCategories] = useState<string[][]>([]);
@@ -276,21 +279,23 @@ const NameBingo = ({ eventId }: NameBingoProps) => {
 			)}
 
 			{/* Search bar with type-ahead */}
-			<View style={styles.inputRow}>
-				<TextInput
-					style={styles.inputFlex}
-					placeholder="Who did you find?"
-					value={search}
-					onChangeText={setSearch}
-				/>
-				<TouchableOpacity
-					style={[styles.submitButton]}
-					onPress={() => handleAssign(search.trim())}
-					disabled={!selectedCardId || !isValidParticipant}
-				>
-					<Text style={styles.submitText}>Submit</Text>
-				</TouchableOpacity>
-			</View>
+			{gameState.progress === EventState.IN_PROGRESS && (
+				<View style={styles.inputRow}>
+					<TextInput
+						style={styles.inputFlex}
+						placeholder="Who did you find?"
+						value={search}
+						onChangeText={setSearch}
+					/>
+					<TouchableOpacity
+						style={[styles.submitButton]}
+						onPress={() => handleAssign(search.trim())}
+						disabled={!selectedCardId || !isValidParticipant}
+					>
+						<Text style={styles.submitText}>Submit</Text>
+					</TouchableOpacity>
+				</View>
+			)}
 
 			{/* Dropdown suggestions */}
 			{search.length > 0 && filteredParticipants.length > 0 && (

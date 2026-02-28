@@ -34,7 +34,6 @@ export function useJoinEvent() {
 				//guest joining event
 				if (!user._id) {
 					//first time joining event
-					console.log("User:", user);
 					const guestInfo = await JoinEventIdGuest(eventId, user.name);
 					user._id = guestInfo.userId;
 					await authenticate(user, guestInfo.token, true);

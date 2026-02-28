@@ -1,3 +1,4 @@
+import { GameType } from "@/src/interfaces/Event";
 import UserConnectionsRequest from "@/src/interfaces/requests/GetUserConnectionsRequest";
 import UserLoginRequest from "@/src/interfaces/requests/UserLoginRequest";
 import UserSignupRequest from "@/src/interfaces/requests/UserSignupRequest";

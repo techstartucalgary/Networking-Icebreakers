@@ -1,20 +1,17 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import NameBingo from "./NameBingo";
 import { useRouter } from "expo-router";
+import { useGame } from "../context/GameContext";
 
-type IcebreakerGameProps = {
-  eventId: string;
-  gameType: "Name Bingo"; //TODO: Add more games
-};
-
-const IcebreakerGame = ({ eventId, gameType }: IcebreakerGameProps) => {
+const IcebreakerGame = () => {
+  const { gameState } = useGame();
   const router = useRouter();
 
   //Pick game-specific component
   const renderGame = () => {
-    switch (gameType) {
+    switch (gameState.gameType) {
       case "Name Bingo":
-        return <NameBingo eventId={eventId} />;
+        return <NameBingo eventId={gameState.eventId} />;
       default:
         return <Text>Game not found</Text>;
     }

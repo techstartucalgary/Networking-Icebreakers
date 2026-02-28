@@ -1,34 +1,34 @@
 import { fetchConnections } from "@/src/services/user.service";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+	FlatList,
+	Image,
+	Pressable,
+	StyleSheet,
+	Text,
+	View,
 } from "react-native";
-import Event from "../../interfaces/Event";
+import EventIB, { EventState, GameType } from "../../interfaces/Event";
 import { useAuth } from "../context/AuthContext";
+import { useGame } from "../context/GameContext";
 
 type EventCardProps = {
-	event: Event;
+	event: EventIB;
 	expanded: boolean;
 	onPress: () => void; //if tapped
-	onJoinGame?: (event: Event) => void;
 };
 
-const EventCard = ({
-	event,
-	expanded,
-	onPress,
-	onJoinGame,
-}: EventCardProps) => {
-	const live = true; //(event.currentState === EventState.IN_PROGRESS); //TODO: Remove hard coded live status
+const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
+	const router = useRouter();
 	const { user, authStorage } = useAuth();
+	const { initializeGame } = useGame();
 	const [connections, setConnections] = useState<string[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
+
+	const live = event.currentState === EventState.IN_PROGRESS; //TODO: Remove hard coded live status
+	const completed = true; //event.currentState === EventState.COMPLETED; //TODO: Remove hard coded completed status
 
 	useEffect(() => {
 		if (expanded) {
@@ -84,13 +84,38 @@ const EventCard = ({
 				<View style={styles.expandedContent}>
 					<Text>{event.description}</Text>
 
-					{/* Join Game Button */}
-					{live && onJoinGame && (
+					{/* Join and View Game Buttons */}
+					{live && (
 						<Pressable
-							onPress={() => onJoinGame(event)}
+							onPress={() => {
+								if (!event.gameType) {
+									//REMOVE hard-coded event data
+									event.currentState = EventState.IN_PROGRESS;
+									event.gameType = GameType.NAME_BINGO;
+								}
+								initializeGame(event.gameType, event._id, event.currentState);
+								router.push(`/GamePages/Game`);
+							}}
 							style={styles.joinButton}
 						>
 							<Text style={styles.joinButtonText}>Join Game</Text>
+						</Pressable>
+					)}
+
+					{completed && (
+						<Pressable
+							onPress={() => {
+								if (!event.gameType) {
+									//REMOVE hard-coded event data
+									event.currentState = EventState.COMPLETED;
+									event.gameType = GameType.NAME_BINGO;
+								}
+								initializeGame(event.gameType, event._id, event.currentState);
+								router.push(`/GamePages/Game`);
+							}}
+							style={styles.viewButton}
+						>
+							<Text style={styles.viewButtonText}>View Game</Text>
 						</Pressable>
 					)}
 
@@ -176,6 +201,18 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	joinButtonText: {
+		color: "#fff",
+		fontWeight: "bold",
+		fontSize: 15,
+	},
+	viewButton: {
+		marginTop: 12,
+		backgroundColor: "#e5cd15",
+		paddingVertical: 10,
+		borderRadius: 8,
+		alignItems: "center",
+	},
+	viewButtonText: {
 		color: "#fff",
 		fontWeight: "bold",
 		fontSize: 15,

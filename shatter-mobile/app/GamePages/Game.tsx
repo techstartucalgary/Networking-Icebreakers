@@ -1,26 +1,26 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import IcebreakerGame from "../../src/components/games/IcebreakerGame";
 import { getEventById } from "../../src/services/event.service";
+import { useGame } from "@/src/components/context/GameContext";
 
 const GamePage = () => {
 	const router = useRouter();
-	const searchParams = useLocalSearchParams();
-	const eventId = searchParams.eventId.toString();
+	const { gameState } = useGame();
 	const [event, setEvent] = useState<any>(null);
 	const [loading, setLoading] = useState(true);
 
 	const loadGameData = useCallback(async () => {
 		setLoading(true);
 
-		if (!eventId) {
+		if (!gameState?.eventId) {
 			router.replace("/(tabs)/EventsPage");
 			return;
 		}
 
 		//fetch the event data
-		getEventById(eventId)
+		getEventById(gameState?.eventId)
 			.then((data) => {
 				setEvent(data?.event);
 			})
@@ -56,7 +56,7 @@ const GamePage = () => {
 			<Text style={styles.description}>{event.description}</Text>
 
 			{/* Game Rendering */}
-			<IcebreakerGame eventId={event._id} gameType={event.gameType} />
+			<IcebreakerGame/>
 		</View>
 	);
 };
