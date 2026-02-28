@@ -1,5 +1,4 @@
 import { getStoredAuth } from "@/src/components/context/AsyncStorage";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
@@ -18,7 +17,8 @@ const NewEvents = () => {
 
 		try {
 			const stored = await getStoredAuth();
-			if (stored.userId) { //guest user that hasn't joined event
+			if (stored.userId) {
+				//guest that has joined event or user with account
 				const data = await getUserEvents(stored.userId, stored.accessToken);
 				setEvents(data?.events || []);
 			}

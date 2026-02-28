@@ -52,7 +52,7 @@ export default function SignUpForm() {
 			const userResponse = await userSignup(name, email, password);
 
 			const user: User = {
-				user_id: userResponse.userId,
+				_id: userResponse.userId,
 				name,
 				email,
 				socialLinks: [],

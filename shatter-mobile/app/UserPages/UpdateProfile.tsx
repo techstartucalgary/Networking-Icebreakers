@@ -3,12 +3,12 @@ import { userUpdate } from "@/src/services/user.service";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+	ScrollView,
+	StyleSheet,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
 } from "react-native";
 import { useAuth } from "../../src/components/context/AuthContext";
 
@@ -46,7 +46,7 @@ export default function UpdateProfile() {
 		setSocialLinks(socialLinks.filter((_, i) => i !== index));
 
 	const handleSave = async () => {
-		if (!user) return;
+		if (!user || !user._id) return;
 		if ((!email && password) || (email && !password && user.isGuest)) {
 			alert(
 				"Both email and password must be filled to create an account based on guest info.",
@@ -76,7 +76,7 @@ export default function UpdateProfile() {
 			socialLinks,
 		}); //local update
 		const res = await userUpdate(
-			user?.user_id,
+			user._id,
 			{ name, email, bio, profilePhoto, socialLinks },
 			stored.accessToken,
 		); //remote update

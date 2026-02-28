@@ -1,9 +1,9 @@
+import { useAuth } from "@/src/components/context/AuthContext";
 import {
 	getEventByCode,
 	JoinEventIdGuest,
 	JoinEventIdUser,
 } from "@/src/services/event.service";
-import { useAuth } from "@/src/components/context/AuthContext";
 
 export function useJoinEvent() {
 	const { user, authStorage, authenticate } = useAuth();
@@ -13,7 +13,6 @@ export function useJoinEvent() {
 		const eventData = await getEventByCode(normalizedCode);
 
 		if (!user) throw new Error("No user logged in.");
-		if (!user.user_id) throw new Error("Missing user ID.");
 		if (!user.name) throw new Error("Your profile is missing a name.");
 
 		if (!eventData || !eventData.event?._id) {
@@ -23,28 +22,39 @@ export function useJoinEvent() {
 		const eventId = eventData.event._id;
 
 		try {
-			if (!authStorage.isGuest) { //first time joining event as guest
-				await JoinEventIdUser(eventId, user.user_id, user.name, authStorage.accessToken);
-			} else { //guest joining event
-				if (!user.user_id) { //first time joining event
+			if (!authStorage.isGuest && user._id) {
+				//first time joining event as guest
+				await JoinEventIdUser(
+					eventId,
+					user._id,
+					user.name,
+					authStorage.accessToken,
+				);
+			} else {
+				//guest joining event
+				if (!user._id) {
+					//first time joining event
+					console.log("User:", user);
 					const guestInfo = await JoinEventIdGuest(eventId, user.name);
-					user.user_id = guestInfo.userId;
+					user._id = guestInfo.userId;
 					await authenticate(user, guestInfo.token, true);
-
-				} else { //returning guest joining another event
-					await JoinEventIdUser(eventId, user.user_id, user.name, authStorage.accessToken);
+				} else {
+					//returning guest joining another event
+					await JoinEventIdUser(
+						eventId,
+						user._id,
+						user.name,
+						authStorage.accessToken,
+					);
 				}
-				const guestInfo = await JoinEventIdGuest(eventId, user.name);
-				user.user_id = guestInfo.userId //update local user ID
-				authenticate(user, guestInfo.token, true) //update guest account in local context
 			}
-		} catch (err) {
-			console.log("Join event error:", err);
-			throw new Error("Something went wrong joining the event.");
+		} catch (err: any) {
+			console.log(err);
+			throw new Error(err);
 		}
 
 		return eventId; //success returns eventId
-	}
+	};
 
 	return { joinEvent };
 }

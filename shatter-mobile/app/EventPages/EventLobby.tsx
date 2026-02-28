@@ -1,6 +1,6 @@
 import { useLocalSearchParams, router } from "expo-router";
 import { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
 import { getEventById } from "@/src/services/event.service";
 import { EventState } from "@/src/interfaces/Event";
 
@@ -43,6 +43,14 @@ export default function EventLobby() {
           </Text>
         </>
       )}
+
+      {/* Leave Game Button */}
+      <TouchableOpacity
+        style={styles.leaveButton}
+        onPress={() => router.replace("/EventsPage")}
+      >
+        <Text style={styles.leaveButtonText}>Leave Game</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -60,6 +68,18 @@ const styles = StyleSheet.create({
   },
   text: {
     marginTop: 10,
+    fontSize: 16,
+  },
+  leaveButton: {
+    backgroundColor: "#ef4444",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  leaveButtonText: {
+    color: "#fff",
+    fontWeight: "600",
     fontSize: 16,
   },
 });

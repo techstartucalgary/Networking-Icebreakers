@@ -69,10 +69,11 @@ export default function Profile() {
 				</Text>
 
 				<Text style={styles.subtitle}>
-					To upgrade your account, join an event and then come back here to set it up!
+					To upgrade your account, join an event and then come back here to set
+					it up!
 				</Text>
 
-        		{socialLinks.length === 0 && (
+				{socialLinks.length === 0 && (
 					<Text style={styles.emptyText}>No social links added yet.</Text>
 				)}
 
@@ -86,7 +87,7 @@ export default function Profile() {
 				))}
 
 				{/* Guest user who has joined event / has userId */}
-				{user.user_id && (
+				{user._id && (
 					<View>
 						<TouchableOpacity
 							style={styles.editButton}

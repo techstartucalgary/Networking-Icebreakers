@@ -5,7 +5,7 @@ export type SocialLink = {
 
 //internal user for mobile
 export type User = {
-	user_id: string | null; //null for guest users that haven't joined event before
+	_id: string | null; //null for guest users that haven't joined event before
 	name: string;
 	email?: string;
 	password?: string

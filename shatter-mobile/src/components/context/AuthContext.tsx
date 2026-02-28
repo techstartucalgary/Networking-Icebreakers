@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				const res = await userFetch(stored.userId, stored.accessToken);
 				if (res) {
 					const mappedUser: User = {
-						user_id: res.user.user_id,
+						_id: res.user._id,
 						name: res.user.name,
 						email: res.user.email,
 						isGuest: res.user.isGuest,
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				const savedData = await getStoredAuth();
 				if (savedData) {
 					const mappedUser: User = {
-						user_id: savedData.userId,
+						_id: savedData.userId,
 						name: savedData.guestInfo.name,
 						email: "",
 						isGuest: savedData.isGuest,
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	) => {
 		setUser(user);
 		const storageData: AuthDataStorage = {
-			userId: user?.user_id,
+			userId: user?._id,
 			accessToken,
 			isGuest: isGuest,
 			guestInfo: { name: user.name, socialLinks: user.socialLinks },
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 	const continueAsGuest = async (name: string, socialLink: SocialLink) => {
 		const guestUser: User = {
-			user_id: null,
+			_id: null,
 			name: name,
 			socialLinks: [{ label: socialLink.label, url: socialLink.url }],
 			isGuest: true,
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		setUser(guestUser);
 
 		const storageData: AuthDataStorage = {
-			userId: guestUser.user_id,
+			userId: guestUser._id,
 			accessToken: "",
 			isGuest: true,
 			guestInfo: { name: guestUser.name, socialLinks: guestUser.socialLinks },

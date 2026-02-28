@@ -7,14 +7,14 @@ import EventJoinIdResponse from "@/src/interfaces/responses/JoinEventIdResponse"
 import axios, { AxiosError, AxiosResponse } from "axios";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
-const API_BASE_URL: string = `${API_BASE}/api/events`;
+const API_BASE_URL_EVENT: string = `${API_BASE}/api/events`;
 
 export async function GetEventByCodeApi(
 	joinCode: string,
 ): Promise<EventResponse> {
 	try {
 		const response: AxiosResponse<EventResponse> = await axios.get(
-			`${API_BASE_URL}/event/${joinCode}`,
+			`${API_BASE_URL_EVENT}/event/${joinCode}`,
 		);
 		return response.data;
 	} catch (error) {
@@ -40,7 +40,7 @@ export async function GetEventByCodeApi(
 export async function GetEventByIdApi(eventId: string): Promise<EventResponse> {
 	try {
 		const response: AxiosResponse<EventIdResponse> = await axios.get(
-			`${API_BASE_URL}/${eventId}`,
+			`${API_BASE_URL_EVENT}/${eventId}`,
 		);
 		response.data.event.gameType = GameType.NAME_BINGO; //TODO: Remove hard coded game type
 		return response.data;
@@ -73,7 +73,7 @@ export async function JoinEventByIdUserApi(
 	try {
 		const body: JoinEventByIdUserRequest = { userId, name };
 		const response: AxiosResponse<EventJoinIdResponse> = await axios.post(
-			`${API_BASE_URL}/${eventId}/join/user`,
+			`${API_BASE_URL_EVENT}/${eventId}/join/user`,
 			body,
 			{ headers: { Authorization: `Bearer ${token}` } },
 		);
@@ -109,7 +109,7 @@ export async function JoinEventByIdGuestApi(
 	try {
 		const body: JoinEventByIdGuestRequest = { name };
 		const response: AxiosResponse<EventJoinIdResponse> = await axios.post(
-			`${API_BASE_URL}/${eventId}/join/guest`,
+			`${API_BASE_URL_EVENT}/${eventId}/join/guest`,
 			body,
 		);
 		return response.data;

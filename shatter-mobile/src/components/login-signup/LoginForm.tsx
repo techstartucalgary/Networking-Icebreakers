@@ -45,7 +45,7 @@ export default function LoginForm() {
 			const userData = await userFetch(userResponse.userId, userResponse.token);
 
 			const user: User = {
-				user_id: userResponse.userId,
+				_id: userResponse.userId,
 				name: userData?.user.name,
 				email,
 				socialLinks: userData?.user.socialLinks ?? [],

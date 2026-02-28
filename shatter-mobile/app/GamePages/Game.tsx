@@ -15,7 +15,7 @@ const GamePage = () => {
 		setLoading(true);
 
 		if (!eventId) {
-			router.replace("/Events");
+			router.replace("/(tabs)/EventsPage");
 			return;
 		}
 
