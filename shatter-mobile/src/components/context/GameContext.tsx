@@ -16,6 +16,7 @@ type GameContextType = {
 	initializeGame: (
 		gameType: GameType,
 		eventId: string,
+        eventProgress: EventState,
 		initialData?: any,
 	) => void;
 	setGameData: (data: any) => void;

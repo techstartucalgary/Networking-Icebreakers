@@ -41,7 +41,7 @@ export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 
 		try {
 			const result = await joinEvent(joinCode);
-
+			
 			router.push({
 				pathname: "/EventPages/EventLobby",
 				params: { eventId: result },

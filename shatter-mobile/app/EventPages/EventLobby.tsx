@@ -12,21 +12,19 @@ export default function EventLobby() {
   useEffect(() => {
     const interval = setInterval(async () => {
       const res = await getEventById(eventId);
+      const event = res?.event;
+      if (!event) return;
 
-      if (!res) {
-        return null
-      }
+      setStatus(event.currentState);
 
-      if (res?.event.currentState === EventState.IN_PROGRESS) {
+      if (event.currentState === EventState.IN_PROGRESS) {
         clearInterval(interval);
+
         router.replace({
           pathname: "/GamePages/Game",
-          params: { eventId },
         });
       }
-
-      setStatus(res?.event.currentState);
-    }, 3000); //poll every 3 seconds
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [eventId]);
