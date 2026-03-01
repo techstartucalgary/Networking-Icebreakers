@@ -6,6 +6,18 @@
 
 ---
 
+## Table of Contents
+
+- [Relationship Diagram](#relationship-diagram)
+- [1. Users Collection](#1-users-collection)
+- [2. Events Collection](#2-events-collection)
+- [3. Participants Collection](#3-participants-collection)
+- [4. Bingo Collection](#4-bingo-collection)
+- [5. ParticipantConnection Collection](#5-participantconnection-collection)
+- [6. AuthCode Collection](#6-authcode-collection)
+
+---
+
 ## Relationship Diagram
 
 ```

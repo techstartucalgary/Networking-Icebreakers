@@ -4,6 +4,25 @@
 
 ---
 
+## Table of Contents
+
+- [Why Pusher?](#why-pusher)
+- [Setup](#setup)
+- [Channel Naming Convention](#channel-naming-convention)
+- [Implemented Events](#implemented-events-)
+  - [`participant-joined`](#participant-joined)
+- [Planned Events](#planned-events-)
+  - [`event-started`](#event-started)
+  - [`event-ended`](#event-ended)
+  - [`bingo-achieved`](#bingo-achieved)
+- [Client Integration Examples](#client-integration-examples)
+  - [React (Web Dashboard)](#react-web-dashboard)
+  - [React Native (Mobile App)](#react-native-mobile-app)
+  - [Error Handling](#error-handling)
+- [Testing Tips](#testing-tips)
+
+---
+
 ## Why Pusher?
 
 Shatter's backend is deployed on Vercel, which runs serverless functions. Serverless functions freeze between requests and cannot maintain persistent WebSocket connections (ruling out Socket.IO or raw WebSockets).

@@ -5,6 +5,79 @@
 
 ---
 
+## Table of Contents
+
+- [General Information](#general-information)
+- [Endpoint Summary](#endpoint-summary)
+- [Authentication (`/api/auth`)](#authentication-apiauth)
+  - [POST /api/auth/signup](#post-apiauthsignup)
+  - [POST /api/auth/login](#post-apiauthlogin)
+  - [GET /api/auth/linkedin](#get-apiauthlinkedin)
+  - [GET /api/auth/linkedin/callback](#get-apiauthlinkedincallback)
+  - [POST /api/auth/exchange](#post-apiauthexchange)
+- [Users (`/api/users`)](#users-apiusers)
+  - [GET /api/users](#get-apiusers)
+  - [POST /api/users](#post-apiusers)
+  - [GET /api/users/me](#get-apiusersme)
+  - [GET /api/users/:userId](#get-apiusersuserid)
+  - [GET /api/users/:userId/events](#get-apiusersuseриdevents)
+  - [PUT /api/users/:userId](#put-apiusersuserid)
+- [Events (`/api/events`)](#events-apievents)
+  - [POST /api/events/createEvent](#post-apieventscreateevent)
+  - [GET /api/events/event/:joinCode](#get-apieventseventjoincode)
+  - [GET /api/events/:eventId](#get-apieventseventid)
+  - [POST /api/events/:eventId/join/user](#post-apieventseventиdjoinuser)
+  - [POST /api/events/:eventId/join/guest](#post-apieventseventиdjoinguest)
+  - [GET /api/events/createdEvents/user/:userId](#get-apieventscreatedeventsuseriduserid)
+- [Bingo (`/api/bingo`)](#bingo-apibingo)
+  - [POST /api/bingo/createBingo](#post-apibingocreatebingo)
+  - [GET /api/bingo/getBingo/:eventId](#get-apibingogetbingoeventid)
+  - [PUT /api/bingo/updateBingo](#put-apibingoupdatebingo)
+- [Participant Connections (`/api/participantConnections`)](#participant-connections-apiparticipantconnections)
+  - [POST /api/participantConnections/](#post-apiparticipantconnections)
+  - [POST /api/participantConnections/by-emails](#post-apiparticipantconnectionsby-emails)
+  - [DELETE /api/participantConnections/delete](#delete-apiparticipantconnectionsdelete)
+  - [GET /api/participantConnections/getByParticipantAndEvent](#get-apiparticipantconnectionsgetbyparticipantandevent)
+  - [GET /api/participantConnections/getByUserEmailAndEvent](#get-apiparticipantconnectionsgetbyuseremailandevent)
+- [Planned Endpoints](#planned-endpoints-)
+- [Quick Start Examples](#quick-start-examples)
+
+---
+
+## Endpoint Summary
+
+Quick reference of all implemented endpoints. See detailed sections below for request/response shapes.
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/auth/signup` | Public | Create new user account |
+| POST | `/api/auth/login` | Public | Log in with email + password |
+| GET | `/api/auth/linkedin` | Public | Initiate LinkedIn OAuth flow |
+| GET | `/api/auth/linkedin/callback` | Public | LinkedIn OAuth callback (not called directly) |
+| POST | `/api/auth/exchange` | Public | Exchange OAuth auth code for JWT |
+| GET | `/api/users` | Public | List all users |
+| POST | `/api/users` | Public | Create basic user (name + email) |
+| GET | `/api/users/me` | Protected | Get current user's profile |
+| GET | `/api/users/:userId` | Protected | Get user by ID |
+| GET | `/api/users/:userId/events` | Protected | Get user's joined events |
+| PUT | `/api/users/:userId` | Protected | Update user profile (self-only) |
+| POST | `/api/events/createEvent` | Protected | Create a new event |
+| GET | `/api/events/event/:joinCode` | Public | Get event by join code |
+| GET | `/api/events/:eventId` | Public | Get event by ID |
+| POST | `/api/events/:eventId/join/user` | Protected | Join event as authenticated user |
+| POST | `/api/events/:eventId/join/guest` | Public | Join event as guest |
+| GET | `/api/events/createdEvents/user/:userId` | Protected | Get events created by user |
+| POST | `/api/bingo/createBingo` | Protected | Create bingo game for event |
+| GET | `/api/bingo/getBingo/:eventId` | Public | Get bingo by event ID |
+| PUT | `/api/bingo/updateBingo` | Protected | Update bingo game |
+| POST | `/api/participantConnections/` | Protected | Create connection by participant IDs |
+| POST | `/api/participantConnections/by-emails` | Protected | Create connection by user emails |
+| DELETE | `/api/participantConnections/delete` | Protected | Delete a connection |
+| GET | `/api/participantConnections/getByParticipantAndEvent` | Protected | Get connections by participant + event |
+| GET | `/api/participantConnections/getByUserEmailAndEvent` | Protected | Get connections by email + event |
+
+---
+
 ## General Information
 
 ### Authentication
@@ -19,24 +92,29 @@ Tokens are obtained via `/api/auth/signup`, `/api/auth/login`, `/api/auth/exchan
 
 Token payload: `{ userId, iat, exp }` — expires in 30 days by default.
 
-### Standard Error Format
+### Response Format
 
-Most endpoints return errors as:
+> **Known inconsistency:** The API currently uses **three different error response shapes** depending on the controller. Frontend code should handle all three formats. This is a known issue and may be standardized in a future refactor.
 
+**Format 1** — Auth endpoints (`/api/auth/*`):
 ```json
 { "error": "Description of the error" }
 ```
 
-Some endpoints use an alternative format:
-
+**Format 2** — User, Event, Bingo endpoints (`success` + `error`):
 ```json
 { "success": false, "error": "Description" }
 ```
 
-or:
-
+**Format 3** — Event join endpoints (`success` + `msg`):
 ```json
 { "success": false, "msg": "Description" }
+```
+
+**Recommended client-side handling:**
+```js
+// Extract error message from any response format
+const getErrorMessage = (data) => data.error || data.msg || 'Unknown error';
 ```
 
 ### Common Status Codes

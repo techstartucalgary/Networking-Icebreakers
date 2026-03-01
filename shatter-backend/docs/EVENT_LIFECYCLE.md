@@ -4,6 +4,24 @@
 
 ---
 
+## Table of Contents
+
+- [Current State](#current-state-)
+  - [How `currentState` Works Today](#how-currentstate-works-today)
+  - [Current Event Endpoints and State](#current-event-endpoints-and-state)
+- [Planned State Machine](#planned-state-machine-)
+  - [States](#states)
+  - [Transition Rules](#transition-rules)
+  - [Planned Endpoint](#planned-endpoint-put-apieventseventidstatus)
+  - [Side Effects Per Transition](#side-effects-per-transition)
+- [What's Allowed in Each State (Planned)](#whats-allowed-in-each-state-planned)
+- [Frontend Integration Notes](#frontend-integration-notes)
+  - [UI State Mapping](#ui-state-mapping)
+  - [Subscribing to State Changes](#subscribing-to-state-changes)
+  - [Polling Fallback](#polling-fallback-current-workaround)
+
+---
+
 ## Current State ✅
 
 ### How `currentState` Works Today
