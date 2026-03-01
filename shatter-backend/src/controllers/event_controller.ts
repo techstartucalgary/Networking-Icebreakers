@@ -206,10 +206,18 @@ export async function joinEventAsUser(req: Request, res: Response) {
     });
   } catch (e: any) {
     if (e.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        msg: "This name is already taken in this event",
-      });
+      if (e.keyPattern?.name && e.keyPattern?.eventId) {
+        return res.status(409).json({
+          success: false,
+          msg: "This name is already taken in this event",
+        });
+      }
+      if (e.keyPattern?.email) {
+        return res.status(409).json({
+          success: false,
+          msg: "A user with this email already exists",
+        });
+      }
     }
     console.error("JOIN EVENT ERROR:", e);
     return res.status(500).json({ success: false, msg: "Internal error" });
@@ -297,10 +305,18 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     });
   } catch (e: any) {
     if (e.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        msg: "This name is already taken in this event",
-      });
+      if (e.keyPattern?.name && e.keyPattern?.eventId) {
+        return res.status(409).json({
+          success: false,
+          msg: "This name is already taken in this event",
+        });
+      }
+      if (e.keyPattern?.email) {
+        return res.status(409).json({
+          success: false,
+          msg: "A user with this email already exists",
+        });
+      }
     }
     console.error("JOIN GUEST ERROR:", e);
     return res.status(500).json({ success: false, msg: "Internal error" });
