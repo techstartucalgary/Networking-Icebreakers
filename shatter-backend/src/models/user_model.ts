@@ -45,7 +45,6 @@ const UserSchema = new Schema<IUser>(
       lowercase: true,
       unique: true,
       sparse: true, // allows multiple users without email (guests)
-      index: true,
       match: [
         /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
         "Please provide a valid email address",
