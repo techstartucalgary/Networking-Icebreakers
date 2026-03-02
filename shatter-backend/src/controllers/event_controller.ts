@@ -75,6 +75,9 @@ export async function createEvent(req: Request, res: Response) {
 
     res.status(201).json({ success: true, event: savedEvent });
   } catch (err: any) {
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ success: false, error: err.message });
+    }
     res.status(500).json({ success: false, error: err.message });
   }
 }
