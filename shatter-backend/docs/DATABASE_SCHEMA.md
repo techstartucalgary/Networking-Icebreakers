@@ -102,20 +102,22 @@
 
 ### Fields
 
-| Field            | Type       | Required | Default | Notes |
-|------------------|------------|----------|---------|-------|
-| `_id`            | ObjectId   | Auto     | Auto    | |
-| `name`           | String     | Yes      | —       | |
-| `description`    | String     | Yes      | —       | |
-| `joinCode`       | String     | Yes      | —       | Unique, auto-generated 8-digit number |
-| `startDate`      | Date       | Yes      | —       | |
-| `endDate`        | Date       | Yes      | —       | Must be after `startDate` |
-| `maxParticipant` | Number     | Yes      | —       | |
-| `participantIds` | [ObjectId] | No       | `[]`    | Refs `Participant` |
-| `currentState`   | String     | Yes      | —       | Free-form string (no enum validation) |
-| `createdBy`      | ObjectId   | Yes      | —       | User who created the event (no ref set) |
-| `createdAt`      | Date       | Auto     | Auto    | Mongoose timestamps |
-| `updatedAt`      | Date       | Auto     | Auto    | Mongoose timestamps |
+| Field            | Type          | Required | Default      | Notes |
+|------------------|---------------|----------|--------------|-------|
+| `_id`            | ObjectId      | Auto     | Auto         | |
+| `name`           | String        | Yes      | —            | |
+| `description`    | String        | Yes      | —            | |
+| `joinCode`       | String        | Yes      | —            | Unique, auto-generated 8-digit number |
+| `gameType`       | String (enum) | Yes      | —            | One of: `'Name Bingo'` |
+| `eventImg`       | String        | No       | —            | URL for event image |
+| `startDate`      | Date          | Yes      | —            | |
+| `endDate`        | Date          | Yes      | —            | Must be after `startDate` |
+| `maxParticipant` | Number        | Yes      | —            | |
+| `participantIds` | [ObjectId]    | No       | `[]`         | Refs `Participant` |
+| `currentState`   | String (enum) | Yes      | `'Upcoming'` | One of: `'Upcoming'`, `'In Progress'`, `'Completed'` |
+| `createdBy`      | ObjectId      | Yes      | —            | User who created the event (no ref set) |
+| `createdAt`      | Date          | Auto     | Auto         | Mongoose timestamps |
+| `updatedAt`      | Date          | Auto     | Auto         | Mongoose timestamps |
 
 ### Indexes
 

@@ -6,112 +6,139 @@
 
 ## Table of Contents
 
-- [Current State](#current-state-)
-  - [How `currentState` Works Today](#how-currentstate-works-today)
-  - [Current Event Endpoints and State](#current-event-endpoints-and-state)
-- [Planned State Machine](#planned-state-machine-)
-  - [States](#states)
-  - [Transition Rules](#transition-rules)
-  - [Planned Endpoint](#planned-endpoint-put-apieventseventidstatus)
+- [Event States](#event-states)
+  - [State Enum](#state-enum)
+  - [State Diagram](#state-diagram)
+- [Transition Rules](#transition-rules)
+  - [Valid Transitions](#valid-transitions)
+  - [Transition Endpoint](#transition-endpoint-put-apieventseventidstatus)
   - [Side Effects Per Transition](#side-effects-per-transition)
+- [Current Event Endpoints and State](#current-event-endpoints-and-state)
 - [What's Allowed in Each State (Planned)](#whats-allowed-in-each-state-planned)
 - [Frontend Integration Notes](#frontend-integration-notes)
   - [UI State Mapping](#ui-state-mapping)
   - [Subscribing to State Changes](#subscribing-to-state-changes)
-  - [Polling Fallback](#polling-fallback-current-workaround)
 
 ---
 
-## Current State ✅
+## Event States
 
-### How `currentState` Works Today
+### State Enum
 
-The `currentState` field on the Event model is a **free-form string** with no enum, no validation, and no transition enforcement.
+The `currentState` field on the Event model is a **validated enum** with three possible values:
 
 ```js
 // event_model.ts
-currentState: { type: String, required: true }
+currentState: {
+  type: String,
+  enum: ['Upcoming', 'In Progress', 'Completed'],
+  default: 'Upcoming',
+  required: true
+}
 ```
 
-- Any string value is accepted when creating an event
-- There is no endpoint to update the state after creation
-- No logic gates behavior based on state (joining, games, etc. work regardless of state value)
-- The backend does not enforce any state machine — the frontend can pass whatever string it wants
+| State         | Description |
+|---------------|-------------|
+| `Upcoming`    | Event created, waiting for host to start. Participants can join. |
+| `In Progress` | Event is live. Games/activities are in progress. Participants can still join (unless at capacity). |
+| `Completed`   | Event is over. No new joins. Results are finalized. |
 
-### Current Event Endpoints and State
+These values match the mobile app's `EventState` enum exactly (title case with spaces).
 
-| Endpoint | State Behavior |
-|----------|---------------|
-| `POST /api/events/createEvent` | Sets `currentState` from request body (any string) |
-| `GET /api/events/:eventId` | Returns `currentState` as-is |
-| `GET /api/events/event/:joinCode` | Returns `currentState` as-is |
-| `POST /api/events/:eventId/join/user` | Does **not** check `currentState` |
-| `POST /api/events/:eventId/join/guest` | Does **not** check `currentState` |
+### State Diagram
 
-**In practice**, frontends have been passing values like `"pending"`, `"active"`, or similar, but the backend does not enforce these.
+```
+Upcoming ──► In Progress ──► Completed
+```
+
+- Only forward transitions are allowed
+- There is no way to revert a state (e.g., `Completed` cannot go back to `In Progress`)
+- Events are created with `currentState: 'Upcoming'` by default
 
 ---
 
-## Planned State Machine ⏳
+## Transition Rules
 
-> **This section describes planned functionality that is NOT yet implemented.**
+### Valid Transitions
 
-### States
+| From          | To             | Who Can Trigger    | Endpoint |
+|---------------|----------------|--------------------|----------|
+| `Upcoming`    | `In Progress`  | Event creator only | `PUT /api/events/:eventId/status` |
+| `In Progress` | `Completed`    | Event creator only | `PUT /api/events/:eventId/status` |
 
-```
-pending ──► active ──► ended
-```
+Invalid transitions (e.g., `Completed` → `In Progress`, `Upcoming` → `Completed`) are rejected with a `400` error.
 
-| State     | Description |
-|-----------|-------------|
-| `pending` | Event created, waiting for host to start. Participants can join. |
-| `active`  | Event is live. Games/activities are in progress. Participants can still join (unless at capacity). |
-| `ended`   | Event is over. No new joins. Results are finalized. |
+### Transition Endpoint: `PUT /api/events/:eventId/status`
 
-### Transition Rules
-
-| From      | To       | Who Can Trigger | Endpoint |
-|-----------|----------|-----------------|----------|
-| `pending` | `active` | Event creator only | `PUT /api/events/:eventId/status` |
-| `active`  | `ended`  | Event creator only | `PUT /api/events/:eventId/status` |
-
-Invalid transitions (e.g., `ended` → `active`, `pending` → `ended`) will be rejected.
-
-### Planned Endpoint: `PUT /api/events/:eventId/status`
-
-**Auth:** Protected (event creator only)
+**Auth:** Protected (event creator only — `event.createdBy === req.user.userId`)
 
 **Request Body:**
 
 ```json
 {
-  "status": "active"
+  "status": "In Progress"
 }
 ```
 
 **Validation:**
-- Only the user in `createdBy` can change the state
-- Only valid transitions are allowed (`pending` → `active`, `active` → `ended`)
+- Only the user in `createdBy` can change the state (403 for non-host)
+- Only valid transitions are allowed (400 for invalid transitions)
+- The `status` field is required (400 if missing)
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "event": {
+    "_id": "665a...",
+    "name": "Tech Meetup",
+    "currentState": "In Progress",
+    ...
+  }
+}
+```
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 400    | `"Status is required"` |
+| 400    | `"Invalid status transition from <current> to <target>"` |
+| 403    | `"Only the event host can update the event status"` |
+| 404    | `"Event not found"` |
 
 ### Side Effects Per Transition
 
-#### `pending` → `active`
-- Trigger Pusher event `event-started` on channel `event-{eventId}`
-- Payload: `{ eventId, state: "active", startedAt: <timestamp> }`
+#### `Upcoming` → `In Progress`
+- Triggers Pusher event `event-started` on channel `event-{eventId}`
+- Payload: `{ status: 'In Progress' }`
 - Frontend should transition from lobby/waiting UI to active game UI
 
-#### `active` → `ended`
-- Trigger Pusher event `event-ended` on channel `event-{eventId}`
-- Payload: `{ eventId, state: "ended", endedAt: <timestamp> }`
-- Lock bingo state (no more updates to player grids)
+#### `In Progress` → `Completed`
+- Triggers Pusher event `event-ended` on channel `event-{eventId}`
+- Payload: `{ status: 'Completed' }`
 - Frontend should show results/summary screen
+
+---
+
+## Current Event Endpoints and State
+
+| Endpoint | State Behavior |
+|----------|---------------|
+| `POST /api/events/createEvent` | Sets `currentState` to `'Upcoming'` by default (can be overridden with a valid enum value) |
+| `GET /api/events/:eventId` | Returns `currentState` as-is |
+| `GET /api/events/event/:joinCode` | Returns `currentState` as-is |
+| `PUT /api/events/:eventId/status` | Validates and transitions `currentState` (host-only) |
+| `POST /api/events/:eventId/join/user` | Does **not** check `currentState` |
+| `POST /api/events/:eventId/join/guest` | Does **not** check `currentState` |
 
 ---
 
 ## What's Allowed in Each State (Planned)
 
-| Action | `pending` | `active` | `ended` |
-|--------|-----------|----------|---------|
+| Action | `Upcoming` | `In Progress` | `Completed` |
+|--------|-----------|----------------|-------------|
 | Join event | Yes | Yes (if not full) | No |
 | Leave event | Yes | Yes | No |
 | View participants | Yes | Yes | Yes |
@@ -128,41 +155,26 @@ Invalid transitions (e.g., `ended` → `active`, `pending` → `ended`) will be 
 
 | `currentState` | Suggested UI |
 |----------------|-------------|
-| `pending`      | Lobby / waiting room. Show participant list, join code, QR code. "Waiting for host to start..." |
-| `active`       | Game screen. Show bingo grid, active activities, connection creation. |
-| `ended`        | Results screen. Show final scores, connections made, event summary. |
+| `Upcoming`     | Lobby / waiting room. Show participant list, join code, QR code. "Waiting for host to start..." |
+| `In Progress`  | Game screen. Show bingo grid, active activities, connection creation. |
+| `Completed`    | Results screen. Show final scores, connections made, event summary. |
 
 ### Subscribing to State Changes
 
-Once the state transition endpoint and Pusher events are implemented, subscribe to state changes:
+Subscribe to Pusher events on the event channel to react to state transitions in real time:
 
 ```js
 const channel = pusher.subscribe(`event-${eventId}`);
 
 channel.bind('event-started', (data) => {
+  // data.status === 'In Progress'
   // Transition UI from lobby to active game
-  setEventState('active');
+  setEventState('In Progress');
 });
 
 channel.bind('event-ended', (data) => {
+  // data.status === 'Completed'
   // Transition UI from active game to results
-  setEventState('ended');
+  setEventState('Completed');
 });
 ```
-
-### Polling Fallback (Current Workaround)
-
-Since state change events are not yet implemented, frontends can poll the event endpoint:
-
-```js
-// Poll every 5 seconds for state changes
-const interval = setInterval(async () => {
-  const res = await fetch(`/api/events/${eventId}`);
-  const { event } = await res.json();
-  if (event.currentState !== currentState) {
-    setCurrentState(event.currentState);
-  }
-}, 5000);
-```
-
-This is a temporary approach and should be replaced with Pusher events once implemented.

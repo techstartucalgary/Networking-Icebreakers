@@ -35,6 +35,8 @@ export async function createEvent(req: Request, res: Response) {
       endDate,
       maxParticipant,
       currentState,
+      gameType,
+      eventImg,
     } = req.body;
 
     const createdBy = req.user!.userId;
@@ -64,6 +66,8 @@ export async function createEvent(req: Request, res: Response) {
       maxParticipant,
       participantIds: [],
       currentState,
+      gameType,
+      eventImg,
       createdBy, // user id
     });
 
@@ -355,6 +359,73 @@ export async function getEventById(req: Request, res: Response) {
  * @returns 400 if userId is missing
  * @returns 404 if no events are found for the user
  */
+/**
+ * PUT /api/events/:eventId/status
+ * Update event status (host only)
+ *
+ * @param req.params.eventId - Event ID (required)
+ * @param req.body.status - New status: "In Progress" or "Completed" (required)
+ * @param req.user.userId - Authenticated user ID (from access token)
+ *
+ * @returns 200 with updated event on success
+ * @returns 400 if status is invalid or transition is not allowed
+ * @returns 403 if user is not the event host
+ * @returns 404 if event is not found
+ */
+export async function updateEventStatus(req: Request, res: Response) {
+  try {
+    const { eventId } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['In Progress', 'Completed'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+      });
+    }
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ success: false, error: "Event not found" });
+    }
+
+    // Only the host can change event status
+    if (event.createdBy.toString() !== req.user!.userId) {
+      return res.status(403).json({
+        success: false,
+        error: "Only the event host can update the event status",
+      });
+    }
+
+    // Validate allowed transitions
+    const allowedTransitions: Record<string, string> = {
+      'Upcoming': 'In Progress',
+      'In Progress': 'Completed',
+    };
+
+    if (allowedTransitions[event.currentState] !== status) {
+      return res.status(400).json({
+        success: false,
+        error: `Cannot transition from "${event.currentState}" to "${status}"`,
+      });
+    }
+
+    event.currentState = status;
+    const updatedEvent = await event.save();
+
+    // Emit Pusher events for real-time updates
+    const pusherEvent = status === 'In Progress' ? 'event-started' : 'event-ended';
+    await pusher.trigger(`event-${eventId}`, pusherEvent, {
+      status,
+    });
+
+    return res.status(200).json({ success: true, event: updatedEvent });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+}
+
 export async function getEventsByUserId(req: Request, res: Response) {
   try {
     const { userId } = req.params;

@@ -11,9 +11,9 @@
 - [Channel Naming Convention](#channel-naming-convention)
 - [Implemented Events](#implemented-events-)
   - [`participant-joined`](#participant-joined)
-- [Planned Events](#planned-events-)
   - [`event-started`](#event-started)
   - [`event-ended`](#event-ended)
+- [Planned Events](#planned-events-)
   - [`bingo-achieved`](#bingo-achieved)
 - [Client Integration Examples](#client-integration-examples)
   - [React (Web Dashboard)](#react-web-dashboard)
@@ -112,41 +112,55 @@ Each event has its own channel. Subscribe when a user enters an event, unsubscri
 
 ---
 
-## Planned Events ⏳
-
-These events are **not yet implemented**. Do not depend on them.
-
 ### `event-started`
 
 **Channel:** `event-{eventId}`
 
-Triggered when the host starts the event (transitions state to `active`).
+**Triggered when:**
+- The event host transitions the event status from `Upcoming` to `In Progress` (`PUT /api/events/:eventId/status`)
 
-**Expected payload:**
+**Payload:**
 
 ```json
 {
-  "eventId": "665a...",
-  "state": "active",
-  "startedAt": "2025-02-01T18:00:00.000Z"
+  "status": "In Progress"
 }
 ```
+
+| Field    | Type   | Description |
+|----------|--------|-------------|
+| `status` | string | The new event status (`"In Progress"`) |
+
+**Use case:** Transition the UI from the lobby/waiting room to the active game screen.
+
+---
 
 ### `event-ended`
 
 **Channel:** `event-{eventId}`
 
-Triggered when the host ends the event (transitions state to `ended`).
+**Triggered when:**
+- The event host transitions the event status from `In Progress` to `Completed` (`PUT /api/events/:eventId/status`)
 
-**Expected payload:**
+**Payload:**
 
 ```json
 {
-  "eventId": "665a...",
-  "state": "ended",
-  "endedAt": "2025-02-01T21:00:00.000Z"
+  "status": "Completed"
 }
 ```
+
+| Field    | Type   | Description |
+|----------|--------|-------------|
+| `status` | string | The new event status (`"Completed"`) |
+
+**Use case:** Transition the UI from the active game screen to the results/summary screen.
+
+---
+
+## Planned Events ⏳
+
+These events are **not yet implemented**. Do not depend on them.
 
 ### `bingo-achieved`
 
