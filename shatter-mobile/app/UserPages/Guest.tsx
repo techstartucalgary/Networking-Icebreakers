@@ -18,7 +18,7 @@ export default function GuestPage() {
 			return;
 		}
 
-    //TODO: Check for valid link format
+    	//TODO: Check for valid link format
 		const socialLink: SocialLink = { label: "Contact Link", url: contactLink };
 
 		setError("");

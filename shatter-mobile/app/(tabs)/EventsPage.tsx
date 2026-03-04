@@ -8,7 +8,7 @@ import EventCard from "../../src/components/events/EventCard";
 import EventIB from "../../src/interfaces/Event";
 import { getUserEvents } from "../../src/services/event.service";
 
-const NewEvents = () => {
+export default function EventsPage() {
 	const { user } = useAuth();
 	const { setCurrentParticipantId } = useGame();
 	const [events, setEvents] = useState<EventIB[]>([]);
@@ -93,8 +93,6 @@ const NewEvents = () => {
 		</View>
 	);
 };
-
-export default NewEvents;
 
 const styles = StyleSheet.create({
 	container: {

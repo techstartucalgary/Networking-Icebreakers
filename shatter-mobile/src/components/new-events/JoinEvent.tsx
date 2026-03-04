@@ -25,7 +25,7 @@ export function useJoinEvent() {
 		const event = eventData.event;
 
 		try {
-			if (!authStorage.isGuest && user._id) {
+			if (!user.isGuest && user._id) {
 				const userJoinRes = await JoinEventIdUser(
 					event._id,
 					user._id,
