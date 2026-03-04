@@ -12,6 +12,8 @@ export interface IEvent extends Document {
   maxParticipant: number;
   participantIds: Schema.Types.ObjectId[];
   currentState: string;
+  gameType: string;
+  eventImg?: string;
   createdBy: Schema.Types.ObjectId;
 }
 
@@ -24,7 +26,18 @@ const EventSchema = new Schema<IEvent>(
     endDate: { type: Date, required: true },
     maxParticipant: { type: Number, required: true },
     participantIds: [{ type: Schema.Types.ObjectId, ref: "Participant" }],
-    currentState: { type: String, required: true },
+    currentState: {
+      type: String,
+      enum: ['Upcoming', 'In Progress', 'Completed'],
+      default: 'Upcoming',
+      required: true,
+    },
+    gameType: {
+      type: String,
+      enum: ['Name Bingo'],
+      required: true,
+    },
+    eventImg: { type: String, required: false },
     createdBy: {
       type: Schema.Types.ObjectId,
       required: true,

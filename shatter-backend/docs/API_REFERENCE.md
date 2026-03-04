@@ -26,6 +26,7 @@
   - [POST /api/events/createEvent](#post-apieventscreateevent)
   - [GET /api/events/event/:joinCode](#get-apieventseventjoincode)
   - [GET /api/events/:eventId](#get-apieventseventid)
+  - [PUT /api/events/:eventId/status](#put-apieventseventidstatus)
   - [POST /api/events/:eventId/join/user](#post-apieventseventиdjoinuser)
   - [POST /api/events/:eventId/join/guest](#post-apieventseventиdjoinguest)
   - [GET /api/events/createdEvents/user/:userId](#get-apieventscreatedeventsuseriduserid)
@@ -64,6 +65,7 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | POST | `/api/events/createEvent` | Protected | Create a new event |
 | GET | `/api/events/event/:joinCode` | Public | Get event by join code |
 | GET | `/api/events/:eventId` | Public | Get event by ID |
+| PUT | `/api/events/:eventId/status` | Protected | Update event lifecycle status (host-only) |
 | POST | `/api/events/:eventId/join/user` | Protected | Join event as authenticated user |
 | POST | `/api/events/:eventId/join/guest` | Public | Join event as guest |
 | GET | `/api/events/createdEvents/user/:userId` | Protected | Get events created by user |
@@ -416,7 +418,7 @@ Get all events a user has joined (populates event details).
       "joinCode": "12345678",
       "startDate": "2025-02-01T18:00:00.000Z",
       "endDate": "2025-02-01T21:00:00.000Z",
-      "currentState": "active"
+      "currentState": "In Progress"
     }
   ]
 }
@@ -492,10 +494,12 @@ Create a new event.
 |------------------|--------|----------|-------|
 | `name`           | string | Yes      | |
 | `description`    | string | Yes      | Required by schema |
+| `gameType`       | string | Yes      | Must be `"Name Bingo"` |
 | `startDate`      | string | Yes      | ISO 8601 date |
 | `endDate`        | string | Yes      | Must be after `startDate` |
 | `maxParticipant` | number | Yes      | |
-| `currentState`   | string | Yes      | Free-form string (no enum) |
+| `currentState`   | string | No       | One of: `"Upcoming"`, `"In Progress"`, `"Completed"`. Defaults to `"Upcoming"` |
+| `eventImg`       | string | No       | URL for event image |
 
 **Success Response (201):**
 
@@ -506,12 +510,14 @@ Create a new event.
     "_id": "665a...",
     "name": "Tech Meetup",
     "description": "Monthly networking event",
+    "gameType": "Name Bingo",
     "joinCode": "48291037",
     "startDate": "2025-02-01T18:00:00.000Z",
     "endDate": "2025-02-01T21:00:00.000Z",
     "maxParticipant": 50,
     "participantIds": [],
-    "currentState": "pending",
+    "currentState": "Upcoming",
+    "eventImg": "https://example.com/event-image.jpg",
     "createdBy": "664f...",
     "createdAt": "2025-01-20T12:00:00.000Z",
     "updatedAt": "2025-01-20T12:00:00.000Z"
@@ -555,7 +561,8 @@ Get event details by join code.
     "participantIds": [
       { "_id": "666b...", "name": "John Doe", "userId": "664f..." }
     ],
-    "currentState": "active",
+    "currentState": "Upcoming",
+    "gameType": "Name Bingo",
     "createdBy": "664f...",
     ...
   }
@@ -607,6 +614,60 @@ Get event details by event ID.
 | Status | Error |
 |--------|-------|
 | 404    | `"Event not found"` |
+
+---
+
+### PUT `/api/events/:eventId/status`
+
+Update an event's lifecycle status. Only the event host (creator) can change the status.
+
+- **Auth:** Protected (host-only — `event.createdBy` must match authenticated user)
+
+**URL Params:**
+
+| Param     | Type     | Required |
+|-----------|----------|----------|
+| `eventId` | ObjectId | Yes      |
+
+**Request Body:**
+
+| Field    | Type   | Required | Notes |
+|----------|--------|----------|-------|
+| `status` | string | Yes      | Target status. One of: `"In Progress"`, `"Completed"` |
+
+**Valid Transitions:**
+
+| From          | To             |
+|---------------|----------------|
+| `Upcoming`    | `In Progress`  |
+| `In Progress` | `Completed`    |
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "event": {
+    "_id": "665a...",
+    "name": "Tech Meetup",
+    "currentState": "In Progress",
+    ...
+  }
+}
+```
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 400    | `"Status is required"` |
+| 400    | `"Invalid status transition from <current> to <target>"` |
+| 403    | `"Only the event host can update the event status"` |
+| 404    | `"Event not found"` |
+
+**Side Effects:**
+- **Upcoming → In Progress:** Emits Pusher event `event-started` on channel `event-{eventId}` with payload `{ status: 'In Progress' }`
+- **In Progress → Completed:** Emits Pusher event `event-ended` on channel `event-{eventId}` with payload `{ status: 'Completed' }`
 
 ---
 
@@ -1064,7 +1125,6 @@ These endpoints are **not yet implemented**. Do not depend on them.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| PUT    | `/api/events/:eventId/status` | Update event lifecycle state (host-only) |
 | POST   | `/api/events/:eventId/leave` | Leave an event |
 | DELETE | `/api/events/:eventId` | Cancel/delete an event |
 | GET    | `/api/events/:eventId/participants` | Search/list participants |
@@ -1110,10 +1170,10 @@ curl -X POST http://localhost:4000/api/events/createEvent \
   -d '{
     "name": "Tech Meetup",
     "description": "Monthly networking event",
+    "gameType": "Name Bingo",
     "startDate": "2025-02-01T18:00:00.000Z",
     "endDate": "2025-02-01T21:00:00.000Z",
-    "maxParticipant": 50,
-    "currentState": "pending"
+    "maxParticipant": 50
   }'
 ```
 
