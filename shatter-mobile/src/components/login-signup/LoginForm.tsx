@@ -52,7 +52,7 @@ export default function LoginForm() {
 				isGuest: false,
 			};
 
-			await authenticate(user, userResponse.token, false);
+			await authenticate(user, userResponse.token, false); //no event joined, set gameData to null
 
 			router.push("/JoinEventPage")
 		} catch (err) {

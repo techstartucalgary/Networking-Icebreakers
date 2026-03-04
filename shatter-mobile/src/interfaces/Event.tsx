@@ -16,7 +16,7 @@ export default interface EventIB {
 }
 
 export interface Participant {
-	_id: string;
+	participantId: string;
 	userId: string | null;
 	name: string;
 }

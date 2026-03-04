@@ -3,6 +3,14 @@ export type SocialLink = {
   url: string;
 };
 
+export type Connection = {
+	_id: string;
+	_eventId: string;
+	primaryParticipantId: string;
+	secondaryParticipantId: string;
+	description: string;
+};
+
 //internal user for mobile
 export type User = {
 	_id: string | null; //null for guest users that haven't joined event before
@@ -14,8 +22,3 @@ export type User = {
 	socialLinks: SocialLink[]
 	isGuest: boolean;
 };
-
-export enum UserType{
-    Networker = "networker",
-    Organizer = "organizer"
-}

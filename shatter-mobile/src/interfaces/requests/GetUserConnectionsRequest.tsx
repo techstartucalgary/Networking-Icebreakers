@@ -1,4 +1,4 @@
 export default interface UserConnectionsRequest {
-    userId: string,
+    participantId: string,
     eventId: string
 }

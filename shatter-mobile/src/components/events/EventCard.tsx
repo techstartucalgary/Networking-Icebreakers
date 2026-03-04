@@ -1,4 +1,5 @@
-import { fetchConnections } from "@/src/services/user.service";
+import { Connection, User } from "@/src/interfaces/User";
+import { fetchConnections, userFetch } from "@/src/services/user.service";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -22,8 +23,8 @@ type EventCardProps = {
 const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	const router = useRouter();
 	const { user, authStorage } = useAuth();
-	const { initializeGame } = useGame();
-	const [connections, setConnections] = useState<string[]>([]);
+	const { initializeGame, currentParticipantId } = useGame();
+	const [connections, setConnections] = useState<User[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
 
@@ -42,18 +43,38 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 
 			const userId = user?._id;
 			const accessToken = authStorage.accessToken;
+			const participantId = currentParticipantId;
 
 			if (!userId) {
 				throw new Error("No user logged in.");
 			}
 
-			const res = await fetchConnections(userId, eventId, accessToken);
+			if (!participantId) {
+				throw new Error("No participant set.");
+			}
+
+			const res = await fetchConnections(participantId, eventId, accessToken);
 
 			if (!res || !res.connections) {
 				throw new Error("Unable to load connections for this event.");
 			}
 
-			setConnections(res.connections);
+			const connectionList: Connection[] = res.connections;
+
+			const userPromises = connectionList.map(async (conn) => {
+				//decide which participant is secondary
+				const otherUserId =
+					conn.primaryParticipantId === participantId
+						? conn.secondaryParticipantId
+						: conn.primaryParticipantId;
+
+				//TODO: fetch the full user info
+				const userRes = await userFetch(otherUserId, accessToken);
+				return userRes.user;
+			});
+
+			const detailedUsers = await Promise.all(userPromises);
+			setConnections(detailedUsers);
 		} catch (err) {
 			console.log("Load connections error:", err);
 			setError((err as Error).message);
@@ -89,7 +110,7 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 						<Pressable
 							onPress={() => {
 								if (!event.gameType) {
-									//REMOVE hard-coded event data
+									//TODO: REMOVE hard-coded event data
 									event.currentState = EventState.IN_PROGRESS;
 									event.gameType = GameType.NAME_BINGO;
 								}
@@ -106,9 +127,9 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 						<Pressable
 							onPress={() => {
 								if (!event.gameType) {
-									//REMOVE hard-coded event data
-									event.currentState = EventState.COMPLETED;
+									//TODO: REMOVE hard-coded event data
 									event.gameType = GameType.NAME_BINGO;
+									event.currentState = EventState.COMPLETED;
 								}
 								initializeGame(event.gameType, event._id, event.currentState);
 								router.push(`/GamePages/Game`);
@@ -127,8 +148,18 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					)}
 					<FlatList
 						data={connections}
-						keyExtractor={(item) => item}
-						renderItem={({ item }) => <Text style={styles.item}>{item}</Text>}
+						keyExtractor={(item) => item._id!}
+						renderItem={({ item }) => (
+							<View style={styles.itemWrapper}>
+								{item.profilePhoto && (
+									<Image
+										source={{ uri: item.profilePhoto }}
+										style={styles.avatar}
+									/>
+								)}
+								<Text style={styles.item}>{item.name}</Text>
+							</View>
+						)}
 					/>
 
 					<Text style={styles.err}>{err}</Text>
@@ -225,6 +256,17 @@ const styles = StyleSheet.create({
 	item: {
 		fontSize: 12,
 		color: "#777",
+	},
+	avatar: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		marginRight: 8,
+	},
+	itemWrapper: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginVertical: 2,
 	},
 	liveText: {
 		color: "#fff",

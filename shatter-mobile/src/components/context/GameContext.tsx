@@ -1,8 +1,8 @@
 import { EventState, GameType } from "@/src/interfaces/Event";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
-type GameState = {
+export type GameState = {
 	gameType: GameType; //"Game Bingo"
 	eventId: string;
 	loading: boolean;
@@ -12,6 +12,8 @@ type GameState = {
 };
 
 type GameContextType = {
+	currentParticipantId: string;
+  	setCurrentParticipantId: (id: string) => Promise<void>;
 	gameState: GameState;
 	initializeGame: (
 		gameType: GameType,
@@ -37,10 +39,35 @@ const defaultGameState: GameState = {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
+	const [currentParticipantId, _setCurrentParticipantId] = useState<string>("");
 	const [gameState, setGameState] = useState<GameState>(defaultGameState);
+
+	const participantStorageKey = "current-participant-id";
 
 	const storageKey = (eventId: string, gameType: GameType) =>
 		`game-${gameType}-${eventId}`;
+
+	//load participantId on app start
+	useEffect(() => {
+		const loadParticipant = async () => {
+		try {
+			const storedId = await AsyncStorage.getItem(participantStorageKey);
+			if (storedId) _setCurrentParticipantId(storedId);
+		} catch (err) {
+			console.log("Failed to load participantId:", err);
+		}
+		};
+		loadParticipant();
+	}, []);
+
+	const setCurrentParticipantId = async (id: string) => {
+		_setCurrentParticipantId(id);
+		try {
+			await AsyncStorage.setItem(participantStorageKey, id);
+		} catch (err) {
+			console.log("Failed to save participantId:", err);
+		}
+	};
 
 	const initializeGame = async (
 		gameType: GameType,
@@ -129,6 +156,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 	return (
 		<GameContext.Provider
 			value={{
+				currentParticipantId,
+				setCurrentParticipantId,
 				gameState,
 				initializeGame,
 				setGameData,

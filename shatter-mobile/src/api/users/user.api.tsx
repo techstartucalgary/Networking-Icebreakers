@@ -1,7 +1,8 @@
-import { GameType } from "@/src/interfaces/Event";
+import CreateUserConnectionRequest from "@/src/interfaces/requests/CreateUserConnectionRequest";
 import UserConnectionsRequest from "@/src/interfaces/requests/GetUserConnectionsRequest";
 import UserLoginRequest from "@/src/interfaces/requests/UserLoginRequest";
 import UserSignupRequest from "@/src/interfaces/requests/UserSignupRequest";
+import CreateUserConnectionResponse from "@/src/interfaces/responses/CreateUserConnectionResponse";
 import UserConnectionsResponse from "@/src/interfaces/responses/GetUserConnectionsResponse";
 import UserDataResponse from "@/src/interfaces/responses/GetUserDataResponse";
 import GetUserEventsResponse from "@/src/interfaces/responses/GetUserEventsResponse";
@@ -12,6 +13,7 @@ import { User } from "@/src/interfaces/User";
 import axios, { AxiosError, type AxiosResponse } from "axios";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
+const API_BASE_URL = `${API_BASE}/api`;
 const API_BASE_URL_AUTH = `${API_BASE}/api/auth`;
 const API_BASE_URL_USER = `${API_BASE}/api/users`;
 
@@ -140,15 +142,18 @@ export async function GetUserEventsApi(
 	}
 }
 
-export async function UserConnectionsApi(
-	userId: string,
+export async function GetUserConnectionsApi(
+	participantId: string,
 	eventId: string,
 	token: string,
 ): Promise<UserConnectionsResponse> {
 	try {
-		const body: UserConnectionsRequest = { userId, eventId };
+		const body: UserConnectionsRequest = {
+			eventId: eventId,
+			participantId: participantId,
+		};
 		const response: AxiosResponse<UserConnectionsResponse> = await axios.post(
-			`${API_BASE_URL_USER}/blah`,
+			`${API_BASE_URL}/participantConnections/getByParticipantAndEvent`,
 			body,
 			{ headers: { Authorization: `Bearer ${token}` } },
 		);
@@ -159,11 +164,56 @@ export async function UserConnectionsApi(
 		if (err.response) {
 			switch (err.response.status) {
 				case 400:
-					throw new Error("Invalid connection data.");
+					throw new Error("Invalid user data.");
 				case 500:
 					throw new Error("Server error. Please try again later.");
 				default:
-					throw new Error("Connection failed.");
+					throw new Error("Connections cannot be found.");
+			}
+		}
+
+		throw new Error("Network error. Check your connection.");
+	}
+}
+
+export async function CreateUserConnectionsApi(
+	eventId: string,
+	primaryParticipantId: string,
+	secondaryParticipantId: string,
+	token: string,
+	description?: string | null,
+): Promise<CreateUserConnectionResponse> {
+	try {
+		const body: CreateUserConnectionRequest = {
+			eventId: eventId,
+			primaryParticipantId: primaryParticipantId,
+			secondaryParticipantId: secondaryParticipantId,
+			description: description ?? null,
+		};
+		const response: AxiosResponse<CreateUserConnectionResponse> =
+			await axios.post(
+				`${API_BASE_URL}/participantConnections/getByParticipantAndEvent`,
+				body,
+				{ headers: { Authorization: `Bearer ${token}` } },
+			);
+		return response.data;
+	} catch (error) {
+		const err = error as AxiosError;
+
+		if (err.response) {
+			switch (err.response.status) {
+				case 400:
+					throw new Error("Missing required fields, or invalid data.");
+				case 404:
+					throw new Error("Participant not found for this event.");
+				case 409:
+					throw new Error(
+						"You've already connected with this user at this event!.",
+					);
+				case 500:
+					throw new Error("Server error. Please try again later.");
+				default:
+					throw new Error("Connection creation failed.");
 			}
 		}
 

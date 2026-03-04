@@ -1,9 +1,9 @@
+import { useGame } from "@/src/components/context/GameContext";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import IcebreakerGame from "../../src/components/games/IcebreakerGame";
 import { getEventById } from "../../src/services/event.service";
-import { useGame } from "@/src/components/context/GameContext";
 
 const GamePage = () => {
 	const router = useRouter();
@@ -56,7 +56,7 @@ const GamePage = () => {
 			<Text style={styles.description}>{event.description}</Text>
 
 			{/* Game Rendering */}
-			<IcebreakerGame/>
+			<IcebreakerGame />
 		</View>
 	);
 };

@@ -1,5 +1,7 @@
 import { getStoredAuth } from "@/src/components/context/AsyncStorage";
-import { router, useFocusEffect } from "expo-router";
+import { useAuth } from "@/src/components/context/AuthContext";
+import { useGame } from "@/src/components/context/GameContext";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import EventCard from "../../src/components/events/EventCard";
@@ -7,6 +9,8 @@ import EventIB from "../../src/interfaces/Event";
 import { getUserEvents } from "../../src/services/event.service";
 
 const NewEvents = () => {
+	const { user } = useAuth();
+	const { setCurrentParticipantId } = useGame();
 	const [events, setEvents] = useState<EventIB[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
@@ -35,8 +39,21 @@ const NewEvents = () => {
 	);
 
 	//dropdown of event
-	const handlePress = (eventId: string) => {
-		setExpandedEventId((prev) => (prev === eventId ? null : eventId));
+	const handlePress = async (event: EventIB) => {
+		//set participantId based on event pressed
+		const myParticipantId = event.participantIds?.find(
+			(p) => p.userId === user?._id,
+		)?.participantId;
+
+		if (myParticipantId) {
+			await setCurrentParticipantId(myParticipantId); //update context for participantId for tapped event
+		} else {
+			console.log("No participantId found for current user in this event.");
+			await setCurrentParticipantId(""); //reset if not found
+		}
+
+		//expand event based on ID
+		setExpandedEventId((prev) => (prev === event._id ? null : event._id));
 	};
 
 	if (loading) {
@@ -69,7 +86,7 @@ const NewEvents = () => {
 					<EventCard
 						event={item}
 						expanded={expandedEventId === item._id}
-						onPress={() => handlePress(item._id)}
+						onPress={() => handlePress(item)}
 					/>
 				)}
 			/>

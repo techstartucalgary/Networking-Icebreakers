@@ -66,6 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		load();
 	}, []);
 
+	//when user or guest joins an event, store for app refresh
 	const authenticate = async (
 		user: User,
 		accessToken: string,
@@ -82,6 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		await saveStoredAuth(storageData);
 	};
 
+	//when user initially creates a guest account
 	const continueAsGuest = async (name: string, socialLink: SocialLink) => {
 		const guestUser: User = {
 			_id: null,

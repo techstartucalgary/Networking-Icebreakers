@@ -59,7 +59,7 @@ export default function SignUpForm() {
 				isGuest: false,
 			};
 
-			await authenticate(user, userResponse.token, false);
+			await authenticate(user, userResponse.token, false); //no event joined, set gameData to null
 
 			router.push("/(tabs)/JoinEventPage");
 		} catch (err) {

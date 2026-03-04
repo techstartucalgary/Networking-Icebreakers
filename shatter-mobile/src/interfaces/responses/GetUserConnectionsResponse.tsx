@@ -1,4 +1,5 @@
+import { Connection } from "../User";
+
 export default interface UserConnectionsResponse {
-    success: boolean,
-    connections: string[],
+	connections: Connection[];
 }
