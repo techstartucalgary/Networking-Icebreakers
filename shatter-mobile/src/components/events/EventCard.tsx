@@ -1,5 +1,8 @@
 import { Connection, User } from "@/src/interfaces/User";
-import { fetchConnections, userFetch } from "@/src/services/user.service";
+import {
+	fetchConnections,
+	participantFetch,
+} from "@/src/services/user.service";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -28,8 +31,8 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
 
-	const live = event.currentState === EventState.IN_PROGRESS; //TODO: Remove hard coded live status
-	const completed = true; //event.currentState === EventState.COMPLETED; //TODO: Remove hard coded completed status
+	const live = true; //event.currentState === EventState.IN_PROGRESS; //TODO: Remove hard coded live status
+	const completed = event.currentState === EventState.COMPLETED; //TODO: Remove hard coded completed status
 
 	useEffect(() => {
 		if (expanded) {
@@ -63,13 +66,17 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 
 			const userPromises = connectionList.map(async (conn) => {
 				//decide which participant is secondary
-				const otherUserId =
+				const otherParticipantId =
 					conn.primaryParticipantId === participantId
 						? conn.secondaryParticipantId
 						: conn.primaryParticipantId;
 
 				//TODO: fetch the full user info
-				const userRes = await userFetch(otherUserId, accessToken);
+				const userRes = await participantFetch(
+					otherParticipantId,
+					eventId,
+					accessToken,
+				);
 				return userRes.user;
 			});
 

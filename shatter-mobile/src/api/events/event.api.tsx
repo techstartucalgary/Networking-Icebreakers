@@ -1,8 +1,7 @@
 import { GameType } from "@/src/interfaces/Event";
 import JoinEventByIdGuestRequest from "@/src/interfaces/requests/JoinEventByIdGuestRequest";
 import JoinEventByIdUserRequest from "@/src/interfaces/requests/JoinEventByIdUserRequest";
-import EventResponse from "@/src/interfaces/responses/GetEventByCodeResponse";
-import EventIdResponse from "@/src/interfaces/responses/GetEventByIdResponse";
+import EventResponse from "@/src/interfaces/responses/GetEventResponse";
 import EventJoinIdResponse from "@/src/interfaces/responses/JoinEventIdResponse";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
@@ -39,10 +38,10 @@ export async function GetEventByCodeApi(
 
 export async function GetEventByIdApi(eventId: string): Promise<EventResponse> {
 	try {
-		const response: AxiosResponse<EventIdResponse> = await axios.get(
+		const response: AxiosResponse<EventResponse> = await axios.get(
 			`${API_BASE_URL_EVENT}/${eventId}`,
 		);
-		response.data.event.gameType = GameType.NAME_BINGO; //TODO: Remove hard coded game type
+		//response.data.event.gameType = GameType.NAME_BINGO; //TODO: Remove hard coded game type
 		return response.data;
 	} catch (error) {
 		const err = error as AxiosError;

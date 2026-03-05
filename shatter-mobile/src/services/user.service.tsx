@@ -1,5 +1,6 @@
 import {
 	CreateUserConnectionsApi,
+	GetParticipantApi,
 	GetUserConnectionsApi,
 	UserFetchApi,
 	UserLoginApi,
@@ -8,7 +9,7 @@ import {
 } from "../api/users/user.api";
 import CreateUserConnectionResponse from "../interfaces/responses/CreateUserConnectionResponse";
 import UserConnectionsResponse from "../interfaces/responses/GetUserConnectionsResponse";
-import GetUserDataResponse from "../interfaces/responses/GetUserDataResponse";
+import UserDataResponse from "../interfaces/responses/GetUserDataResponse";
 import UserInfoUpdateResponse from "../interfaces/responses/UpdateUserInfoResponse";
 import UserLoginResponse from "../interfaces/responses/UserLoginResponse";
 import UserSignupResponse from "../interfaces/responses/UserSignupResponse";
@@ -32,7 +33,7 @@ export async function userSignup(
 export async function userFetch(
 	userId: string,
 	token: string,
-): Promise<GetUserDataResponse> {
+): Promise<UserDataResponse> {
 	return await UserFetchApi(userId, token);
 }
 
@@ -42,6 +43,14 @@ export async function fetchConnections(
 	token: string,
 ): Promise<UserConnectionsResponse> {
 	return await GetUserConnectionsApi(participantId, eventId, token);
+}
+
+export async function participantFetch(
+	participantId: string,
+	eventId: string,
+	token: string,
+): Promise<UserDataResponse> {
+	return await GetParticipantApi(participantId, eventId, token);
 }
 
 export async function createConnection(

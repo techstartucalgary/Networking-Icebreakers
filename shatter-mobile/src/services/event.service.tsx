@@ -5,8 +5,7 @@ import {
 	JoinEventByIdUserApi,
 } from "../api/events/event.api";
 import { GetUserEventsApi } from "../api/users/user.api";
-import EventResponse from "../interfaces/responses/GetEventByCodeResponse";
-import EventIdResponse from "../interfaces/responses/GetEventByIdResponse";
+import EventResponse from "../interfaces/responses/GetEventResponse";
 import UserEventsResponse from "../interfaces/responses/GetUserEventsResponse";
 import EventJoinIdResponse from "../interfaces/responses/JoinEventIdResponse";
 
@@ -18,7 +17,7 @@ export async function getEventByCode(
 
 export async function getEventById(
 	eventId: string,
-): Promise<EventIdResponse> {
+): Promise<EventResponse> {
 	return await GetEventByIdApi(eventId);
 }
 

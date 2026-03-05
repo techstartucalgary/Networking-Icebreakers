@@ -67,11 +67,12 @@ export default function Profile() {
 				<Text style={styles.subtitle}>
 					You are logged in as a guest. Some features may be limited.
 				</Text>
-
-				<Text style={styles.subtitle}>
-					To upgrade your account, join an event and then come back here to set
-					it up!
-				</Text>
+				{!user._id && (
+					<Text style={styles.subtitle}>
+						To upgrade your account, join an event and then come back here to
+						set it up!
+					</Text>
+				)}
 
 				{socialLinks.length === 0 && (
 					<Text style={styles.emptyText}>No social links added yet.</Text>

@@ -1,6 +1,6 @@
 import BingoCategoriesResponse from "@/src/interfaces/responses/GetBingoCategoriesResponse";
 import BingoDataResponse from "@/src/interfaces/responses/GetBingoResponse";
-import EventIdResponse from "@/src/interfaces/responses/GetEventByIdResponse";
+import EventResponse from "@/src/interfaces/responses/GetEventResponse";
 import ParticipantsByEventIdResponse from "@/src/interfaces/responses/GetParticipantsByEventIdResponse";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
@@ -12,7 +12,7 @@ export async function GetParticipantsByEventIdApi(
 	eventId: string,
 ): Promise<ParticipantsByEventIdResponse> {
 	try {
-		const response: AxiosResponse<EventIdResponse> = await axios.get(
+		const response: AxiosResponse<EventResponse> = await axios.get(
 			`${API_BASE_URL_EVENTS}/${eventId}`,
 		);
 

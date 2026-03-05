@@ -24,6 +24,12 @@ export function useJoinEvent() {
 
 		const event = eventData.event;
 
+		if (event.currentState === EventState.COMPLETED) {
+			throw new Error(
+				"That event already completed. If this isn't the case, double-check the code.",
+			);
+		}
+
 		try {
 			if (!user.isGuest && user._id) {
 				const userJoinRes = await JoinEventIdUser(
@@ -42,6 +48,7 @@ export function useJoinEvent() {
 					//first time joining event
 					const guestInfo = await JoinEventIdGuest(event._id, user.name);
 					user._id = guestInfo.userId;
+					console.log("Guest Info: ", guestInfo)
 
 					setCurrentParticipantId(guestInfo.participant.participantId);
 

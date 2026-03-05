@@ -221,6 +221,46 @@ export async function CreateUserConnectionsApi(
 	}
 }
 
+//TODO: Fix participant data fetch
+export async function GetParticipantApi(
+	participantId: string,
+	eventId: string,
+	token: string,
+): Promise<UserDataResponse> {
+	try {
+		const body = {
+			participantId: participantId,
+			eventId: eventId,
+		};
+
+		const response: AxiosResponse<UserDataResponse> = await axios.get(
+			`/getParticipantConnections/connected-users`,
+			body,
+			{ headers: { Authorization: `Bearer ${token}` } },
+		);
+		return response.data;
+	} catch (error) {
+		const err = error as AxiosError;
+
+		if (err.response) {
+			switch (err.response.status) {
+				case 400:
+					throw new Error(
+						"Invalid information entered. Please adjust your info and try again.",
+					);
+				case 404:
+					throw new Error("Participant not found. Please try again later.");
+				case 500:
+					throw new Error("Server error. Please try again later.");
+				default:
+					throw new Error("Participant info could not be fetched at this time. Please try again later.");
+			}
+		}
+
+		throw new Error("Network error. Check your connection.");
+	}
+}
+
 export async function UserUpdateApi(
 	userId: string,
 	updates: Partial<User>,

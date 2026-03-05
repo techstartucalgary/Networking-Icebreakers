@@ -1,3 +1,4 @@
+//returns connection info when connection created
 export default interface CreateUserConnectionResponse {
     _eventId: string,
     primaryParticipantId: string,
