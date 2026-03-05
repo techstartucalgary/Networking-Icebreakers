@@ -1,7 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 
 export interface IParticipant extends Document {
-  userId: Schema.Types.ObjectId | null;
+  userId: Schema.Types.ObjectId;
   name: string;
   eventId: Schema.Types.ObjectId;
 }

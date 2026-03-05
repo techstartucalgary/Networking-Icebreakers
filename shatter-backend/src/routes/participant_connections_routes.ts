@@ -5,6 +5,7 @@ import {
   createParticipantConnection,
   createParticipantConnectionByEmails,
   deleteParticipantConnection,
+  getConnectedUsersInfo,
   getConnectionsByParticipantAndEvent,
   getConnectionsByUserEmailAndEvent,
 } from "../controllers/participant_connections_controller";
@@ -56,5 +57,8 @@ router.get("/getByParticipantAndEvent", authMiddleware, getConnectionsByParticip
 // Get all connections for (eventId + userEmail) where user's participant is primary or secondary
 // GET /api/participantConnections/getByUserEmailAndEvent
 router.get("/getByUserEmailAndEvent", authMiddleware, getConnectionsByUserEmailAndEvent);
+
+// Get all user's information that connected with the participant
+router.get("/getParticipantConnections/connected-users", authMiddleware, getConnectedUsersInfo);
 
 export default router;
