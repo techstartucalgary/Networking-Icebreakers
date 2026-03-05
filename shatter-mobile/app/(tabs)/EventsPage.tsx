@@ -1,15 +1,17 @@
-import { getStoredAuth } from "@/src/components/general/AsyncStorage";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router, useFocusEffect } from "expo-router";
+import { getStoredAuth } from "@/src/components/context/AsyncStorage";
+import { useAuth } from "@/src/components/context/AuthContext";
+import { useGame } from "@/src/components/context/GameContext";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import EventCard from "../../src/components/events/EventCard";
-import type Event from "../../src/interfaces/Event";
 import EventIB from "../../src/interfaces/Event";
 import { getUserEvents } from "../../src/services/event.service";
 
-const NewEvents = () => {
-	const [events, setEvents] = useState<Event[]>([]);
+export default function EventsPage() {
+	const { user } = useAuth();
+	const { setCurrentParticipantId } = useGame();
+	const [events, setEvents] = useState<EventIB[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
 
@@ -19,16 +21,11 @@ const NewEvents = () => {
 
 		try {
 			const stored = await getStoredAuth();
-
-			if (stored.isGuest) {
-				const local = await AsyncStorage.getItem("guestEvents");
-				const events: EventIB[] = local ? JSON.parse(local) : [];
-				setEvents(events);
-				return;
+			if (stored.userId) {
+				//guest that has joined event or user with account
+				const data = await getUserEvents(stored.userId, stored.accessToken); //TODO: Needs to return participant data
+				setEvents(data.events || []);
 			}
-
-			const data = await getUserEvents(stored.userId, stored.accessToken);
-			setEvents(data?.events || []);
 		} finally {
 			setLoading(false);
 		}
@@ -42,8 +39,21 @@ const NewEvents = () => {
 	);
 
 	//dropdown of event
-	const handlePress = (eventId: string) => {
-		setExpandedEventId((prev) => (prev === eventId ? null : eventId));
+	const handlePress = async (event: EventIB) => {
+		//set participantId based on event pressed
+		const myParticipantId = event.participantIds?.find(
+			(p) => p.userId === user?._id,
+		)?.participantId;
+
+		if (myParticipantId) {
+			await setCurrentParticipantId(myParticipantId); //update context for participantId for tapped event
+		} else {
+			console.log("No participantId found for current user in this event.");
+			await setCurrentParticipantId(""); //reset if not found
+		}
+
+		//expand event based on ID
+		setExpandedEventId((prev) => (prev === event._id ? null : event._id));
 	};
 
 	if (loading) {
@@ -76,21 +86,13 @@ const NewEvents = () => {
 					<EventCard
 						event={item}
 						expanded={expandedEventId === item._id}
-						onPress={() => handlePress(item._id)}
-						onJoinGame={() => {
-							router.push({
-								pathname: "/GamePages/Game",
-								params: { eventId: item._id },
-							});
-						}}
+						onPress={() => handlePress(item)}
 					/>
 				)}
 			/>
 		</View>
 	);
-};
-
-export default NewEvents;
+}
 
 const styles = StyleSheet.create({
 	container: {

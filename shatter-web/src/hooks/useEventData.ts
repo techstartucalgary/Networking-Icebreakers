@@ -32,7 +32,7 @@ export function useEventData(joinCode: string | undefined) {
     }
 
     setLoading(true);
-    setError(null);
+    setError("");
     
     fetch(`${import.meta.env.VITE_API_URL}/events/event/${joinCode}`, {
       cache: "no-store",

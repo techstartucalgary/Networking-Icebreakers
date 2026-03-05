@@ -1,4 +1,6 @@
 //called by Profile.tsx for signing up
+import { User } from "@/src/interfaces/User";
+import { userSignup } from "@/src/services/user.service";
 import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Button,KeyboardAvoidingView,ScrollView, Platform, StyleSheet, Text, TextInput,ImageBackground, TouchableOpacity, View } from "react-native";
@@ -8,63 +10,63 @@ import { SignUpFormStyling as styles } from "../../styling/SignUpFormStyling.sty
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignUpForm() {
-  const { login, user } = useAuth();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [err, setError] = useState("");
+	const { authenticate } = useAuth();
+	const [name, setName] = useState("");
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+	const [loading, setLoading] = useState(false);
+	const [err, setError] = useState("");
 
-  const handleSignup = async () => {
-    setError("");
-    setLoading(true);
+	const handleSignup = async () => {
+		setError("");
+		setLoading(true);
 
-    if (!email || !password) {
-        console.log("Error: All fields are required");
-        setLoading(false)
-        setError("Please fill in all fields.");
-        return;
-    }
+		if (!email || !password) {
+			console.log("Error: All fields are required");
+			setLoading(false);
+			setError("Please fill in all fields.");
+			return;
+		}
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        console.log("Error: Invalid email format");
-        setLoading(false)
-        setError("Please enter a valid email.");
-        return;
-    }
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(email)) {
+			console.log("Error: Invalid email format");
+			setLoading(false);
+			setError("Please enter a valid email.");
+			return;
+		}
 
-    if (password.length < 8) {
-        console.log("Error: Password must be at least 8 characters");
-        setError("Password must be at least 8 characters.");
-        setLoading(false)
-        return;
-    }
+		if (password.length < 8) {
+			console.log("Error: Password must be at least 8 characters");
+			setError("Password must be at least 8 characters.");
+			setLoading(false);
+			return;
+		}
 
-    try {
-      const userResponse = await userSignup(name, email, password);
+		try {
+			const userResponse = await userSignup(name, email, password);
 
-      if (!userResponse) {
-        throw new Error("No response from server");
-      }
+			const user: User = {
+				_id: userResponse.userId,
+				name,
+				email,
+				socialLinks: [],
+				isGuest: false,
+			};
 
-      const user: AuthUser = {
-        user_id: userResponse.userId,
-        name,
-        email,
-        linkedin: "",
-        github: "",
-        isGuest: false,
-      };
+			await authenticate(user, userResponse.token, false); //no event joined, set gameData to null
 
-      await login(user, userResponse.token); 
-    } catch (e) {
-      console.log("Signup failed:", e);
-      setError("Signup Failure");
-    } finally {
-      setLoading(false);
-    }
-  };
+			router.push("/(tabs)/JoinEventPage");
+		} catch (err) {
+			console.log("Signup failed:", err);
+			setError(
+				(err as Error).message ||
+					"Uh Oh! Please check your signup info and try again.",
+			);
+		} finally {
+			setLoading(false);
+		}
+	};
 
   return (
     <ImageBackground

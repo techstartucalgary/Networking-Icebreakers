@@ -14,12 +14,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAuth } from "../context/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth, AuthUser } from "../context/AuthContext";
 import { LoginFormStyling as styles } from "../../styling/LoginFormstyling.styles";
 
 export default function LoginForm() {
-	const { login } = useAuth();
+	const { authenticate } = useAuth();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -49,44 +50,27 @@ export default function LoginForm() {
 			return;
 		}
 
-		//TODO: Social Link storing?
 		try {
 			const userResponse = await userLogin(email, password);
 
-			if (!userResponse) {
-				throw new Error("No response from server");
-			}
-
-			if (!userResponse.userId) {
-				throw new Error("No user found.");
-			}
-
-			if (!userResponse.token) {
-				throw new Error("No access token passed.");
-			}
-
 			const userData = await userFetch(userResponse.userId, userResponse.token);
 
-			if (!userData) {
-				throw new Error("No response from server");
-			}
-
-			const user: AuthUser = {
-				user_id: userResponse.userId,
-				name: userData?.name,
+			const user: User = {
+				_id: userResponse.userId,
+				name: userData?.user.name,
 				email,
-				linkedin: "",
-				github: "",
+				socialLinks: userData?.user.socialLinks ?? [],
 				isGuest: false,
 			};
 
-			await login(user, userResponse.token);
-		} catch (e) {
-			console.log("Login failed:", e);
-			setError("Login Failure: " + e);
+			await authenticate(user, userResponse.token, false); //no event joined, set gameData to null
+
+			router.push("/JoinEventPage")
+		} catch (err) {
+			console.log("Login failed:", err);
+			setError((err as Error).message || "Uh Oh! Please check your login info and try again.");
 		} finally {
 			setLoading(false);
-			router.push("/JoinEvent")
 		}
 
 	};

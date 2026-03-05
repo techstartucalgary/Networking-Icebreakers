@@ -1,64 +1,88 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import EventIB from "@/src/interfaces/Event";
+import { useAuth } from "@/src/components/context/AuthContext";
+import { EventState, GameType } from "@/src/interfaces/Event";
 import {
 	getEventByCode,
 	JoinEventIdGuest,
 	JoinEventIdUser,
 } from "@/src/services/event.service";
-import { useAuth } from "@/src/components/context/AuthContext";
-
-export type JoinResult =
-  | { status: "success"; eventId: string }
-  | { status: "event-not-found" }
-  | { status: "no-user" }
-  | { status: "no-user-id" }
-  | { status: "join-error" };
+import { useGame } from "../context/GameContext";
 
 export function useJoinEvent() {
-	const { user, authStorage } = useAuth();
+	const { user, authStorage, authenticate } = useAuth();
+	const { setCurrentParticipantId, initializeGame } = useGame();
 
-	const saveGuestEvent = async (event: EventIB) => {
-		const stored = await AsyncStorage.getItem("guestEvents");
-		const events: EventIB[] = stored ? JSON.parse(stored) : [];
-
-		if (!events.some(e => e._id === event._id)) {
-			events.push(event);
-			await AsyncStorage.setItem("guestEvents", JSON.stringify(events));
-		}
-	};
-
-	const joinEvent = async (joinCode: string): Promise<JoinResult> => {
-		const userId = user?.user_id;
-		const name = user?.name;
-		const isGuest = authStorage.isGuest;
-
+	const joinEvent = async (joinCode: string): Promise<string> => {
 		const normalizedCode = joinCode.trim().toUpperCase();
 		const eventData = await getEventByCode(normalizedCode);
-		const eventId = eventData?.event._id;
 
-		if (!userId) return { status: "no-user-id" };
-		if (!eventData || !eventId) return { status: "event-not-found"};
-		if (!name) return { status: "no-user" };
+		if (!user) throw new Error("No user logged in.");
+		if (!user.name) throw new Error("Your profile is missing a name.");
 
-		try {
-			if (!isGuest) {
-				await JoinEventIdUser(
-					eventId,
-					userId,
-					name,
-					authStorage.accessToken
-				);
-			} else {
-				const result = await JoinEventIdGuest(eventId, name);
-				if (result?.success) {
-					await saveGuestEvent(eventData.event);
-				}
-			}
-		} catch {
-			return { status:  "join-error" };
+		if (!eventData || !eventData.event?._id) {
+			throw new Error("We couldn’t find that event. Double-check the code.");
 		}
 
-		return { status: "success", "eventId": eventId };
+		const event = eventData.event;
+
+		if (event.currentState === EventState.COMPLETED) {
+			throw new Error(
+				"That event already completed. If this isn't the case, double-check the code.",
+			);
+		}
+
+		try {
+			if (!user.isGuest && user._id) {
+				const userJoinRes = await JoinEventIdUser(
+					event._id,
+					user._id,
+					user.name,
+					authStorage.accessToken,
+				);
+
+				await setCurrentParticipantId(userJoinRes.participant.participantId);
+
+				//no authenticate because info already locally stored through signup/login
+			} else {
+				//guest joining event
+				if (!user._id) {
+					//first time joining event
+					const guestInfo = await JoinEventIdGuest(event._id, user.name);
+					user._id = guestInfo.userId;
+					console.log("Guest Info: ", guestInfo)
+
+					setCurrentParticipantId(guestInfo.participant.participantId);
+
+					await authenticate(user, guestInfo.token, true);
+				} else {
+					//returning guest joining another event
+					const guestUserInfo = await JoinEventIdUser(
+						event._id,
+						user._id,
+						user.name,
+						authStorage.accessToken,
+					);
+
+					await setCurrentParticipantId(
+						guestUserInfo.participant.participantId,
+					);
+
+					await authenticate(user, guestUserInfo.token, true);
+				}
+			}
+
+			if (!event.gameType) {
+				//TODO: REMOVE hard-coded event data
+				event.currentState = EventState.IN_PROGRESS;
+				event.gameType = GameType.NAME_BINGO;
+			}
+
+			initializeGame(event.gameType, event._id, event.currentState);
+		} catch (err: any) {
+			console.log(err);
+			throw new Error(err);
+		}
+
+		return event._id; //success returns eventId
 	};
 
 	return { joinEvent };
