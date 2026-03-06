@@ -8,16 +8,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Button,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAuth } from "../context/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth, AuthUser } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { LoginFormStyling as styles } from "../../styling/LoginFormstyling.styles";
+import { User } from "@/src/interfaces/User";
 
 export default function LoginForm() {
 	const { authenticate } = useAuth();
@@ -151,16 +150,10 @@ export default function LoginForm() {
 							</TouchableOpacity>
 							<TouchableOpacity onPress={() => router.push("/UserPages/Signup")}>
 								<Text style={styles.signupLinkText}>
-								Don't have an account?{" "}
+								Don&apos;t have an account?{" "}
 								<Text style={styles.signupLinkBold}>Sign Up</Text>
 								</Text>
 							</TouchableOpacity>
-
-
-
-
-						
-						
 						</ScrollView>
 					</View>
 

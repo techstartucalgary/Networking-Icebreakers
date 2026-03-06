@@ -3,10 +3,18 @@ import { useAuth } from "@/src/components/context/AuthContext";
 import { useGame } from "@/src/components/context/GameContext";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import {
+	ActivityIndicator,
+	FlatList,
+	ImageBackground,
+	Text,
+	View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import EventCard from "../../src/components/events/EventCard";
 import EventIB from "../../src/interfaces/Event";
 import { getUserEvents } from "../../src/services/event.service";
+import { EventPageStyling as styles } from "../../src/styling/EventPage.styles";
 
 export default function EventsPage() {
 	const { user } = useAuth();
@@ -58,46 +66,60 @@ export default function EventsPage() {
 
 	if (loading) {
 		return (
-			<View style={styles.container}>
-				<Text>Loading events...</Text>
-			</View>
+			<ImageBackground
+				source={require("../../src/images/getStartedImage.png")}
+				style={styles.background}
+				resizeMode="cover"
+			>
+				<SafeAreaView style={styles.safe}>
+					<View style={styles.container}>
+						<View style={styles.loadingContainer}>
+							<ActivityIndicator size="large" color="#1e3a8a" />
+							<Text style={styles.loading}>Loading events...</Text>
+						</View>
+					</View>
+				</SafeAreaView>
+			</ImageBackground>
 		);
 	}
 
 	if (events.length === 0) {
 		return (
-			<View
-				style={[
-					styles.container,
-					{ justifyContent: "center", alignItems: "center" },
-				]}
+			<ImageBackground
+				source={require("../../src/images/getStartedImage.png")}
+				style={styles.background}
+				resizeMode="cover"
 			>
-				<Text>No events joined</Text>
-			</View>
+				<SafeAreaView style={styles.safe}>
+					<View style={styles.loadingContainer}>
+						<Text style={styles.loading}>No events joined</Text>
+					</View>
+				</SafeAreaView>
+			</ImageBackground>
 		);
 	}
 
 	return (
-		<View style={styles.container}>
-			<FlatList
-				data={events}
-				keyExtractor={(item) => item._id}
-				renderItem={({ item }) => (
-					<EventCard
-						event={item}
-						expanded={expandedEventId === item._id}
-						onPress={() => handlePress(item)}
+		<ImageBackground
+			source={require("../../src/images/getStartedImage.png")}
+			style={styles.background}
+			resizeMode="cover"
+		>
+			<SafeAreaView style={styles.safe}>
+				<View style={styles.container}>
+					<FlatList
+						data={events}
+						keyExtractor={(item) => item._id}
+						renderItem={({ item }) => (
+							<EventCard
+								event={item}
+								expanded={expandedEventId === item._id}
+								onPress={() => handlePress(item)}
+							/>
+						)}
 					/>
-				)}
-			/>
-		</View>
+				</View>
+			</SafeAreaView>
+		</ImageBackground>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: "#f8f8f8",
-		padding: 20,
-	},
-});

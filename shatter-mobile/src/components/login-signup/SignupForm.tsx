@@ -4,8 +4,7 @@ import { userSignup } from "@/src/services/user.service";
 import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Button,KeyboardAvoidingView,ScrollView, Platform, StyleSheet, Text, TextInput,ImageBackground, TouchableOpacity, View } from "react-native";
-import { useAuth, AuthUser } from "../context/AuthContext";
-import { userSignup } from "@/src/services/user.service";
+import { useAuth } from "../context/AuthContext";
 import { SignUpFormStyling as styles } from "../../styling/SignUpFormStyling.styles";
 import { SafeAreaView } from "react-native-safe-area-context";
 
