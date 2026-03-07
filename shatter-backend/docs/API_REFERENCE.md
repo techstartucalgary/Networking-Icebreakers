@@ -40,6 +40,7 @@
   - [DELETE /api/participantConnections/delete](#delete-apiparticipantconnectionsdelete)
   - [GET /api/participantConnections/getByParticipantAndEvent](#get-apiparticipantconnectionsgetbyparticipantandevent)
   - [GET /api/participantConnections/getByUserEmailAndEvent](#get-apiparticipantconnectionsgetbyuseremailandevent)
+  - [GET /api/participantConnections/connected-users](#get-apiparticipantconnectionsconnected-users)
 - [Planned Endpoints](#planned-endpoints-)
 - [Quick Start Examples](#quick-start-examples)
 
@@ -77,6 +78,7 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | DELETE | `/api/participantConnections/delete` | Protected | Delete a connection |
 | GET | `/api/participantConnections/getByParticipantAndEvent` | Protected | Get connections by participant + event |
 | GET | `/api/participantConnections/getByUserEmailAndEvent` | Protected | Get connections by email + event |
+| GET | `/api/participantConnections/connected-users` | Protected | Get connected users' info by participant + event |
 
 ---
 
@@ -1116,6 +1118,51 @@ Get all connections for a user (by email) in an event.
 | 400    | `"Invalid eventId"` |
 | 400    | `"Invalid userEmail"` |
 | 404    | `"Participant not found for this event (by user email)"` |
+
+---
+
+### GET `/api/participantConnections/connected-users`
+
+Get all users connected with a given participant in an event, including connection descriptions. Returns all connections (including multiple connections to the same user with different descriptions).
+
+- **Auth:** Protected
+
+**Query Params:**
+
+| Param           | Type     | Required |
+|-----------------|----------|----------|
+| `eventId`       | ObjectId | Yes      |
+| `participantId` | ObjectId | Yes      |
+
+**Success Response (200):**
+
+```json
+[
+  {
+    "user": {
+      "_id": "664f...",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "linkedinUrl": "https://linkedin.com/in/johndoe",
+      "bio": "Software developer",
+      "profilePhoto": "https://example.com/photo.jpg",
+      "socialLinks": { "github": "https://github.com/johndoe" }
+    },
+    "participantId": "666b...",
+    "participantName": "John Doe",
+    "connectionDescription": "Both love hiking"
+  }
+]
+```
+
+Returns an empty array `[]` if no connections exist. If a participant has no linked user (guest with null `userId`), the `user` field is `null` while `participantId` and `participantName` are still returned.
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 400    | `"Invalid eventId"` |
+| 400    | `"Invalid participantId"` |
 
 ---
 

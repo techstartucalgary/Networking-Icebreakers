@@ -369,7 +369,7 @@ export async function getConnectionsByUserEmailAndEvent(
 }
 
 /**
- * GET /api/participantConnections/getParticipantConnections/connected-users
+ * GET /api/participantConnections/connected-users
  *
  * Get all users connected with a given participant in an event,
  * including the description of the connection.
@@ -377,9 +377,8 @@ export async function getConnectionsByUserEmailAndEvent(
  * @param req.query.eventId - MongoDB ObjectId of the event (required)
  * @param req.query.participantId - MongoDB ObjectId of the participant (required)
  *
- * @returns 200 - Array of connected users with connection descriptions
+ * @returns 200 - Array of connected users with connection descriptions (empty array if none)
  * @returns 400 - Missing/invalid params
- * @returns 404 - Participant not found or no connections
  * @returns 500 - Internal server error
  */
 export async function getConnectedUsersInfo(req: Request, res: Response) {
@@ -411,12 +410,11 @@ export async function getConnectedUsersInfo(req: Request, res: Response) {
     });
 
     if (!connections.length) {
-      return res
-        .status(404)
-        .json({ error: "No connections found for this participant" });
+      return res.status(200).json([]);
     }
 
-    const connectedMap = connections.map((conn) => {
+    // Map each connection to the other participant's ID + description
+    const connectedItems = connections.map((conn) => {
       const otherParticipantId =
         conn.primaryParticipantId.toString() === participantId
           ? conn.secondaryParticipantId
@@ -427,46 +425,40 @@ export async function getConnectedUsersInfo(req: Request, res: Response) {
       };
     });
 
-    // Remove duplicate connections for the same participant 
-    const uniqueMap = Array.from(
-      new Map(
-        connectedMap.map((item) => [item.participantId.toString(), item]),
-      ).values(),
-    );
+    const participantIds = [
+      ...new Set(connectedItems.map((item) => item.participantId.toString())),
+    ];
 
-    const participantIds = uniqueMap.map((item) => item.participantId);
-
+    // Single query with populate to get participants + their users
     const participants = await Participant.find({
       _id: { $in: participantIds },
-    }).select("userId name");
-    const userIds = participants.map((p) => p.userId);
+    })
+      .select("userId name")
+      .populate("userId", "name email linkedinUrl bio profilePhoto socialLinks");
 
-    const users = await User.find({ _id: { $in: userIds } }).select(
-      "name email linkedinUrl bio profilePhoto socialLinks",
+    const participantMap = new Map(
+      participants.map((p) => [(p._id as Types.ObjectId).toString(), p]),
     );
 
-    const result = uniqueMap
-      .map((item) => {
-        const participant = participants.find(
-          (p) => p._id && p._id.toString() === item.participantId.toString(),
-        );
+    const result = connectedItems.map((item) => {
+      const participant = participantMap.get(item.participantId.toString());
 
-        if (!participant || !participant.userId) return null;
-
-        const user = users.find(
-          (u) => u._id.toString() === participant.userId.toString(),
-        );
-
-        if (!user) return null;
-
+      if (!participant) {
         return {
-          user,
-          participantId: participant._id,      
-          participantName: participant.name,
+          user: null,
+          participantId: item.participantId,
+          participantName: null,
           connectionDescription: item.description,
         };
-      })
-      .filter(Boolean); 
+      }
+
+      return {
+        user: participant.userId || null,
+        participantId: participant._id,
+        participantName: participant.name,
+        connectionDescription: item.description,
+      };
+    });
 
     return res.status(200).json(result);
   } catch (_error) {

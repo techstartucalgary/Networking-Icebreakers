@@ -59,6 +59,7 @@ router.get("/getByParticipantAndEvent", authMiddleware, getConnectionsByParticip
 router.get("/getByUserEmailAndEvent", authMiddleware, getConnectionsByUserEmailAndEvent);
 
 // Get all user's information that connected with the participant
-router.get("/getParticipantConnections/connected-users", authMiddleware, getConnectedUsersInfo);
+// GET /api/participantConnections/connected-users
+router.get("/connected-users", authMiddleware, getConnectedUsersInfo);
 
 export default router;
