@@ -31,15 +31,28 @@ import { ParticipantConnection } from "../models/participant_connection_model";
  */
 export async function createParticipantConnection(req: Request, res: Response) {
   try {
-    const requiredFields = ["_eventId", "primaryParticipantId", "secondaryParticipantId"];
+    const requiredFields = [
+      "_eventId",
+      "primaryParticipantId",
+      "secondaryParticipantId",
+    ];
     if (!check_req_fields(req, requiredFields)) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const { _eventId, primaryParticipantId, secondaryParticipantId, description } = req.body;
+    const {
+      _eventId,
+      primaryParticipantId,
+      secondaryParticipantId,
+      description,
+    } = req.body;
 
     // Validate ObjectId format before hitting the DB
-    const idsToValidate = { _eventId, primaryParticipantId, secondaryParticipantId };
+    const idsToValidate = {
+      _eventId,
+      primaryParticipantId,
+      secondaryParticipantId,
+    };
     for (const [key, value] of Object.entries(idsToValidate)) {
       if (!Types.ObjectId.isValid(value)) {
         return res.status(400).json({ error: `Invalid ${key}` });
@@ -48,15 +61,25 @@ export async function createParticipantConnection(req: Request, res: Response) {
 
     // Ensure both participants exist AND belong to the event
     const [primaryParticipant, secondaryParticipant] = await Promise.all([
-      Participant.findOne({ _id: primaryParticipantId, eventId: _eventId }).select("_id"),
-      Participant.findOne({ _id: secondaryParticipantId, eventId: _eventId }).select("_id"),
+      Participant.findOne({
+        _id: primaryParticipantId,
+        eventId: _eventId,
+      }).select("_id"),
+      Participant.findOne({
+        _id: secondaryParticipantId,
+        eventId: _eventId,
+      }).select("_id"),
     ]);
 
     if (!primaryParticipant) {
-      return res.status(404).json({ error: "Primary participant not found for this event" });
+      return res
+        .status(404)
+        .json({ error: "Primary participant not found for this event" });
     }
     if (!secondaryParticipant) {
-      return res.status(404).json({ error: "Secondary participant not found for this event" });
+      return res
+        .status(404)
+        .json({ error: "Secondary participant not found for this event" });
     }
 
     // Prevent duplicates with exact same (_eventId, primaryParticipantId, secondaryParticipantId)
@@ -68,7 +91,8 @@ export async function createParticipantConnection(req: Request, res: Response) {
 
     if (existing) {
       return res.status(409).json({
-        error: "ParticipantConnection already exists for this event and participants",
+        error:
+          "ParticipantConnection already exists for this event and participants",
         existingConnection: existing,
       });
     }
@@ -111,14 +135,22 @@ export async function createParticipantConnection(req: Request, res: Response) {
  * @returns 409 - ParticipantConnection already exists for this event and participants
  * @returns 500 - Internal server error
  */
-export async function createParticipantConnectionByEmails(req: Request, res: Response) {
+export async function createParticipantConnectionByEmails(
+  req: Request,
+  res: Response,
+) {
   try {
-    const requiredFields = ["_eventId", "primaryUserEmail", "secondaryUserEmail"];
+    const requiredFields = [
+      "_eventId",
+      "primaryUserEmail",
+      "secondaryUserEmail",
+    ];
     if (!check_req_fields(req, requiredFields)) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const { _eventId, primaryUserEmail, secondaryUserEmail, description } = req.body;
+    const { _eventId, primaryUserEmail, secondaryUserEmail, description } =
+      req.body;
 
     if (!Types.ObjectId.isValid(_eventId)) {
       return res.status(400).json({ error: "Invalid _eventId" });
@@ -136,7 +168,9 @@ export async function createParticipantConnectionByEmails(req: Request, res: Res
     }
 
     if (primaryEmail === secondaryEmail) {
-      return res.status(400).json({ error: "primaryUserEmail and secondaryUserEmail must be different" });
+      return res.status(400).json({
+        error: "primaryUserEmail and secondaryUserEmail must be different",
+      });
     }
 
     // Find users by email
@@ -145,20 +179,32 @@ export async function createParticipantConnectionByEmails(req: Request, res: Res
       User.findOne({ email: secondaryEmail }).select("_id"),
     ]);
 
-    if (!primaryUser) return res.status(404).json({ error: "Primary user not found" });
-    if (!secondaryUser) return res.status(404).json({ error: "Secondary user not found" });
+    if (!primaryUser)
+      return res.status(404).json({ error: "Primary user not found" });
+    if (!secondaryUser)
+      return res.status(404).json({ error: "Secondary user not found" });
 
     // Map User -> Participant (for the event)
     const [primaryParticipant, secondaryParticipant] = await Promise.all([
-      Participant.findOne({ eventId: _eventId, userId: primaryUser._id }).select("_id"),
-      Participant.findOne({ eventId: _eventId, userId: secondaryUser._id }).select("_id"),
+      Participant.findOne({
+        eventId: _eventId,
+        userId: primaryUser._id,
+      }).select("_id"),
+      Participant.findOne({
+        eventId: _eventId,
+        userId: secondaryUser._id,
+      }).select("_id"),
     ]);
 
     if (!primaryParticipant) {
-      return res.status(404).json({ error: "Primary participant not found for this event (by user email)" });
+      return res.status(404).json({
+        error: "Primary participant not found for this event (by user email)",
+      });
     }
     if (!secondaryParticipant) {
-      return res.status(404).json({ error: "Secondary participant not found for this event (by user email)" });
+      return res.status(404).json({
+        error: "Secondary participant not found for this event (by user email)",
+      });
     }
 
     // Prevent duplicates with exact same (_eventId, primaryParticipantId, secondaryParticipantId)
@@ -170,7 +216,8 @@ export async function createParticipantConnectionByEmails(req: Request, res: Res
 
     if (existing) {
       return res.status(409).json({
-        error: "ParticipantConnection already exists for this event and participants",
+        error:
+          "ParticipantConnection already exists for this event and participants",
         existingConnection: existing,
       });
     }
@@ -219,7 +266,9 @@ export async function deleteParticipantConnection(req: Request, res: Response) {
     });
 
     if (!deleted) {
-      return res.status(404).json({ error: "ParticipantConnection not found for this event" });
+      return res
+        .status(404)
+        .json({ error: "ParticipantConnection not found for this event" });
     }
 
     return res.status(200).json({
@@ -231,15 +280,26 @@ export async function deleteParticipantConnection(req: Request, res: Response) {
   }
 }
 
-export async function getConnectionsByParticipantAndEvent(req: Request, res: Response) {
+export async function getConnectionsByParticipantAndEvent(
+  req: Request,
+  res: Response,
+) {
   try {
     const { eventId, participantId } = req.query;
 
-    if (!eventId || typeof eventId !== "string" || !Types.ObjectId.isValid(eventId)) {
+    if (
+      !eventId ||
+      typeof eventId !== "string" ||
+      !Types.ObjectId.isValid(eventId)
+    ) {
       return res.status(400).json({ error: "Invalid eventId" });
     }
 
-    if (!participantId || typeof participantId !== "string" || !Types.ObjectId.isValid(participantId)) {
+    if (
+      !participantId ||
+      typeof participantId !== "string" ||
+      !Types.ObjectId.isValid(participantId)
+    ) {
       return res.status(400).json({ error: "Invalid participantId" });
     }
 
@@ -257,11 +317,18 @@ export async function getConnectionsByParticipantAndEvent(req: Request, res: Res
   }
 }
 
-export async function getConnectionsByUserEmailAndEvent(req: Request, res: Response) {
+export async function getConnectionsByUserEmailAndEvent(
+  req: Request,
+  res: Response,
+) {
   try {
     const { eventId, userEmail } = req.query;
 
-    if (!eventId || typeof eventId !== "string" || !Types.ObjectId.isValid(eventId)) {
+    if (
+      !eventId ||
+      typeof eventId !== "string" ||
+      !Types.ObjectId.isValid(eventId)
+    ) {
       return res.status(400).json({ error: "Invalid eventId" });
     }
 
@@ -276,21 +343,124 @@ export async function getConnectionsByUserEmailAndEvent(req: Request, res: Respo
       return res.status(400).json({ error: "Invalid userEmail" });
     }
 
-    const participant = await Participant.findOne({ eventId, userId: user._id }).select("_id");
+    const participant = await Participant.findOne({
+      eventId,
+      userId: user._id,
+    }).select("_id");
 
     if (!participant) {
-      return res.status(404).json({ error: "Participant not found for this event (by user email)" });
+      return res.status(404).json({
+        error: "Participant not found for this event (by user email)",
+      });
     }
 
     const connections = await ParticipantConnection.find({
       _eventId: eventId,
       $or: [
         { primaryParticipantId: participant._id },
-        { secondaryParticipantId: participant._id }
+        { secondaryParticipantId: participant._id },
       ],
     });
 
     return res.status(200).json(connections);
+  } catch (_error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+/**
+ * GET /api/participantConnections/connected-users
+ *
+ * Get all users connected with a given participant in an event,
+ * including the description of the connection.
+ *
+ * @param req.query.eventId - MongoDB ObjectId of the event (required)
+ * @param req.query.participantId - MongoDB ObjectId of the participant (required)
+ *
+ * @returns 200 - Array of connected users with connection descriptions (empty array if none)
+ * @returns 400 - Missing/invalid params
+ * @returns 500 - Internal server error
+ */
+export async function getConnectedUsersInfo(req: Request, res: Response) {
+  try {
+    const { eventId, participantId } = req.query;
+
+    if (
+      !eventId ||
+      typeof eventId !== "string" ||
+      !Types.ObjectId.isValid(eventId)
+    ) {
+      return res.status(400).json({ error: "Invalid eventId" });
+    }
+
+    if (
+      !participantId ||
+      typeof participantId !== "string" ||
+      !Types.ObjectId.isValid(participantId)
+    ) {
+      return res.status(400).json({ error: "Invalid participantId" });
+    }
+
+    const connections = await ParticipantConnection.find({
+      _eventId: eventId,
+      $or: [
+        { primaryParticipantId: participantId },
+        { secondaryParticipantId: participantId },
+      ],
+    });
+
+    if (!connections.length) {
+      return res.status(200).json([]);
+    }
+
+    // Map each connection to the other participant's ID + description
+    const connectedItems = connections.map((conn) => {
+      const otherParticipantId =
+        conn.primaryParticipantId.toString() === participantId
+          ? conn.secondaryParticipantId
+          : conn.primaryParticipantId;
+      return {
+        participantId: otherParticipantId,
+        description: conn.description || null,
+      };
+    });
+
+    const participantIds = [
+      ...new Set(connectedItems.map((item) => item.participantId.toString())),
+    ];
+
+    // Single query with populate to get participants + their users
+    const participants = await Participant.find({
+      _id: { $in: participantIds },
+    })
+      .select("userId name")
+      .populate("userId", "name email linkedinUrl bio profilePhoto socialLinks");
+
+    const participantMap = new Map(
+      participants.map((p) => [(p._id as Types.ObjectId).toString(), p]),
+    );
+
+    const result = connectedItems.map((item) => {
+      const participant = participantMap.get(item.participantId.toString());
+
+      if (!participant) {
+        return {
+          user: null,
+          participantId: item.participantId,
+          participantName: null,
+          connectionDescription: item.description,
+        };
+      }
+
+      return {
+        user: participant.userId || null,
+        participantId: participant._id,
+        participantName: participant.name,
+        connectionDescription: item.description,
+      };
+    });
+
+    return res.status(200).json(result);
   } catch (_error) {
     return res.status(500).json({ error: "Internal server error" });
   }
