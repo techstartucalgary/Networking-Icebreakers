@@ -1,6 +1,6 @@
 # Shatter Backend — Real-Time Events Guide
 
-**Last updated:** 2026-03-01
+**Last updated:** 2026-03-08
 
 ---
 
@@ -106,7 +106,7 @@ Each event has its own channel. Subscribe when a user enters an event, unsubscri
 | Field           | Type     | Description |
 |-----------------|----------|-------------|
 | `participantId` | ObjectId | The new participant's ID |
-| `name`          | string   | The participant's display name |
+| `name`          | string   | The participant's display name (may include a `#XXX` suffix if the name was already taken in the event, e.g., `"John#472"`) |
 
 **Use case:** Update the live participant list in the event lobby/dashboard without polling.
 

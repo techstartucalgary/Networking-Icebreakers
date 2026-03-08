@@ -1,6 +1,6 @@
 # Shatter Backend — API Reference
 
-**Last updated:** 2026-03-01
+**Last updated:** 2026-03-08
 **Base URL:** `http://localhost:4000/api`
 
 ---
@@ -169,7 +169,8 @@ Create a new user account.
 | 400    | `"name, email and password are required"` |
 | 400    | `"Invalid email format"` |
 | 400    | `"Password must be at least 8 characters long"` |
-| 409    | `"Email already exists"` |
+| 409    | `"Email already exists"` (local account) |
+| 409    | `"This email is associated with a LinkedIn account. Please log in with LinkedIn."` (LinkedIn account) |
 
 ---
 
@@ -420,11 +421,17 @@ Get all events a user has joined (populates event details).
       "joinCode": "12345678",
       "startDate": "2025-02-01T18:00:00.000Z",
       "endDate": "2025-02-01T21:00:00.000Z",
-      "currentState": "In Progress"
+      "currentState": "In Progress",
+      "participantIds": [
+        { "_id": "666b...", "name": "John Doe", "userId": "664f..." },
+        { "_id": "666c...", "name": "Jane Smith", "userId": "664e..." }
+      ]
     }
   ]
 }
 ```
+
+**Note:** Each event's `participantIds` is populated with participant `name` and `userId` fields, enabling the frontend to load participant connections.
 
 **Error Responses:**
 
@@ -716,13 +723,13 @@ Join an event as a registered (authenticated) user.
 | 404    | `"User not found"` |
 | 404    | `"Event not found"` |
 | 409    | `"User already joined"` |
-| 409    | `"This name is already taken in this event"` |
 
 **Special Behavior:**
 - Creates a Participant record linking user to event
+- If the display name is already taken in the event, a `#XXX` suffix is automatically appended (e.g., `John` becomes `John#472`). The response `participant.name` reflects the final display name.
 - Adds participant to event's `participantIds` array
 - Adds event to user's `eventHistoryIds` array
-- Triggers Pusher event `participant-joined` on channel `event-{eventId}` with payload `{ participantId, name }`
+- Triggers Pusher event `participant-joined` on channel `event-{eventId}` with payload `{ participantId, name }` (using the final display name)
 
 ---
 
@@ -767,13 +774,13 @@ Join an event as a guest (no account required).
 | 400    | `"Missing fields: guest name and eventId are required"` |
 | 400    | `"Event is full"` |
 | 404    | `"Event not found"` |
-| 409    | `"This name is already taken in this event"` |
 
 **Special Behavior:**
 - Creates a guest User (`authProvider: 'guest'`, no email/password)
+- If the display name is already taken in the event, a `#XXX` suffix is automatically appended (e.g., `John` becomes `John#472`). The response `participant.name` reflects the final display name, and the guest User's name is updated to match.
 - Returns a JWT so the guest can make authenticated requests
 - Guest can later upgrade to a full account via `PUT /api/users/:userId`
-- Triggers Pusher event `participant-joined` on channel `event-{eventId}` with payload `{ participantId, name }`
+- Triggers Pusher event `participant-joined` on channel `event-{eventId}` with payload `{ participantId, name }` (using the final display name)
 
 ---
 
