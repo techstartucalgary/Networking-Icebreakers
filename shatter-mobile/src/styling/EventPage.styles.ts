@@ -1,6 +1,5 @@
 import { Dimensions, StyleSheet } from "react-native";
 import { colors, fonts } from "./constants";
-import { Ionicons } from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get("window");
 
@@ -12,11 +11,11 @@ export const EventPageStyling = StyleSheet.create({
 		flex: 1,
 		width: "100%",
 		height: "100%",
+		backgroundColor: colors.lightGrey,
 	},
 	safe: {
 		flex: 1,
 		flexDirection: "column",
-		justifyContent: "center",
 		alignItems: "center",
 	},
 	container: {
@@ -24,7 +23,8 @@ export const EventPageStyling = StyleSheet.create({
 		backgroundColor: colors.lightGrey,
 		width: "95%",
 		borderRadius: 8,
-		padding: 10,
+		padding: 5,
+		marginTop: vh(3),
 	},
 	loadingContainer: {
 		justifyContent: "center",

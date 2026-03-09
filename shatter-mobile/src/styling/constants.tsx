@@ -8,7 +8,10 @@ export const colors = {
 	lightNavy: "#35476e",
 	darkNavy: "#1B253A",
 	lightGrey: "rgba(255, 255, 255, 0.97)",
+	lightGrey2: "rgba(181, 181, 181, 0.97))",
 	beige: "#F8F7DE",
+	gold: "#e3cd3d",
+
 	error: "#f16d6d",
 
 	overlayDark: "rgba(0,0,0,0.35)",

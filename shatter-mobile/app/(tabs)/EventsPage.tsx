@@ -64,41 +64,6 @@ export default function EventsPage() {
 		setExpandedEventId((prev) => (prev === event._id ? null : event._id));
 	};
 
-	if (loading) {
-		return (
-			<ImageBackground
-				source={require("../../src/images/getStartedImage.png")}
-				style={styles.background}
-				resizeMode="cover"
-			>
-				<SafeAreaView style={styles.safe}>
-					<View style={styles.container}>
-						<View style={styles.loadingContainer}>
-							<ActivityIndicator size="large" color="#1e3a8a" />
-							<Text style={styles.loading}>Loading events...</Text>
-						</View>
-					</View>
-				</SafeAreaView>
-			</ImageBackground>
-		);
-	}
-
-	if (events.length === 0) {
-		return (
-			<ImageBackground
-				source={require("../../src/images/getStartedImage.png")}
-				style={styles.background}
-				resizeMode="cover"
-			>
-				<SafeAreaView style={styles.safe}>
-					<View style={styles.loadingContainer}>
-						<Text style={styles.loading}>No events joined</Text>
-					</View>
-				</SafeAreaView>
-			</ImageBackground>
-		);
-	}
-
 	return (
 		<ImageBackground
 			source={require("../../src/images/getStartedImage.png")}
@@ -107,17 +72,28 @@ export default function EventsPage() {
 		>
 			<SafeAreaView style={styles.safe}>
 				<View style={styles.container}>
-					<FlatList
-						data={events}
-						keyExtractor={(item) => item._id}
-						renderItem={({ item }) => (
-							<EventCard
-								event={item}
-								expanded={expandedEventId === item._id}
-								onPress={() => handlePress(item)}
-							/>
-						)}
-					/>
+					{loading ? (
+						<View style={styles.loadingContainer}>
+							<ActivityIndicator size="large" color="#1e3a8a" />
+							<Text style={styles.loading}>Loading events...</Text>
+						</View>
+					) : events.length === 0 ? (
+						<View style={styles.loadingContainer}>
+							<Text style={styles.loading}>No events joined</Text>
+						</View>
+					) : (
+						<FlatList
+							data={events}
+							keyExtractor={(item) => item._id}
+							renderItem={({ item }) => (
+								<EventCard
+									event={item}
+									expanded={expandedEventId === item._id}
+									onPress={() => handlePress(item)}
+								/>
+							)}
+						/>
+					)}
 				</View>
 			</SafeAreaView>
 		</ImageBackground>

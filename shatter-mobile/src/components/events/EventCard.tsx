@@ -8,9 +8,11 @@ import { useEffect, useState } from "react";
 import {
 	FlatList,
 	Image,
+	LayoutAnimation,
+	Platform,
 	Pressable,
-	StyleSheet,
 	Text,
+	UIManager,
 	View,
 } from "react-native";
 import EventIB, { EventState, GameType } from "../../interfaces/Event";
@@ -38,6 +40,10 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	useEffect(() => {
 		if (expanded) {
 			loadConnections(event._id);
+		}
+
+		if (Platform.OS === "android") {
+			UIManager.setLayoutAnimationEnabledExperimental?.(true);
 		}
 	}, [expanded]);
 
@@ -92,7 +98,13 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	};
 
 	return (
-		<Pressable onPress={onPress} style={styles.card}>
+		<Pressable
+			onPress={() => {
+				LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+				onPress();
+			}}
+			style={styles.card}
+		>
 			<View style={styles.imageWrapper}>
 				<Image source={{ uri: event.eventImg }} style={styles.image} />
 

@@ -5,22 +5,21 @@ import {
 	getParticipantsByEventId,
 } from "@/src/services/game.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-	ActivityIndicator,
 	ScrollView,
-	StyleSheet,
 	Text,
 	TextInput,
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { NameBingoStyling as styles } from "../../styling/NameBingo.styles";
+import FullPageLoader from "../FullPageLoader";
 
 type NameBingoProps = {
 	eventId: string;
 	onConnect?: (participant: Participant, description: string | null) => void;
-	connecting?: boolean;
+	onLoaded: () => void;
 };
 
 type Card = {
@@ -36,7 +35,7 @@ type WinningLine = {
 	reverse?: boolean;
 };
 
-const NameBingo = ({ eventId, onConnect, connecting }: NameBingoProps) => {
+const NameBingo = ({ eventId, onConnect, onLoaded }: NameBingoProps) => {
 	const { gameState, currentParticipantId } = useGame();
 	const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 	const [participants, setParticipants] = useState<Participant[]>([]);
@@ -75,11 +74,12 @@ const NameBingo = ({ eventId, onConnect, connecting }: NameBingoProps) => {
 		try {
 			const saved = await AsyncStorage.getItem(storageKey);
 
-			if (!saved) return false;
-			const parsed: Card[] = JSON.parse(saved);
+			if (!saved || saved.length <= 0) {
+				return false; //no saved cards
+			}
 
+			const parsed: Card[] = JSON.parse(saved);
 			setCards(parsed);
-			setLoading(false);
 			return true;
 		} catch (error) {
 			console.log("Error loading saved cards:", error);
@@ -87,68 +87,59 @@ const NameBingo = ({ eventId, onConnect, connecting }: NameBingoProps) => {
 		}
 	};
 
-	const fetchGameData = useCallback(async () => {
-		setLoading(true);
+	useEffect(() => {
+		const fetchData = async () => {
+			console.log("Game Loading True");
+			setLoading(true);
 
-		try {
-			//fetch categories
-			const categoriesData = await getBingoCategories(eventId);
+			try {
+				//load game categories
+				const categoriesData = await getBingoCategories(eventId);
+				const categoriesList =
+					categoriesData?.success && categoriesData.categories
+						? categoriesData.categories
+						: [];
+				setCategories(categoriesList);
 
-			//store locally
-			const categoriesList =
-				categoriesData?.success && categoriesData.categories
-					? categoriesData.categories
-					: [];
+				//load participants
+				const res = await getParticipantsByEventId(eventId);
+				const participantsList = res?.participants || [];
+				setParticipants(participantsList);
 
-			setCategories(categoriesList);
-
-			//fetch names
-			const res = await getParticipantsByEventId(eventId);
-
-			if (!res) {
+				//load local cards if needed
+				const hasSaved = await loadSavedCards();
+				if (!hasSaved) {
+					const initialCards: Card[] = categoriesList.flatMap((row, rowIdx) =>
+						row.map((cat, colIdx) => ({
+							cardId: `card-${rowIdx}-${colIdx}`,
+							category: cat,
+						})),
+					);
+					setCards(initialCards);
+					await AsyncStorage.setItem(storageKey, JSON.stringify(initialCards));
+				}
+			} catch (err) {
+				console.log("Error fetching bingo data:", err);
+				setError((err as Error).message);
+				setParticipants([]);
+				setCards([]);
+			} finally {
+				setLoading(false);
+				onLoaded(); //tell parent it's done loading
+				console.log("Game Loading False");
 			}
+		};
 
-			const participantsList = res.participants;
-
-			setParticipants(participantsList);
-
-			const hasSaved = await loadSavedCards();
-			if (hasSaved) return;
-
-			//map categories to cards
-			const initialCards: Card[] = categoriesList.flatMap((row, rowIdx) =>
-				row.map((cat, colIdx) => ({
-					cardId: `card-${rowIdx}-${colIdx}`,
-					category: cat,
-				})),
-			);
-
-			setParticipants(participantsList);
-			setCards(initialCards);
-
-			await AsyncStorage.setItem(storageKey, JSON.stringify(initialCards));
-		} catch (err) {
-			console.log("Error fetching bingo data:", err);
-			setError((err as Error).message);
-			setParticipants([]);
-			setCards([]);
-		} finally {
-			setLoading(false);
-		}
-	}, [eventId]);
-
-	useFocusEffect(
-		useCallback(() => {
-			fetchGameData();
-		}, [fetchGameData]),
-	);
+		if (eventId) fetchData();
+	}, [eventId, onLoaded]);
 
 	const handleAssign = async (participant: Participant) => {
 		if (!selectedCardId || participant === null) return;
 
 		if (!currentParticipantId) return;
 
-		if (!isValidParticipant(participant.participantId, currentParticipantId)) return;
+		if (!isValidParticipant(participant.participantId, currentParticipantId))
+			return;
 		if (isAlreadyAssigned(participant.participantId)) return;
 
 		const updatedCards = cards.map((c) =>
@@ -283,21 +274,14 @@ const NameBingo = ({ eventId, onConnect, connecting }: NameBingoProps) => {
 	const isAlreadyAssigned = (participantId: string) =>
 		cards.some((c) => c.assignedParticipantId === participantId);
 
-	if (loading) {
-		return (
-			<View style={styles.center}>
-				<ActivityIndicator size="large" color="#000" />
-				<Text>Loading participants or categories...</Text>
-			</View>
-		);
-	}
-
 	const filteredParticipants = participants.filter(
 		(participant) =>
 			participant.name.toLowerCase().includes(search.toLowerCase()) &&
 			!isAlreadyAssigned(participant.participantId) &&
 			isValidParticipant(participant.participantId, currentParticipantId),
 	);
+
+	if (loading) return <FullPageLoader message="Loading bingo..." />;
 
 	return (
 		<View style={styles.container}>
@@ -333,10 +317,7 @@ const NameBingo = ({ eventId, onConnect, connecting }: NameBingoProps) => {
 							!participants.some(
 								(p) =>
 									p.name.toLowerCase() === search.trim().toLowerCase() &&
-									isValidParticipant(
-										p.participantId,
-										currentParticipantId,
-									) &&
+									isValidParticipant(p.participantId, currentParticipantId) &&
 									!isAlreadyAssigned(p.participantId),
 							)
 						}
@@ -417,79 +398,3 @@ const NameBingo = ({ eventId, onConnect, connecting }: NameBingoProps) => {
 };
 
 export default NameBingo;
-
-const styles = StyleSheet.create({
-	container: { flex: 1, padding: 10 },
-	center: { flex: 1, justifyContent: "center", alignItems: "center" },
-	grid: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		justifyContent: "space-between",
-		marginBottom: 12,
-	},
-	card: {
-		width: "18%",
-		aspectRatio: 1,
-		backgroundColor: "#e0f7e0",
-		marginBottom: 10,
-		borderRadius: 8,
-		justifyContent: "center",
-		alignItems: "center",
-		padding: 5,
-	},
-	selectedCard: {
-		borderWidth: 2,
-		borderColor: "#3b82f6",
-	},
-	winningCard: {
-		borderWidth: 3,
-		borderColor: "gold",
-	},
-	blackoutCard: {
-		backgroundColor: "#FFD700",
-		transform: [{ scale: 1.1 }],
-	},
-	category: { fontWeight: "bold", textAlign: "center" },
-	assignedName: { fontSize: 12, textAlign: "center", marginTop: 2 },
-	inputRow: { flexDirection: "row", marginBottom: 5 },
-	inputTitle: { color: "#d4d4d4", fontWeight: "bold" },
-	inputFlex: {
-		flex: 1,
-		borderWidth: 1,
-		borderColor: "#ccc",
-		padding: 8,
-		borderRadius: 5,
-	},
-	submitButton: {
-		marginLeft: 8,
-		backgroundColor: "#3b82f6",
-		paddingHorizontal: 16,
-		justifyContent: "center",
-		borderRadius: 5,
-	},
-	submitText: { color: "#fff", fontWeight: "bold" },
-	bingoBanner: {
-		backgroundColor: "#4CAF50",
-		padding: 10,
-		borderRadius: 5,
-		marginBottom: 10,
-	},
-	bingoText: {
-		color: "#fff",
-		fontWeight: "bold",
-		textAlign: "center",
-	},
-	dropdown: {
-		maxHeight: 150,
-		borderWidth: 1,
-		borderColor: "#ccc",
-		borderRadius: 5,
-		marginBottom: 10,
-	},
-	dropdownItem: { padding: 8, borderBottomWidth: 1, borderBottomColor: "#eee" },
-	err: {
-		fontSize: 12,
-		fontWeight: "bold",
-		color: "#ef4444",
-	},
-});

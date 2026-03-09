@@ -3,9 +3,9 @@ import { Tabs } from "expo-router";
 import { barStyles } from "../../src/styling/PageStyles.styles";
 
 export const EventPageHeaderStyling = {
+	title: "",
 	headerTransparent: true,
 	headerTitle: "",
-	headerTintColor: "#fff",
 	tabBarIcon: ({ color, size }: { color: string; size: number }) => (
 		<Ionicons name="calendar-outline" size={size} color={color} />
 	),
