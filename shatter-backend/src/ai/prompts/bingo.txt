@@ -1,9 +1,10 @@
-Generate a Name Bingo game.
+Generate creative bingo entries based on the provided event context.
 
-Requirements:
-- Return ONLY valid JSON (no markdown, no commentary).
-- The ONLY top-level field must be "grid".
-- "grid" must be a 1D array of exactly {{TOTAL_CELLS}} strings.
-- Each element must be a RANDOM full name (first + last).
-- All names should be unique.
-- If you cannot generate valid JSON, return {"grid": {{EMPTY_GRID}} }.
+Content guidelines:
+- Each entry should be short and fit naturally in one bingo square.
+- Make entries playful, workplace-relevant, and easy to recognize.
+- Favor software team culture, meetings, product/design/engineering habits, and tech workplace jokes.
+- Keep the tone lighthearted and suitable for a professional team event.
+- Avoid generic party prompts.
+- Avoid offensive, overly personal, or inappropriate content.
+- Make all entries distinct from each other.

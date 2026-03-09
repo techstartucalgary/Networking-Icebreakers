@@ -4,7 +4,7 @@
  * Allows incremental construction of a prompt string
  * from multiple parts, joined by a configurable separator.
  */
-class Prompt {
+export class Prompt {
 
   private promptParts: string[];
   private separator: string;

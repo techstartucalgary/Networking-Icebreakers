@@ -1,128 +1,218 @@
 // src/ai/gemini.ts
+
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import "dotenv/config";
+
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { Prompt } from "./prompt_builder.ts";
+
+console.log("Gemini module starting...");
+
 
 // ----------------------
-// Schema (1D array of names)
+// File path setup
 // ----------------------
-const bingoSchema = z.object({
-  grid: z.array(z.string()),
-});
 
-export type Bingo = z.infer<typeof bingoSchema>;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// ----------------------
-// AI Setup
-// ----------------------
-const ai = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_API_KEY,
-});
+const promptPath = path.join(__dirname, "prompts", "bingo.txt");
+
+console.log("Resolved prompt path:", promptPath);
+console.log("Prompt file exists:", fs.existsSync(promptPath));
+
 
 // ----------------------
 // Helpers
 // ----------------------
-function makeEmptyGrid(size: number): string[] {
-  return Array.from({ length: size }, () => "");
-}
 
-function extractJsonObject(text: string): string {
-  const trimmed = text.trim();
-  if (trimmed.startsWith("{") && trimmed.endsWith("}")) return trimmed;
+function makeEmptyGrid(rows: number, cols: number) {
 
-  const first = trimmed.indexOf("{");
-  const last = trimmed.lastIndexOf("}");
-  if (first !== -1 && last !== -1 && last > first) {
-    return trimmed.slice(first, last + 1);
+  console.log(`Creating fallback grid ${rows}x${cols}`);
+
+  const grid: Record<string, string[]> = {};
+
+  for (let r = 1; r <= rows; r++) {
+    grid[`row${r}`] = Array(cols).fill("");
   }
 
-  return trimmed;
+  return grid;
 }
 
-function readPromptTemplate(): string {
-  // Resolves relative to this file’s location reliably
-  const filePath = path.resolve(process.cwd(), "src", "ai", "prompts", "bingo.txt");
-  return fs.readFileSync(filePath, "utf8");
+
+function buildSchema(rows: number, cols: number) {
+
+  console.log("Building dynamic Zod schema...");
+
+  const shape: Record<string, z.ZodTypeAny> = {};
+
+  for (let r = 1; r <= rows; r++) {
+
+    shape[`row${r}`] = z
+      .array(
+        z
+          .string()
+          .describe("A humorous bingo square phrase related to tech culture")
+      )
+      .length(cols)
+      .describe(`Row ${r} of the bingo board`);
+  }
+
+  return z.object(shape);
 }
 
-function buildPromptFromTemplate(template: string, totalCells: number): string {
-  const schemaJson = JSON.stringify(zodToJsonSchema(bingoSchema), null, 2);
-  const emptyGridJson = JSON.stringify(makeEmptyGrid(totalCells));
 
-  // Supported placeholders in bingo.txt:
-  // {{TOTAL_CELLS}}  -> total number of names to generate
-  // {{SCHEMA}}       -> JSON schema
-  // {{EMPTY_GRID}}   -> JSON array fallback for grid
-  return template
-    .replace(/{{TOTAL_CELLS}}/g, String(totalCells))
-    .replace(/{{SCHEMA}}/g, schemaJson)
-    .replace(/{{EMPTY_GRID}}/g, emptyGridJson)
-    .trim();
+function buildShapeExample(rows: number, cols: number) {
+
+  console.log("Building JSON example for prompt");
+
+  const obj: Record<string, string[]> = {};
+
+  for (let r = 1; r <= rows; r++) {
+    obj[`row${r}`] = Array.from(
+      { length: cols },
+      (_, c) => `Row ${r} Col ${c + 1}`
+    );
+  }
+
+  return JSON.stringify(obj, null, 2);
 }
+
+
+// ----------------------
+// Gemini Client
+// ----------------------
+
+console.log("Initializing Gemini client...");
+
+const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+  throw new Error("Missing API key");
+}
+
+const ai = new GoogleGenAI({ apiKey });
+
+console.log("Gemini client initialized.");
+
 
 // ----------------------
 // Generator
 // ----------------------
-export async function generateNameBingo(n_rows: number, n_cols: number): Promise<Bingo> {
-  const totalCells = n_rows * n_cols;
 
-  const template = readPromptTemplate();
-  const prompt = buildPromptFromTemplate(template, totalCells);
+export async function generateNameBingo(rows: number, cols: number) {
 
-  let rawResponse: string | undefined;
+  console.log("generateNameBingo called");
+  console.log("Grid size:", rows, "x", cols);
+
+  const schema = buildSchema(rows, cols);
+  const schemaJson = zodToJsonSchema(schema);
+
+  const example = buildShapeExample(rows, cols);
+
+  const basePrompt = `
+Generate a ${rows}x${cols} bingo board.
+
+Return JSON exactly matching this structure:
+
+${example}
+
+Rules:
+- Keys must be row1, row2, row3, etc.
+- Each row must contain ${cols} strings.
+- Each string is a humorous bingo phrase about software development culture.
+
+Return ONLY valid JSON.
+`.trim();
+
+
+  console.log("Loading instruction file...");
+
+  if (!fs.existsSync(promptPath)) {
+    throw new Error(`Prompt file missing: ${promptPath}`);
+  }
+
+  const aiInstruction = fs.readFileSync(promptPath, "utf-8");
+
+  const aiPrompt = new Prompt([
+    basePrompt,
+    aiInstruction,
+  ]);
+
+  console.log("Generating final prompt...");
+
+  aiPrompt.generatePrompt();
+
+  const prompt = aiPrompt.getPrompt();
+
+  console.log("Final prompt length:", prompt.length);
+
 
   try {
+
+    console.log("Sending request to Gemini...");
+
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        responseJsonSchema: zodToJsonSchema(bingoSchema),
+        responseJsonSchema: schemaJson,
         temperature: 0.7,
       },
     });
 
-    rawResponse = typeof response.text === "string" ? response.text : String(response.text);
+    console.log("Gemini response received");
 
-    const jsonText = extractJsonObject(rawResponse);
-    const parsed = JSON.parse(jsonText);
-    const validated = bingoSchema.parse(parsed);
+    console.log("RAW RESPONSE:");
+    console.log(response.text);
 
-    // Enforce exact length; fallback if wrong
-    if (validated.grid.length !== totalCells) {
-      return { grid: makeEmptyGrid(totalCells) };
-    }
+
+    console.log("Parsing JSON...");
+
+    const parsed = JSON.parse(response.text);
+
+    console.log("Validating schema...");
+
+    const validated = schema.parse(parsed);
+
+    console.log("Schema validation successful");
 
     return validated;
+
   } catch (error) {
-    console.error("\n❌ Generation Failed\n");
 
-    if (rawResponse) {
-      console.error("---- Raw Gemini Response ----");
-      console.error(rawResponse);
-      console.error("-----------------------------\n");
-    } else {
-      console.error("No response text was received from Gemini.\n");
-    }
+    console.error("Generation failed:", error);
 
-    console.error("Error:", error);
-
-    return { grid: makeEmptyGrid(totalCells) };
+    return makeEmptyGrid(rows, cols);
   }
 }
+
 
 // ----------------------
 // Run directly
 // ----------------------
+
 async function main() {
+
+  console.log("Generating Bingo Grid...");
+
   const result = await generateNameBingo(4, 4);
-  console.log("\n✅ Generated Bingo Grid:\n");
+
+  console.log("Result:");
+
   console.log(JSON.stringify(result, null, 2));
 }
 
-main().catch(() => {
+
+main().catch((err) => {
+
+  console.error("Fatal error:", err);
+
   process.exitCode = 1;
 });
