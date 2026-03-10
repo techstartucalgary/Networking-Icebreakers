@@ -13,7 +13,6 @@ const GamePage = () => {
 	const { gameState } = useGame();
 	const [event, setEvent] = useState<any>(null);
 	const [loading, setLoading] = useState(true);
-	const [childLoading, setChildLoading] = useState(true);
 
 	const loadEvent = useCallback(async () => {
 		if (!gameState?.eventId) {

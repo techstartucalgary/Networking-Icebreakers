@@ -41,7 +41,6 @@ export async function GetEventByIdApi(eventId: string): Promise<EventResponse> {
 		const response: AxiosResponse<EventResponse> = await axios.get(
 			`${API_BASE_URL_EVENT}/${eventId}`,
 		);
-		//response.data.event.gameType = GameType.NAME_BINGO; //TODO: Remove hard coded game type
 		return response.data;
 	} catch (error) {
 		const err = error as AxiosError;
