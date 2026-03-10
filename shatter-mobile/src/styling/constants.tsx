@@ -11,6 +11,7 @@ export const colors = {
 	lightGrey2: "rgba(181, 181, 181, 0.97))",
 	beige: "#F8F7DE",
 	gold: "#e3cd3d",
+	red: "#f07070",
 
 	error: "#f16d6d",
 

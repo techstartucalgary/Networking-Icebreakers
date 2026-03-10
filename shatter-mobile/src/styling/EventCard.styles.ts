@@ -54,7 +54,7 @@ export const EventCardStyling = StyleSheet.create({
 		fontFamily: fonts.body,
 		marginVertical: 5,
 	},
-	liveBadge: {
+	badge: {
 		position: "absolute",
 		top: 10,
 		right: 10,
