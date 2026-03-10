@@ -19,7 +19,6 @@ import FullPageLoader from "../FullPageLoader";
 type NameBingoProps = {
 	eventId: string;
 	onConnect?: (participant: Participant, description: string | null) => void;
-	onLoaded: () => void;
 };
 
 type Card = {
@@ -35,7 +34,7 @@ type WinningLine = {
 	reverse?: boolean;
 };
 
-const NameBingo = ({ eventId, onConnect, onLoaded }: NameBingoProps) => {
+const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 	const { gameState, currentParticipantId } = useGame();
 	const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 	const [participants, setParticipants] = useState<Participant[]>([]);
@@ -89,7 +88,6 @@ const NameBingo = ({ eventId, onConnect, onLoaded }: NameBingoProps) => {
 
 	useEffect(() => {
 		const fetchData = async () => {
-			console.log("Game Loading True");
 			setLoading(true);
 
 			try {
@@ -125,13 +123,11 @@ const NameBingo = ({ eventId, onConnect, onLoaded }: NameBingoProps) => {
 				setCards([]);
 			} finally {
 				setLoading(false);
-				onLoaded(); //tell parent it's done loading
-				console.log("Game Loading False");
 			}
 		};
 
 		if (eventId) fetchData();
-	}, [eventId, onLoaded]);
+	}, [eventId]);
 
 	const handleAssign = async (participant: Participant) => {
 		if (!selectedCardId || participant === null) return;

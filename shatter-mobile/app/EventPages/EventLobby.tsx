@@ -1,83 +1,56 @@
-import { useLocalSearchParams, router } from "expo-router";
-import { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
-import { getEventById } from "@/src/services/event.service";
 import { EventState } from "@/src/interfaces/Event";
+import { getEventById } from "@/src/services/event.service";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { EventLobbyStyling as styles } from "../../src/styling/EventLobby.styles";
 
 export default function EventLobby() {
-  const { eventId } = useLocalSearchParams<{ eventId: string }>();
-  const [status, setStatus] = useState(EventState.UPCOMING);
+	const { eventId } = useLocalSearchParams<{ eventId: string }>();
+	const [status, setStatus] = useState(EventState.UPCOMING);
 
-  //TODO: Websocket for game loading
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      const res = await getEventById(eventId);
-      const event = res?.event;
-      if (!event) return;
+	//TODO: Websocket for game loading
+	useEffect(() => {
+		const interval = setInterval(async () => {
+			const res = await getEventById(eventId);
+			const event = res?.event;
+			if (!event) return;
 
-      setStatus(event.currentState);
+			setStatus(event.currentState);
 
-      if (event.currentState === EventState.IN_PROGRESS) {
-        clearInterval(interval);
+			if (event.currentState === EventState.IN_PROGRESS) {
+				clearInterval(interval);
 
-        router.replace({
-          pathname: "/GamePages/Game",
-        });
-      }
-    }, 3000);
+				router.replace({
+					pathname: "/GamePages/Game",
+				});
+			}
+		}, 3000);
 
-    return () => clearInterval(interval);
-  }, [eventId]);
+		return () => clearInterval(interval);
+	}, [eventId]);
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Successfully Joined!</Text>
+	return (
+		<SafeAreaView style={styles.safe}>
+			<View style={styles.container}>
+				<Text style={styles.title}>Successfully Joined!</Text>
 
-      {status === EventState.UPCOMING && (
-        <>
-          <ActivityIndicator size="large" />
-          <Text style={styles.text}>
-            Waiting for the event to start...
-          </Text>
-        </>
-      )}
+				{status === EventState.UPCOMING && (
+					<>
+						<Text style={styles.text}>Waiting for the event to start...</Text>
+            <ActivityIndicator size="large" style={styles.indicator} />
+					</>
+				)}
 
-      {/* Leave Game Button */}
-      <TouchableOpacity
-        style={styles.leaveButton}
-        onPress={() => router.replace("/EventsPage")}
-      >
-        <Text style={styles.leaveButtonText}>Leave Game</Text>
-      </TouchableOpacity>
-    </View>
-  );
+				{/* Leave Game Button */}
+				<TouchableOpacity
+					style={styles.leaveButton}
+					onPress={() => router.replace("/EventsPage")}
+				>
+					<Text style={styles.leaveButtonText}>Leave Game</Text>
+				</TouchableOpacity>
+			</View>
+		</SafeAreaView>
+	);
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  text: {
-    marginTop: 10,
-    fontSize: 16,
-  },
-  leaveButton: {
-    backgroundColor: "#ef4444",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  leaveButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-});

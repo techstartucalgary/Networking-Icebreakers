@@ -14,8 +14,6 @@ const IcebreakerGame = () => {
 	const { gameState, currentParticipantId } = useGame();
 	const router = useRouter();
 
-	const [loading, setLoading] = useState(true);
-
 	//Pick game-specific component
 	const renderGame = () => {
 		switch (gameState.gameType) {
@@ -24,7 +22,6 @@ const IcebreakerGame = () => {
 					<NameBingo
 						eventId={gameState.eventId}
 						onConnect={handleConnect}
-						onLoaded={() => setLoading(false)}
 					/>
 				);
 			default:
