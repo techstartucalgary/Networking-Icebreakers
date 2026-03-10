@@ -6,6 +6,8 @@ import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EventLobbyStyling as styles } from "../../src/styling/EventLobby.styles";
 
+const POLL_INTERVAL = 3000 //3 seconds
+
 export default function EventLobby() {
 	const { eventId } = useLocalSearchParams<{ eventId: string }>();
 	const [status, setStatus] = useState(EventState.UPCOMING);
@@ -26,7 +28,7 @@ export default function EventLobby() {
 					pathname: "/GamePages/Game",
 				});
 			}
-		}, 3000);
+		}, POLL_INTERVAL);
 
 		return () => clearInterval(interval);
 	}, [eventId]);

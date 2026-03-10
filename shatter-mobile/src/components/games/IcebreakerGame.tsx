@@ -1,18 +1,47 @@
-import { Participant } from "@/src/interfaces/Event";
+import { EventState, Participant } from "@/src/interfaces/Event";
 import { createConnection } from "@/src/services/user.service";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { IcebreakerStyling as styles } from "../../styling/Icebreaker.styles";
 import { getStoredAuth } from "../context/AsyncStorage";
 import { useAuth } from "../context/AuthContext";
 import { useGame } from "../context/GameContext";
 import NameBingo from "./NameBingo";
+import { useEffect } from "react";
+import { getEventById } from "@/src/services/event.service";
+
+const POLL_INTERVAL = 4000 //4 seconds
 
 const IcebreakerGame = () => {
 	const { user } = useAuth();
 	const { gameState, currentParticipantId } = useGame();
 	const router = useRouter();
+
+	//TODO: Websocket for event progress
+	useEffect(() => {
+		if (!gameState.eventId) return;
+
+		const interval = setInterval(async () => {
+			try {
+				const res = await getEventById(gameState.eventId);
+				/* TODO: Reset gameState updating
+				if (res.event.currentState) {
+					setGameProgress(res.event.currentState);
+				}
+				*/
+
+				//when game is finised
+				if (res?.event.currentState === EventState.COMPLETED) {
+					clearInterval(interval);
+					router.push("/EventPages/EventComplete");
+				}
+			} catch (err) {
+				console.log("Polling error:", err);
+			}
+		}, POLL_INTERVAL);
+
+		return () => clearInterval(interval);
+	}, [gameState.eventId]);
 
 	//Pick game-specific component
 	const renderGame = () => {

@@ -1,6 +1,12 @@
 import { EventState, GameType } from "@/src/interfaces/Event";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import {
+	createContext,
+	ReactNode,
+	useContext,
+	useEffect,
+	useState,
+} from "react";
 
 export type GameState = {
 	gameType: GameType; //"Game Bingo"
@@ -13,12 +19,12 @@ export type GameState = {
 
 type GameContextType = {
 	currentParticipantId: string;
-  	setCurrentParticipantId: (id: string) => Promise<void>;
+	setCurrentParticipantId: (id: string) => Promise<void>;
 	gameState: GameState;
 	initializeGame: (
 		gameType: GameType,
 		eventId: string,
-        eventProgress: EventState,
+		eventProgress: EventState,
 		initialData?: any,
 	) => void;
 	setGameData: (data: any) => void;
@@ -50,12 +56,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 	//load participantId on app start
 	useEffect(() => {
 		const loadParticipant = async () => {
-		try {
-			const storedId = await AsyncStorage.getItem(participantStorageKey);
-			if (storedId) _setCurrentParticipantId(storedId);
-		} catch (err) {
-			console.log("Failed to load participantId:", err);
-		}
+			try {
+				const storedId = await AsyncStorage.getItem(participantStorageKey);
+				if (storedId) _setCurrentParticipantId(storedId);
+			} catch (err) {
+				console.log("Failed to load participantId:", err);
+			}
 		};
 		loadParticipant();
 	}, []);
@@ -88,7 +94,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		try {
 			const saved = await AsyncStorage.getItem(storageKey(eventId, gameType));
 			if (saved) {
-				setGameState(JSON.parse(saved));
+				const parsed = JSON.parse(saved);
+
+				setGameState((prev) => ({
+					...prev,
+					...parsed,
+					progress: eventProgress, //always fetch live update for game progress
+				}));
 			}
 		} catch (err) {
 			console.log("Failed to load game state:", err);

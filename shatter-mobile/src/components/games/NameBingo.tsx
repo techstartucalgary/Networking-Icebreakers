@@ -130,9 +130,7 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 	}, [eventId]);
 
 	const handleAssign = async (participant: Participant) => {
-		if (!selectedCardId || participant === null) return;
-
-		if (!currentParticipantId) return;
+		if (!selectedCardId || !participant || !currentParticipantId) return;
 
 		if (!isValidParticipant(participant.participantId, currentParticipantId))
 			return;
@@ -255,27 +253,27 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 		setBingoStatus("Blackout!");
 	};
 
-	//check if secondary is not primary and is part of event
+	//check if secondary is not primary
 	const isValidParticipant = (
 		participantId: string,
 		primaryParticipantId: string,
-	) =>
-		participants.some(
-			(p) =>
-				p.participantId === participantId &&
-				p.participantId !== primaryParticipantId,
-		);
+	) => participantId !== primaryParticipantId;
 
 	//check if secondary hasn't been assigned to anything yet
 	const isAlreadyAssigned = (participantId: string) =>
 		cards.some((c) => c.assignedParticipantId === participantId);
 
-	const filteredParticipants = participants.filter(
-		(participant) =>
+	const filteredParticipants = participants.filter((participant) => {
+		if (!currentParticipantId) return false;
+
+		return (
 			participant.name.toLowerCase().includes(search.toLowerCase()) &&
 			!isAlreadyAssigned(participant.participantId) &&
-			isValidParticipant(participant.participantId, currentParticipantId),
-	);
+			isValidParticipant(participant.participantId, currentParticipantId)
+		);
+	});
+
+	const selectedCard = cards.find((c) => c.cardId === selectedCardId); //find selected card for
 
 	if (loading) return <FullPageLoader message="Loading bingo..." />;
 
@@ -288,6 +286,20 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 				</View>
 			)}
 
+			{/* Selected card category */}
+			{selectedCard && (
+				<View style={styles.selectedCardInfo}>
+					<Text style={styles.selectedCardCategory}>
+						{selectedCard.category}
+					</Text>
+				</View>
+			)}
+
+			{/* No card selected when name selected */}
+			{!selectedCardId && (
+				<Text style={styles.selectCardHint}>Select a square first</Text>
+			)}
+
 			{/* Search bar with type-ahead */}
 			{gameState.progress === EventState.IN_PROGRESS && (
 				<View style={styles.inputRow}>
@@ -297,29 +309,6 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 						value={search}
 						onChangeText={setSearch}
 					/>
-					<TouchableOpacity
-						style={[styles.submitButton]}
-						onPress={() => {
-							const participant = participants.find(
-								(p) => p.name.toLowerCase() === search.trim().toLowerCase(),
-							);
-
-							if (participant) {
-								handleAssign(participant);
-							}
-						}}
-						disabled={
-							!selectedCardId ||
-							!participants.some(
-								(p) =>
-									p.name.toLowerCase() === search.trim().toLowerCase() &&
-									isValidParticipant(p.participantId, currentParticipantId) &&
-									!isAlreadyAssigned(p.participantId),
-							)
-						}
-					>
-						<Text style={styles.submitText}>Submit</Text>
-					</TouchableOpacity>
 				</View>
 			)}
 
@@ -330,7 +319,7 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 						<TouchableOpacity
 							key={p.name}
 							style={styles.dropdownItem}
-							onPress={() => setSearch(p.name)}
+							onPress={() => handleAssign(p)}
 						>
 							<Text>{p.name}</Text>
 						</TouchableOpacity>

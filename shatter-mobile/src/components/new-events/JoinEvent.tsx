@@ -48,7 +48,7 @@ export function useJoinEvent() {
 					//first time joining event
 					const guestInfo = await JoinEventIdGuest(event._id, user.name);
 					user._id = guestInfo.userId;
-					console.log("Guest Info: ", guestInfo)
+					console.log("Guest Info: ", guestInfo);
 
 					setCurrentParticipantId(guestInfo.participant.participantId);
 
@@ -70,7 +70,7 @@ export function useJoinEvent() {
 				}
 			}
 
-			if (!event.gameType) {
+			if (event.currentState !== EventState.IN_PROGRESS) {
 				//TODO: REMOVE hard-coded event data
 				event.currentState = EventState.IN_PROGRESS;
 				event.gameType = GameType.NAME_BINGO;

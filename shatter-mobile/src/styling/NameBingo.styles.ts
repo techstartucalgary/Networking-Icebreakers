@@ -42,6 +42,17 @@ export const NameBingoStyling = StyleSheet.create({
 		borderWidth: 2,
 		borderColor: colors.darkNavy,
 	},
+	selectedCardInfo: {
+		backgroundColor: colors.white,
+		padding: 10,
+		marginBottom: 10,
+		borderRadius: 8,
+		alignItems: "center",
+	},
+	selectedCardCategory: {
+		fontSize: 16,
+		fontWeight: "bold",
+	},
 	winningCard: {
 		borderWidth: 3,
 		borderColor: colors.gold,
@@ -76,15 +87,8 @@ export const NameBingoStyling = StyleSheet.create({
 		fontFamily: fonts.body,
 		fontSize: 14,
 	},
-	submitButton: {
-		marginLeft: 8,
-		backgroundColor: colors.darkNavy,
-		paddingHorizontal: 16,
-		justifyContent: "center",
-		borderRadius: 8,
-	},
-	submitText: {
-		color: colors.white,
+	selectCardHint: {
+		color: colors.lightGrey2,
 		fontFamily: fonts.body,
 		fontWeight: "600",
 	},
