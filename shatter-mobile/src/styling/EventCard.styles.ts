@@ -81,7 +81,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	upcomingButton: {
 		marginTop: 12,
-		backgroundColor: colors.darkBlue,
+		backgroundColor: colors.lightBlue,
 		paddingVertical: 10,
 		borderRadius: 8,
 		alignItems: "center",
@@ -93,7 +93,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	joinButton: {
 		marginTop: 12,
-		backgroundColor: colors.darkBlue,
+		backgroundColor: colors.lightBlue,
 		paddingVertical: 10,
 		borderRadius: 8,
 		alignItems: "center",
@@ -105,7 +105,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	viewButton: {
 		marginTop: 12,
-		backgroundColor: colors.darkBlue,
+		backgroundColor: colors.lightBlue,
 		paddingVertical: 10,
 		borderRadius: 8,
 		alignItems: "center",

@@ -7,11 +7,6 @@ const vw = (percent: number) => (width * percent) / 100;
 const vh = (percent: number) => (height * percent) / 100;
 
 export const EventCompletedStyling = StyleSheet.create({
-	background: {
-		flex: 1,
-		width: "100%",
-		height:"50%"
-	},
 	container: {
 		flex: 1,
 		width: "100%",
@@ -19,7 +14,6 @@ export const EventCompletedStyling = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		backgroundColor: colors.lightGrey,
-		padding: 20,
 	},
 	safe: {
 		flex: 1,

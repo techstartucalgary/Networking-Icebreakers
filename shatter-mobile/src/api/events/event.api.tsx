@@ -1,4 +1,3 @@
-import { GameType } from "@/src/interfaces/Event";
 import JoinEventByIdGuestRequest from "@/src/interfaces/requests/JoinEventByIdGuestRequest";
 import JoinEventByIdUserRequest from "@/src/interfaces/requests/JoinEventByIdUserRequest";
 import EventResponse from "@/src/interfaces/responses/GetEventResponse";
@@ -41,7 +40,6 @@ export async function GetEventByIdApi(eventId: string): Promise<EventResponse> {
 		const response: AxiosResponse<EventResponse> = await axios.get(
 			`${API_BASE_URL_EVENT}/${eventId}`,
 		);
-		//response.data.event.gameType = GameType.NAME_BINGO; //TODO: Remove hard coded game type
 		return response.data;
 	} catch (error) {
 		const err = error as AxiosError;
@@ -53,6 +51,7 @@ export async function GetEventByIdApi(eventId: string): Promise<EventResponse> {
 				case 404:
 					throw new Error("The event cannot be found. Please try again later.");
 				case 500:
+					console.log(eventId);
 					throw new Error("Server error. Please try again later.");
 				default:
 					throw new Error("Signup failed.");

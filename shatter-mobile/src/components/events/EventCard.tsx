@@ -35,8 +35,8 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	const [err, setError] = useState("");
 
 	//TODO: Remove hard coded statuses
-	const upcoming = false;//event.currentState === EventState.UPCOMING;
-	const live = true; //event.currentState === EventState.IN_PROGRESS;
+	const upcoming = event.currentState === EventState.UPCOMING;
+	const live = event.currentState === EventState.IN_PROGRESS;
 	const completed = event.currentState === EventState.COMPLETED;
 
 	useEffect(() => {
@@ -133,7 +133,7 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 				<View style={styles.expandedContent}>
 					<Text>{event.description}</Text>
 
-					{/* Join and View Game Buttons */}
+					{/* Game Buttons */}
 					{upcoming && (
 						<Pressable
 							onPress={() => {

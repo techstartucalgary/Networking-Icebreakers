@@ -10,11 +10,11 @@ import NameBingo from "./NameBingo";
 import { useEffect } from "react";
 import { getEventById } from "@/src/services/event.service";
 
-const POLL_INTERVAL = 4000 //4 seconds
+const POLL_INTERVAL = 4000; //4 seconds
 
 const IcebreakerGame = () => {
 	const { user } = useAuth();
-	const { gameState, currentParticipantId } = useGame();
+	const { gameState, currentParticipantId, setGameProgress } = useGame();
 	const router = useRouter();
 
 	//TODO: Websocket for event progress
@@ -24,11 +24,9 @@ const IcebreakerGame = () => {
 		const interval = setInterval(async () => {
 			try {
 				const res = await getEventById(gameState.eventId);
-				/* TODO: Reset gameState updating
 				if (res.event.currentState) {
 					setGameProgress(res.event.currentState);
 				}
-				*/
 
 				//when game is finised
 				if (res?.event.currentState === EventState.COMPLETED) {
@@ -48,10 +46,7 @@ const IcebreakerGame = () => {
 		switch (gameState.gameType) {
 			case "Name Bingo":
 				return (
-					<NameBingo
-						eventId={gameState.eventId}
-						onConnect={handleConnect}
-					/>
+					<NameBingo eventId={gameState.eventId} onConnect={handleConnect} />
 				);
 			default:
 				return <Text>Game not found</Text>;

@@ -22,10 +22,10 @@ export interface Participant {
 }
 
 export enum EventState {
-	UPCOMING = "upcoming",
-	IN_PROGRESS = "in progress",
-	COMPLETED = "completed",
-	INVALID = "invalid",
+	UPCOMING = "Upcoming",
+	IN_PROGRESS = "In Progress",
+	COMPLETED = "Completed",
+	INVALID = "Invalid",
 }
 
 export enum GameType {

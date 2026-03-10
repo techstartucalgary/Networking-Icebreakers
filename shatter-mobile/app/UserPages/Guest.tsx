@@ -18,8 +18,16 @@ export default function GuestPage() {
 			return;
 		}
 
-    	//TODO: Check for valid link format
-		const socialLink: SocialLink = { label: "Contact Link", url: contactLink };
+		let socialLink: SocialLink | null = null;
+
+		try {
+			const validUrl = new URL(contactLink); // throws if invalid
+			socialLink = { label: "Contact Link", url: validUrl.href };
+		} catch (err) {
+			console.log("Invalid URL:", contactLink);
+			setError("Please enter a valid contact link.")
+			return;
+		}
 
 		setError("");
 		await continueAsGuest(name.trim(), socialLink);
