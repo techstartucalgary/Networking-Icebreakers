@@ -1,4 +1,3 @@
-import { GameType } from "@/src/interfaces/Event";
 import JoinEventByIdGuestRequest from "@/src/interfaces/requests/JoinEventByIdGuestRequest";
 import JoinEventByIdUserRequest from "@/src/interfaces/requests/JoinEventByIdUserRequest";
 import EventResponse from "@/src/interfaces/responses/GetEventResponse";
@@ -52,6 +51,7 @@ export async function GetEventByIdApi(eventId: string): Promise<EventResponse> {
 				case 404:
 					throw new Error("The event cannot be found. Please try again later.");
 				case 500:
+					console.log(eventId);
 					throw new Error("Server error. Please try again later.");
 				default:
 					throw new Error("Signup failed.");

@@ -88,7 +88,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		try {
 			const saved = await AsyncStorage.getItem(storageKey(eventId, gameType));
 			if (saved) {
-				setGameState(JSON.parse(saved));
+				const parsed = JSON.parse(saved);
+
+				setGameState((prev) => ({
+					...prev,
+					...parsed,
+					progress: eventProgress, //always fetch live update for game progress
+				}));
 			}
 		} catch (err) {
 			console.log("Failed to load game state:", err);

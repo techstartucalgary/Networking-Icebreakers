@@ -34,8 +34,10 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
 
-	const live = true; //event.currentState === EventState.IN_PROGRESS; //TODO: Remove hard coded live status
-	const completed = event.currentState === EventState.COMPLETED; //TODO: Remove hard coded completed status
+	//TODO: Remove hard coded statuses
+	const upcoming = event.currentState === EventState.UPCOMING;
+	const live = event.currentState === EventState.IN_PROGRESS;
+	const completed = event.currentState === EventState.COMPLETED;
 
 	useEffect(() => {
 		if (expanded) {
@@ -108,10 +110,16 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 			<View style={styles.imageWrapper}>
 				<Image source={{ uri: event.eventImg }} style={styles.image} />
 
-				{/* LIVE badge */}
+				{/* Badges */}
+				{upcoming && (
+					<View style={styles.badge}>
+						<Text style={styles.badgeText}>Starting Soon...</Text>
+					</View>
+				)}
+
 				{live && (
-					<View style={styles.liveBadge}>
-						<Text style={styles.liveText}>Currently Shattering!</Text>
+					<View style={styles.badgeLive}>
+						<Text style={styles.badgeText}>Currently Shattering!</Text>
 					</View>
 				)}
 			</View>
@@ -125,11 +133,28 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 				<View style={styles.expandedContent}>
 					<Text>{event.description}</Text>
 
-					{/* Join and View Game Buttons */}
+					{/* Game Buttons */}
+					{upcoming && (
+						<Pressable
+							onPress={() => {
+								if (event.currentState !== EventState.UPCOMING) {
+									//TODO: REMOVE hard-coded event data
+									event.currentState = EventState.UPCOMING;
+									event.gameType = GameType.NAME_BINGO;
+								}
+								initializeGame(event.gameType, event._id, event.currentState);
+								router.push(`/EventPages/EventLobby`);
+							}}
+							style={styles.upcomingButton}
+						>
+							<Text style={styles.upcomingButtonText}>Wait to Start</Text>
+						</Pressable>
+					)}
+
 					{live && (
 						<Pressable
 							onPress={() => {
-								if (!event.gameType) {
+								if (event.currentState !== EventState.IN_PROGRESS) {
 									//TODO: REMOVE hard-coded event data
 									event.currentState = EventState.IN_PROGRESS;
 									event.gameType = GameType.NAME_BINGO;
@@ -146,7 +171,7 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					{completed && (
 						<Pressable
 							onPress={() => {
-								if (!event.gameType) {
+								if (event.currentState !== EventState.COMPLETED) {
 									//TODO: REMOVE hard-coded event data
 									event.gameType = GameType.NAME_BINGO;
 									event.currentState = EventState.COMPLETED;
