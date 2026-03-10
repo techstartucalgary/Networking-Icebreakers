@@ -1,19 +1,22 @@
+import { useGame } from "@/src/components/context/GameContext";
 import { EventState } from "@/src/interfaces/Event";
 import { getEventById } from "@/src/services/event.service";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EventLobbyStyling as styles } from "../../src/styling/EventLobby.styles";
 
+const POLL_INTERVAL = 3000; //3 seconds
+
 export default function EventLobby() {
-	const { eventId } = useLocalSearchParams<{ eventId: string }>();
+	const { gameState } = useGame();
 	const [status, setStatus] = useState(EventState.UPCOMING);
 
 	//TODO: Websocket for game loading
 	useEffect(() => {
 		const interval = setInterval(async () => {
-			const res = await getEventById(eventId);
+			const res = await getEventById(gameState.eventId);
 			const event = res?.event;
 			if (!event) return;
 
@@ -26,10 +29,10 @@ export default function EventLobby() {
 					pathname: "/GamePages/Game",
 				});
 			}
-		}, 3000);
+		}, POLL_INTERVAL);
 
 		return () => clearInterval(interval);
-	}, [eventId]);
+	}, [gameState.eventId]);
 
 	return (
 		<SafeAreaView style={styles.safe}>
@@ -39,7 +42,7 @@ export default function EventLobby() {
 				{status === EventState.UPCOMING && (
 					<>
 						<Text style={styles.text}>Waiting for the event to start...</Text>
-            <ActivityIndicator size="large" style={styles.indicator} />
+						<ActivityIndicator size="large" style={styles.indicator} />
 					</>
 				)}
 
