@@ -51,7 +51,7 @@ export default function EventsPage() {
 		//set participantId based on event pressed
 		const myParticipantId = event.participantIds?.find(
 			(p) => p.userId === user?._id,
-		)?.participantId;
+		)?._id;
 
 		if (myParticipantId) {
 			await setCurrentParticipantId(myParticipantId); //update context for participantId for tapped event

@@ -67,20 +67,25 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 
 			const res = await fetchConnections(participantId, eventId, accessToken);
 
-			if (!res || !res.connections) {
+			if (!res) {
 				throw new Error("Unable to load connections for this event.");
 			}
 
-			const connectionList: Connection[] = res.connections;
+			const connectionList: Connection[] = res.connections ?? [];
 
+			if (connectionList.length === 0) {
+				setConnections([]);
+				setError("");
+				return;
+			}
+
+			//fetch the detailed user info
 			const userPromises = connectionList.map(async (conn) => {
-				//decide which participant is secondary
 				const otherParticipantId =
 					conn.primaryParticipantId === participantId
 						? conn.secondaryParticipantId
 						: conn.primaryParticipantId;
 
-				//TODO: fetch the full user info
 				const userRes = await participantFetch(
 					otherParticipantId,
 					eventId,
@@ -189,23 +194,31 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 
 					{/* Connection List */}
 					{!loading && (
-						<Text style={styles.connectionsTitle}>Connections:</Text>
+						<>
+							<Text style={styles.connectionsTitle}>Connections:</Text>
+							{connections.length === 0 ? (
+								<Text style={styles.noConnectionsText}>
+									No connections yet! Go make some!
+								</Text>
+							) : (
+								<FlatList
+									data={connections}
+									keyExtractor={(item) => item._id!}
+									renderItem={({ item }) => (
+										<View style={styles.itemWrapper}>
+											{item.profilePhoto && (
+												<Image
+													source={{ uri: item.profilePhoto }}
+													style={styles.avatar}
+												/>
+											)}
+											<Text style={styles.item}>{item.name}</Text>
+										</View>
+									)}
+								/>
+							)}
+						</>
 					)}
-					<FlatList
-						data={connections}
-						keyExtractor={(item) => item._id!}
-						renderItem={({ item }) => (
-							<View style={styles.itemWrapper}>
-								{item.profilePhoto && (
-									<Image
-										source={{ uri: item.profilePhoto }}
-										style={styles.avatar}
-									/>
-								)}
-								<Text style={styles.item}>{item.name}</Text>
-							</View>
-						)}
-					/>
 
 					<Text style={styles.err}>{err}</Text>
 				</View>

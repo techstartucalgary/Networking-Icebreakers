@@ -137,6 +137,14 @@ export const EventCardStyling = StyleSheet.create({
 		alignItems: "center",
 		marginVertical: 2,
 	},
+	noConnectionsText: {
+		fontFamily: fonts.body,
+		fontSize: 14,
+		color: colors.lightGrey2,
+		fontStyle: "italic",
+		marginVertical: 8,
+		textAlign: "center",
+	},
 	err: {
 		fontSize: 12,
 		fontFamily: fonts.body,

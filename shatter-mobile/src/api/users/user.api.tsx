@@ -152,10 +152,14 @@ export async function GetUserConnectionsApi(
 			eventId: eventId,
 			participantId: participantId,
 		};
-		const response: AxiosResponse<UserConnectionsResponse> = await axios.post(
+
+		//TODO: Swap to Put
+		const response: AxiosResponse<UserConnectionsResponse> = await axios.get(
 			`${API_BASE_URL}/participantConnections/getByParticipantAndEvent`,
-			body,
-			{ headers: { Authorization: `Bearer ${token}` } },
+			{
+				headers: { Authorization: `Bearer ${token}` },
+				params: body,
+			},
 		);
 		return response.data;
 	} catch (error) {
@@ -190,12 +194,11 @@ export async function CreateUserConnectionsApi(
 			secondaryParticipantId: secondaryParticipantId,
 			description: description ?? null,
 		};
+
 		const response: AxiosResponse<CreateUserConnectionResponse> =
-			await axios.post(
-				`${API_BASE_URL}/participantConnections/getByParticipantAndEvent`,
-				body,
-				{ headers: { Authorization: `Bearer ${token}` } },
-			);
+			await axios.post(`${API_BASE_URL}/participantConnections`, body, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
 		return response.data;
 	} catch (error) {
 		const err = error as AxiosError;
@@ -231,7 +234,7 @@ export async function GetParticipantApi(
 			participantId: participantId,
 			eventId: eventId,
 		};
-
+		//TODO: Swap to Put
 		const response: AxiosResponse<UserDataResponse> = await axios.get(
 			`/getParticipantConnections/connected-users`,
 			{

@@ -14,7 +14,7 @@ const POLL_INTERVAL = 4000; //4 seconds
 
 const IcebreakerGame = () => {
 	const { user } = useAuth();
-	const { gameState, currentParticipantId, setGameProgress } = useGame();
+	const { gameState, currentParticipantId } = useGame();
 	const router = useRouter();
 
 	//TODO: Websocket for event progress
@@ -59,7 +59,7 @@ const IcebreakerGame = () => {
 		userToConnect: Participant,
 		description: string | null,
 	) => {
-		if (!user || !currentParticipantId || !userToConnect?.participantId) return;
+		if (!user || !currentParticipantId || !userToConnect?._id) return;
 		if (!gameState?.eventId) return;
 
 		try {
@@ -68,7 +68,7 @@ const IcebreakerGame = () => {
 			const res = await createConnection(
 				gameState.eventId,
 				currentParticipantId, //primaryParticipantId
-				userToConnect.participantId, //secondaryParticipantId
+				userToConnect._id, //secondaryParticipantId
 				stored.accessToken,
 				description,
 			);

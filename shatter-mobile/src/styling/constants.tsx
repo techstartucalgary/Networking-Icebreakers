@@ -10,7 +10,7 @@ export const colors = {
 	lightGrey: "rgba(255, 255, 255, 0.97)",
 	lightGrey2: "rgba(181, 181, 181, 0.97))",
 	beige: "#F8F7DE",
-	gold: "#e3cd3d",
+	gold: "#f1d622",
 	red: "#f07070",
 
 	error: "#f16d6d",

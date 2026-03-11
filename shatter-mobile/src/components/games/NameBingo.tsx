@@ -1,5 +1,5 @@
 import { useGame } from "@/src/components/context/GameContext";
-import { EventState, Participant } from "@/src/interfaces/Event";
+import { Participant } from "@/src/interfaces/Event";
 import {
 	getBingoCategories,
 	getParticipantsByEventId,
@@ -36,7 +36,7 @@ type WinningLine = {
 };
 
 const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
-	const { gameState, currentParticipantId } = useGame();
+	const { currentParticipantId } = useGame();
 	const [selectedCardId, setSelectedCardId] = useState<string | null>(null); //what user chooses
 	const [activeCardId, setActiveCardId] = useState<string | null>(null); //card in the roller
 	const [participants, setParticipants] = useState<Participant[]>([]);
@@ -134,15 +134,14 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 	const handleAssign = async (participant: Participant) => {
 		if (!selectedCardId || !participant || !currentParticipantId) return;
 
-		if (!isValidParticipant(participant.participantId, currentParticipantId))
-			return;
-		if (isAlreadyAssigned(participant.participantId)) return;
+		if (!isValidParticipant(participant._id, currentParticipantId)) return;
+		if (isAlreadyAssigned(participant._id)) return;
 
 		const updatedCards = cards.map((c) =>
 			c.cardId === selectedCardId
 				? {
 						...c,
-						assignedParticipantId: participant.participantId,
+						assignedParticipantId: participant._id,
 						assignedName: participant.name,
 					}
 				: c,
@@ -157,7 +156,7 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 		if (onConnect) {
 			const userToConnect: Participant = {
 				userId: participant.userId,
-				participantId: participant.participantId,
+				_id: participant._id,
 				name: participant.name,
 			};
 
@@ -270,8 +269,8 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 
 		return (
 			participant.name.toLowerCase().includes(search.toLowerCase()) &&
-			!isAlreadyAssigned(participant.participantId) &&
-			isValidParticipant(participant.participantId, currentParticipantId)
+			!isAlreadyAssigned(participant._id) &&
+			isValidParticipant(participant._id, currentParticipantId)
 		);
 	});
 
@@ -291,13 +290,6 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 
 	return (
 		<View style={styles.container}>
-			{/* Bingo status */}
-			{bingoStatus && (
-				<View style={styles.bingoBanner}>
-					<Text style={styles.bingoText}>{bingoStatus}</Text>
-				</View>
-			)}
-
 			{/* Selected card category */}
 			{selectedCard && (
 				<View style={styles.selectedCardInfo}>
@@ -312,32 +304,29 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 				<Text style={styles.selectCardHint}>Select a square first</Text>
 			)}
 
-			{/* Search bar with type-ahead */}
-			{gameState.progress === EventState.IN_PROGRESS && (
-				<View style={styles.inputRow}>
-					<TextInput
-						style={styles.inputFlex}
-						placeholder="Who did you find?"
-						value={search}
-						onChangeText={setSearch}
-					/>
-				</View>
-			)}
+			{/* Search bar with type-ahead + dropdown */}
+			<View style={styles.searchContainer}>
+				<TextInput
+					style={styles.inputFlex}
+					placeholder="Who did you find?"
+					value={search}
+					onChangeText={setSearch}
+				/>
 
-			{/* Dropdown suggestions */}
-			{search.length > 0 && filteredParticipants.length > 0 && (
-				<ScrollView style={styles.dropdown}>
-					{filteredParticipants.map((p) => (
-						<TouchableOpacity
-							key={p.participantId}
-							style={styles.dropdownItem}
-							onPress={() => handleAssign(p)}
-						>
-							<Text>{p.name}</Text>
-						</TouchableOpacity>
-					))}
-				</ScrollView>
-			)}
+				{search.length > 0 && filteredParticipants.length > 0 && (
+					<ScrollView style={styles.dropdown}>
+						{filteredParticipants.map((p) => (
+							<TouchableOpacity
+								key={p._id}
+								style={styles.dropdownItem}
+								onPress={() => handleAssign(p)}
+							>
+								<Text>{p.name}</Text>
+							</TouchableOpacity>
+						))}
+					</ScrollView>
+				)}
+			</View>
 
 			{/* Card grid */}
 			<View style={{ padding: 12 }}>
