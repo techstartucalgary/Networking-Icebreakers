@@ -26,7 +26,6 @@ export default function Profile() {
 		return null; //don't render profile content while redirecting
 	}
 
-	console.log(user.profilePhoto);
 	//logged in
 	if (user && !user.isGuest) {
 		return (

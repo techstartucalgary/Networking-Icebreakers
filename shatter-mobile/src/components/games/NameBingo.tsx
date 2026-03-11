@@ -1,5 +1,5 @@
 import { useGame } from "@/src/components/context/GameContext";
-import { Participant } from "@/src/interfaces/Event";
+import { EventState, Participant } from "@/src/interfaces/Event";
 import {
 	getBingoCategories,
 	getParticipantsByEventId,
@@ -36,7 +36,7 @@ type WinningLine = {
 };
 
 const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
-	const { currentParticipantId } = useGame();
+	const { gameState, currentParticipantId } = useGame();
 	const [selectedCardId, setSelectedCardId] = useState<string | null>(null); //what user chooses
 	const [activeCardId, setActiveCardId] = useState<string | null>(null); //card in the roller
 	const [participants, setParticipants] = useState<Participant[]>([]);
@@ -300,33 +300,35 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 			)}
 
 			{/* No card selected when name selected */}
-			{!selectedCardId && (
+			{!selectedCardId && !(gameState.progress === EventState.COMPLETED) && (
 				<Text style={styles.selectCardHint}>Select a square first</Text>
 			)}
 
 			{/* Search bar with type-ahead + dropdown */}
-			<View style={styles.searchContainer}>
-				<TextInput
-					style={styles.inputFlex}
-					placeholder="Who did you find?"
-					value={search}
-					onChangeText={setSearch}
-				/>
+			{!(gameState.progress === EventState.COMPLETED) && (
+				<View style={styles.searchContainer}>
+					<TextInput
+						style={styles.inputFlex}
+						placeholder="Who did you find?"
+						value={search}
+						onChangeText={setSearch}
+					/>
 
-				{search.length > 0 && filteredParticipants.length > 0 && (
-					<ScrollView style={styles.dropdown}>
-						{filteredParticipants.map((p) => (
-							<TouchableOpacity
-								key={p._id}
-								style={styles.dropdownItem}
-								onPress={() => handleAssign(p)}
-							>
-								<Text>{p.name}</Text>
-							</TouchableOpacity>
-						))}
-					</ScrollView>
-				)}
-			</View>
+					{search.length > 0 && filteredParticipants.length > 0 && (
+						<ScrollView style={styles.dropdown}>
+							{filteredParticipants.map((p) => (
+								<TouchableOpacity
+									key={p._id}
+									style={styles.dropdownItem}
+									onPress={() => handleAssign(p)}
+								>
+									<Text>{p.name}</Text>
+								</TouchableOpacity>
+							))}
+						</ScrollView>
+					)}
+				</View>
+			)}
 
 			{/* Card grid */}
 			<View style={{ padding: 12 }}>
