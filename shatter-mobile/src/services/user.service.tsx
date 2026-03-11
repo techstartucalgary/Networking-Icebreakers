@@ -8,6 +8,7 @@ import {
 	UserUpdateApi,
 } from "../api/users/user.api";
 import CreateUserConnectionResponse from "../interfaces/responses/CreateUserConnectionResponse";
+import { ConnectedUser } from "../interfaces/responses/GetParticipantInfoResponse";
 import { UserConnectionsResponse } from "../interfaces/responses/GetUserConnectionsResponse";
 import UserDataResponse from "../interfaces/responses/GetUserDataResponse";
 import UserInfoUpdateResponse from "../interfaces/responses/UpdateUserInfoResponse";
@@ -49,7 +50,7 @@ export async function participantFetch(
 	participantId: string,
 	eventId: string,
 	token: string,
-): Promise<User[]> {
+): Promise<ConnectedUser[]> {
 	return await GetParticipantApi(participantId, eventId, token);
 }
 

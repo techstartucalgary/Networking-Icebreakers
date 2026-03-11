@@ -1,6 +1,6 @@
 //called by Profile.tsx for signing up
 import { User } from "@/src/interfaces/User";
-import { userSignup } from "@/src/services/user.service";
+import { userSignup, userUpdate } from "@/src/services/user.service";
 import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Button,KeyboardAvoidingView,ScrollView, Platform, StyleSheet, Text, TextInput,ImageBackground, TouchableOpacity, View } from "react-native";
@@ -45,15 +45,30 @@ export default function SignUpForm() {
 		try {
 			const userResponse = await userSignup(name, email, password);
 
+      //create default photo for profile and update user account
+      const encodedName = encodeURIComponent(name ?? "Unknown");
+      const profilePhoto = `https://ui-avatars.com/api/?name=${encodedName}&background=random&format=png`;
+
+      const res = await userUpdate(
+        userResponse.userId,
+        { profilePhoto },
+        userResponse.token,
+      );
+
+      if (!res) {
+        setError("User info could not be created. Please try again later.")
+      }
+
 			const user: User = {
 				_id: userResponse.userId,
 				name,
 				email,
 				socialLinks: [],
+        profilePhoto: profilePhoto,
 				isGuest: false,
 			};
 
-			await authenticate(user, userResponse.token, false); //no event joined, set gameData to null
+			await authenticate(user, userResponse.token, false);
 
 			router.push("/(tabs)/JoinEventPage");
 		} catch (err) {

@@ -44,7 +44,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 						email: res.user.email,
 						isGuest: res.user.isGuest,
 						socialLinks: res.user.socialLinks,
+						profilePhoto: res.user.profilePhoto,
 					};
+
 					setUser(mappedUser);
 				}
 			} else {

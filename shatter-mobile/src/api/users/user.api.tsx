@@ -3,6 +3,7 @@ import UserConnectionsRequest from "@/src/interfaces/requests/GetUserConnections
 import UserLoginRequest from "@/src/interfaces/requests/UserLoginRequest";
 import UserSignupRequest from "@/src/interfaces/requests/UserSignupRequest";
 import CreateUserConnectionResponse from "@/src/interfaces/responses/CreateUserConnectionResponse";
+import { ConnectedUser } from "@/src/interfaces/responses/GetParticipantInfoResponse";
 import { UserConnectionsResponse } from "@/src/interfaces/responses/GetUserConnectionsResponse";
 import UserDataResponse from "@/src/interfaces/responses/GetUserDataResponse";
 import GetUserEventsResponse from "@/src/interfaces/responses/GetUserEventsResponse";
@@ -59,6 +60,7 @@ export async function UserSignupApi(
 			`${API_BASE_URL_AUTH}/signup`,
 			body,
 		);
+
 		return response.data;
 	} catch (error) {
 		const err = error as AxiosError;
@@ -89,6 +91,15 @@ export async function UserFetchApi(
 			`${API_BASE_URL_USER}/${userId}`,
 			{ headers: { Authorization: `Bearer ${token}` } },
 		);
+
+		//assign default photo if none stored (handled in signup as well)
+		if (!response.data.user.profilePhoto) {
+			const encodedName = encodeURIComponent(
+				response.data.user.name ?? "Unknown",
+			);
+			response.data.user.profilePhoto = `https://ui-avatars.com/api/?name=${encodedName}&background=random&format=png`;
+		}
+
 		return response.data;
 	} catch (error) {
 		const err = error as AxiosError;
@@ -230,15 +241,15 @@ export async function GetParticipantApi(
 	participantId: string,
 	eventId: string,
 	token: string,
-): Promise<User[]> {
+): Promise<ConnectedUser[]> {
 	try {
 		const body = {
 			participantId: participantId,
 			eventId: eventId,
 		};
-		//TODO: Swap to Put, fix 404 error
-		const response: AxiosResponse<User[]> = await axios.get(
-			`${API_BASE_URL}/getParticipantConnections/connected-users`,
+		//TODO: Swap to Put, change return type to user model
+		const response: AxiosResponse<ConnectedUser[]> = await axios.get(
+			`${API_BASE_URL}/participantConnections/connected-users`,
 			{
 				headers: { Authorization: `Bearer ${token}` },
 				params: body,
@@ -247,8 +258,6 @@ export async function GetParticipantApi(
 		return response.data;
 	} catch (error) {
 		const err = error as AxiosError;
-
-		console.log(err.response?.data);
 
 		if (err.response) {
 			switch (err.response.status) {

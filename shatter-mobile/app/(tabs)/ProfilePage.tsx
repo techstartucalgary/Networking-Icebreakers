@@ -1,6 +1,6 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../src/components/context/AuthContext";
 
 export default function Profile() {
@@ -26,10 +26,21 @@ export default function Profile() {
 		return null; //don't render profile content while redirecting
 	}
 
+	console.log(user.profilePhoto);
 	//logged in
 	if (user && !user.isGuest) {
 		return (
 			<View style={styles.container}>
+				<Image
+					source={{ uri: user.profilePhoto }}
+					style={{
+						width: 50,
+						height: 50,
+						borderRadius: 12,
+						marginRight: 8,
+					}} //TODO: Swap to actual styling
+					onError={(e) => console.log("Image error:", e.nativeEvent.error)}
+				/>
 				<Text style={styles.title}>Welcome, {user.name}!</Text>
 				<Text style={styles.subtitle}>{user.email}</Text>
 
@@ -63,7 +74,11 @@ export default function Profile() {
 	if (user.isGuest) {
 		return (
 			<View style={styles.container}>
-				<Text style={styles.title}>Welcome, {user?.name || "Guest"}!</Text>
+				<Image
+					source={{ uri: user.profilePhoto }}
+					style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8 }} //TODO: Swap to actual styling
+				/>
+				<Text style={styles.title}>Welcome, {user.name || "Guest"}!</Text>
 				<Text style={styles.subtitle}>
 					You are logged in as a guest. Some features may be limited.
 				</Text>

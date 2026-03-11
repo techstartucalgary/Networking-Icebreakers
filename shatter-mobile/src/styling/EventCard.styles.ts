@@ -124,7 +124,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	item: {
 		fontSize: 12,
-		color: colors.beige,
+		color: colors.darkNavy,
 	},
 	avatar: {
 		width: 24,

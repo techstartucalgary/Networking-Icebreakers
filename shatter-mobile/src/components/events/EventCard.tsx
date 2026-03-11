@@ -1,8 +1,5 @@
-import { Connection, User } from "@/src/interfaces/User";
-import {
-	fetchConnections,
-	participantFetch,
-} from "@/src/services/user.service";
+import { User } from "@/src/interfaces/User";
+import { participantFetch, userFetch } from "@/src/services/user.service";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -35,8 +32,8 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	const [err, setError] = useState("");
 
 	//TODO: Remove hard coded statuses
-	const upcoming = false; //event.currentState === EventState.UPCOMING;
-	const live = true; //event.currentState === EventState.IN_PROGRESS;
+	const upcoming = event.currentState === EventState.UPCOMING;
+	const live = event.currentState === EventState.IN_PROGRESS;
 	const completed = event.currentState === EventState.COMPLETED;
 
 	useEffect(() => {
@@ -65,37 +62,31 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 				throw new Error("No participant set.");
 			}
 
-			const res = await fetchConnections(participantId, eventId, accessToken);
+			//fetch the connection  info
+			const participantConnections = await participantFetch(
+				participantId,
+				eventId,
+				accessToken,
+			);
 
-			if (!res) {
-				throw new Error("Unable to load connections for this event.");
-			}
-
-			const connectionList: Connection[] = res ?? [];
-
-			if (connectionList.length === 0) {
+			if (participantConnections.length === 0) {
 				setConnections([]);
 				setError("");
 				return;
 			}
 
-			//fetch the detailed user info
-			const userPromises = connectionList.map(async (conn) => {
-				const otherParticipantId =
-					conn.primaryParticipantId === participantId
-						? conn.secondaryParticipantId
-						: conn.primaryParticipantId;
+			const userPromises = participantConnections.map(async (conn) => {
+				if (!conn.user?._id) {
+					throw new Error(
+						`Missing userId for connection: ${conn.participantName}`,
+					);
+				}
 
-				const userRes = await participantFetch(
-					otherParticipantId,
-					eventId,
-					accessToken,
-				);
-
-				return userRes;
+				const res = await userFetch(conn.user?._id, accessToken);
+				return res.user;
 			});
 
-			const detailedUsers = (await Promise.all(userPromises)).flat();
+			const detailedUsers = await Promise.all(userPromises);
 			setConnections(detailedUsers);
 		} catch (err) {
 			console.log("Load connections error:", err);
@@ -204,7 +195,7 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 							) : (
 								<FlatList
 									data={connections}
-									keyExtractor={(item) => item._id!}
+									keyExtractor={(item) => item._id ?? ""}
 									renderItem={({ item }) => (
 										<View style={styles.itemWrapper}>
 											{item.profilePhoto && (
@@ -213,6 +204,7 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 													style={styles.avatar}
 												/>
 											)}
+
 											<Text style={styles.item}>{item.name}</Text>
 										</View>
 									)}

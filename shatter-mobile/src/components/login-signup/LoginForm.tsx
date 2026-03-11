@@ -1,22 +1,22 @@
 //called by Profile.tsx for logging in
+import { User } from "@/src/interfaces/User";
 import { userFetch, userLogin } from "@/src/services/user.service";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+	ActivityIndicator,
+	ImageBackground,
+	KeyboardAvoidingView,
+	Platform,
+	ScrollView,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../context/AuthContext";
 import { LoginFormStyling as styles } from "../../styling/LoginFormstyling.styles";
-import { User } from "@/src/interfaces/User";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginForm() {
 	const { authenticate } = useAuth();
@@ -26,7 +26,7 @@ export default function LoginForm() {
 	const [err, setError] = useState("");
 
 	const handleLinkedIn = () => {
-		// wire linkedin from backend 
+		// wire linkedin from backend
 		console.log("LinkedIn login pressed");
 	};
 
@@ -59,19 +59,22 @@ export default function LoginForm() {
 				name: userData?.user.name,
 				email,
 				socialLinks: userData?.user.socialLinks ?? [],
+				profilePhoto: userData.user.profilePhoto,
 				isGuest: false,
 			};
 
-			await authenticate(user, userResponse.token, false); //no event joined, set gameData to null
+			await authenticate(user, userResponse.token, false);
 
-			router.push("/JoinEventPage")
+			router.push("/JoinEventPage");
 		} catch (err) {
 			console.log("Login failed:", err);
-			setError((err as Error).message || "Uh Oh! Please check your login info and try again.");
+			setError(
+				(err as Error).message ||
+					"Uh Oh! Please check your login info and try again.",
+			);
 		} finally {
 			setLoading(false);
 		}
-
 	};
 
 	return (
@@ -97,30 +100,30 @@ export default function LoginForm() {
 							contentContainerStyle={{ paddingBottom: 40 }}
 						>
 							<Text style={styles.title}>Log In</Text>
-              				<Text style={styles.subtitle}>Welcome back!</Text>
+							<Text style={styles.subtitle}>Welcome back!</Text>
 							<Text style={styles.label}>Email</Text>
 							<View style={styles.inputWrap}>
 								<TextInput
-								style={styles.input}
-								placeholder="exemple@gmail.com"
-								value={email}
-								onChangeText={setEmail}
-								placeholderTextColor="#bbb"
-								keyboardType="email-address"
-								autoCapitalize="none"
-								returnKeyType="next"
+									style={styles.input}
+									placeholder="exemple@gmail.com"
+									value={email}
+									onChangeText={setEmail}
+									placeholderTextColor="#bbb"
+									keyboardType="email-address"
+									autoCapitalize="none"
+									returnKeyType="next"
 								/>
 							</View>
 							<Text style={styles.label}>Password</Text>
 							<View style={styles.inputWrap}>
 								<TextInput
-								style={styles.input}
-								placeholder="••••••••••••"
-								secureTextEntry
-								value={password}
-								onChangeText={setPassword}
-								placeholderTextColor="#bbb"
-								returnKeyType="done"
+									style={styles.input}
+									placeholder="••••••••••••"
+									secureTextEntry
+									value={password}
+									onChangeText={setPassword}
+									placeholderTextColor="#bbb"
+									returnKeyType="done"
 								/>
 							</View>
 							<View style={styles.rowBetween}>
@@ -130,39 +133,48 @@ export default function LoginForm() {
 								<TouchableOpacity>
 									<Text style={styles.forgotText}>Forgot your password?</Text>
 								</TouchableOpacity>
-
 							</View>
 							<TouchableOpacity
 								style={[styles.button, loading && styles.buttonDisabled]}
 								onPress={handleLogin}
 								disabled={loading}
 							>
-								{loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log In</Text>}
+								{loading ? (
+									<ActivityIndicator color="#fff" />
+								) : (
+									<Text style={styles.buttonText}>Log In</Text>
+								)}
 							</TouchableOpacity>
 							<View style={styles.dividerRow}>
 								<View style={styles.dividerLine} />
 								<Text style={styles.dividerText}>-OR-</Text>
 								<View style={styles.dividerLine} />
 							</View>
-							<TouchableOpacity style={styles.socialButton} onPress={handleLinkedIn}>
-								<Text style={{ fontSize: 18, fontWeight: "900", color: "#0A66C2" }}>in</Text>
-								<Text style={styles.socialButtonText}>Log in with LinkedIn</Text>
+							<TouchableOpacity
+								style={styles.socialButton}
+								onPress={handleLinkedIn}
+							>
+								<Text
+									style={{ fontSize: 18, fontWeight: "900", color: "#0A66C2" }}
+								>
+									in
+								</Text>
+								<Text style={styles.socialButtonText}>
+									Log in with LinkedIn
+								</Text>
 							</TouchableOpacity>
-							<TouchableOpacity onPress={() => router.push("/UserPages/Signup")}>
+							<TouchableOpacity
+								onPress={() => router.push("/UserPages/Signup")}
+							>
 								<Text style={styles.signupLinkText}>
-								Don&apos;t have an account?{" "}
-								<Text style={styles.signupLinkBold}>Sign Up</Text>
+									Don&apos;t have an account?{" "}
+									<Text style={styles.signupLinkBold}>Sign Up</Text>
 								</Text>
 							</TouchableOpacity>
 						</ScrollView>
 					</View>
-
-
-
 				</KeyboardAvoidingView>
-
 			</SafeAreaView>
-		
 		</ImageBackground>
 	);
 }
