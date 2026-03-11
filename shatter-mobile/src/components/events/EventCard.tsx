@@ -71,7 +71,7 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 				throw new Error("Unable to load connections for this event.");
 			}
 
-			const connectionList: Connection[] = res.connections ?? [];
+			const connectionList: Connection[] = res ?? [];
 
 			if (connectionList.length === 0) {
 				setConnections([]);
@@ -91,10 +91,11 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					eventId,
 					accessToken,
 				);
-				return userRes.user;
+
+				return userRes;
 			});
 
-			const detailedUsers = await Promise.all(userPromises);
+			const detailedUsers = (await Promise.all(userPromises)).flat();
 			setConnections(detailedUsers);
 		} catch (err) {
 			console.log("Load connections error:", err);

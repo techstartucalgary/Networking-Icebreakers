@@ -3,7 +3,7 @@ import UserConnectionsRequest from "@/src/interfaces/requests/GetUserConnections
 import UserLoginRequest from "@/src/interfaces/requests/UserLoginRequest";
 import UserSignupRequest from "@/src/interfaces/requests/UserSignupRequest";
 import CreateUserConnectionResponse from "@/src/interfaces/responses/CreateUserConnectionResponse";
-import UserConnectionsResponse from "@/src/interfaces/responses/GetUserConnectionsResponse";
+import { UserConnectionsResponse } from "@/src/interfaces/responses/GetUserConnectionsResponse";
 import UserDataResponse from "@/src/interfaces/responses/GetUserDataResponse";
 import GetUserEventsResponse from "@/src/interfaces/responses/GetUserEventsResponse";
 import UserInfoUpdateResponse from "@/src/interfaces/responses/UpdateUserInfoResponse";
@@ -169,6 +169,8 @@ export async function GetUserConnectionsApi(
 			switch (err.response.status) {
 				case 400:
 					throw new Error("Invalid user data.");
+				case 404:
+					throw new Error("No connection found for this user.");
 				case 500:
 					throw new Error("Server error. Please try again later.");
 				default:
@@ -189,7 +191,7 @@ export async function CreateUserConnectionsApi(
 ): Promise<CreateUserConnectionResponse> {
 	try {
 		const body: CreateUserConnectionRequest = {
-			eventId: eventId,
+			_eventId: eventId,
 			primaryParticipantId: primaryParticipantId,
 			secondaryParticipantId: secondaryParticipantId,
 			description: description ?? null,
@@ -228,15 +230,15 @@ export async function GetParticipantApi(
 	participantId: string,
 	eventId: string,
 	token: string,
-): Promise<UserDataResponse> {
+): Promise<User[]> {
 	try {
 		const body = {
 			participantId: participantId,
 			eventId: eventId,
 		};
-		//TODO: Swap to Put
-		const response: AxiosResponse<UserDataResponse> = await axios.get(
-			`/getParticipantConnections/connected-users`,
+		//TODO: Swap to Put, fix 404 error
+		const response: AxiosResponse<User[]> = await axios.get(
+			`${API_BASE_URL}/getParticipantConnections/connected-users`,
 			{
 				headers: { Authorization: `Bearer ${token}` },
 				params: body,
@@ -245,6 +247,8 @@ export async function GetParticipantApi(
 		return response.data;
 	} catch (error) {
 		const err = error as AxiosError;
+
+		console.log(err.response?.data);
 
 		if (err.response) {
 			switch (err.response.status) {

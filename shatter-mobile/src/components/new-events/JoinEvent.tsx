@@ -39,7 +39,7 @@ export function useJoinEvent() {
 					authStorage.accessToken,
 				);
 
-				await setCurrentParticipantId(userJoinRes.participant.participantId);
+				await setCurrentParticipantId(userJoinRes.participant._id);
 
 				//no authenticate because info already locally stored through signup/login
 			} else {
@@ -48,9 +48,8 @@ export function useJoinEvent() {
 					//first time joining event
 					const guestInfo = await JoinEventIdGuest(event._id, user.name);
 					user._id = guestInfo.userId;
-					console.log("Guest Info: ", guestInfo);
 
-					setCurrentParticipantId(guestInfo.participant.participantId);
+					setCurrentParticipantId(guestInfo.participant._id);
 
 					await authenticate(user, guestInfo.token, true);
 				} else {
@@ -63,7 +62,7 @@ export function useJoinEvent() {
 					);
 
 					await setCurrentParticipantId(
-						guestUserInfo.participant.participantId,
+						guestUserInfo.participant._id,
 					);
 
 					await authenticate(user, guestUserInfo.token, true);
