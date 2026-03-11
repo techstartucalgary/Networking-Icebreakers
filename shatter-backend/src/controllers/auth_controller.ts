@@ -57,8 +57,13 @@ export const signup = async (req: Request, res: Response) => {
 	// check if email already exists
 	const existingUser = await User.findOne({ email: normalizedEmail }).lean();
 	if (existingUser) {
+	    if (existingUser.authProvider === 'linkedin') {
+		return res.status(409).json({
+		    error: 'This email is associated with a LinkedIn account. Please log in with LinkedIn.',
+		});
+	    }
 	    return res.status(409).json({
-		error: 'Email already exists'
+		error: 'Email already exists',
 	    });
 	}
 

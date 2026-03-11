@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { User } from "../models/user_model";
+import "../models/participant_model";
 import { hashPassword } from "../utils/password_hash";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -76,7 +77,14 @@ export const getUserEvents = async (req: Request, res: Response) => {
     }
 
     const user = await User.findById(userId)
-      .populate("eventHistoryIds", "name description joinCode startDate endDate currentState")
+      .populate({
+        path: "eventHistoryIds",
+        select: "name description joinCode startDate endDate currentState participantIds",
+        populate: {
+          path: "participantIds",
+          select: "name userId",
+        },
+      })
       .select("eventHistoryIds");
 
     if (!user) {

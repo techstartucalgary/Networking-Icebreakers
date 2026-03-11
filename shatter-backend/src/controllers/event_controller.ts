@@ -6,9 +6,43 @@ import "../models/participant_model";
 
 import { generateJoinCode } from "../utils/event_utils";
 import { generateToken } from "../utils/jwt_utils";
-import { Participant } from "../models/participant_model";
+import { Participant, IParticipant } from "../models/participant_model";
 import { User } from "../models/user_model";
 import { Types } from "mongoose";
+
+/**
+ * Create a participant with automatic name suffix on collision.
+ * If the name already exists in the event, retries with a random #XXX suffix.
+ */
+async function createParticipantWithRetry(
+  userId: Types.ObjectId | null,
+  name: string,
+  eventId: string,
+  maxRetries: number = 5
+): Promise<{ participant: IParticipant; finalName: string }> {
+  let finalName = name;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const participant = await Participant.create({
+        userId,
+        name: finalName,
+        eventId,
+      });
+      return { participant, finalName };
+    } catch (e: any) {
+      if (e.code === 11000 && e.keyPattern?.name && e.keyPattern?.eventId) {
+        const suffix = String(Math.floor(Math.random() * 999) + 1).padStart(
+          3,
+          "0"
+        );
+        finalName = `${name}#${suffix}`;
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw { code: 11000, keyPattern: { name: 1, eventId: 1 } };
+}
 
 /**
  * POST /api/events/createEvent
@@ -159,22 +193,22 @@ export async function joinEventAsUser(req: Request, res: Response) {
     if (event.participantIds.length >= event.maxParticipant)
       return res.status(400).json({ success: false, msg: "Event is full" });
 
-    let participant = await Participant.findOne({
+    const existingParticipant = await Participant.findOne({
       userId,
       eventId,
     });
 
-    if (participant) {
+    if (existingParticipant) {
       return res
         .status(409)
         .json({ success: false, msg: "User already joined" });
     }
 
-    participant = await Participant.create({
+    const { participant, finalName } = await createParticipantWithRetry(
       userId,
       name,
       eventId,
-    });
+    );
 
     const participantId = participant._id as Types.ObjectId;
 
@@ -196,14 +230,14 @@ export async function joinEventAsUser(req: Request, res: Response) {
     );
 
     console.log("Room socket:", eventId);
-    console.log("Participant data:", { participantId, name });
+    console.log("Participant data:", { participantId, name: finalName });
 
     await pusher.trigger(
       `event-${eventId}`, // channel (room)
       "participant-joined", // event name
       {
         participantId,
-        name,
+        name: finalName,
       },
     );
 
@@ -213,12 +247,6 @@ export async function joinEventAsUser(req: Request, res: Response) {
     });
   } catch (e: any) {
     if (e.code === 11000) {
-      if (e.keyPattern?.name && e.keyPattern?.eventId) {
-        return res.status(409).json({
-          success: false,
-          msg: "This name is already taken in this event",
-        });
-      }
       if (e.keyPattern?.email) {
         return res.status(409).json({
           success: false,
@@ -272,12 +300,17 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     const userId = user._id as Types.ObjectId;
     const token = generateToken(userId.toString());
 
-    // Create participant linked to the new user
-    const participant = await Participant.create({
+    // Create participant linked to the new user, with automatic #XXX suffix on name collision
+    const { participant, finalName } = await createParticipantWithRetry(
       userId,
       name,
       eventId,
-    });
+    );
+
+    // Update guest user's name to match the suffixed participant name
+    if (finalName !== name) {
+      await User.updateOne({ _id: userId }, { name: finalName });
+    }
 
     const participantId = participant._id as Types.ObjectId;
 
@@ -293,14 +326,14 @@ export async function joinEventAsGuest(req: Request, res: Response) {
 
     // Emit socket
     console.log("Room socket:", eventId);
-    console.log("Participant data:", { participantId, name });
+    console.log("Participant data:", { participantId, name: finalName });
 
     await pusher.trigger(
       `event-${eventId}`, // channel (room)
       "participant-joined", // event name
       {
         participantId,
-        name,
+        name: finalName,
       },
     );
 
@@ -312,12 +345,6 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     });
   } catch (e: any) {
     if (e.code === 11000) {
-      if (e.keyPattern?.name && e.keyPattern?.eventId) {
-        return res.status(409).json({
-          success: false,
-          msg: "This name is already taken in this event",
-        });
-      }
       if (e.keyPattern?.email) {
         return res.status(409).json({
           success: false,

@@ -1,6 +1,6 @@
 # Shatter Backend — Database Schema Reference
 
-**Last updated:** 2026-03-01
+**Last updated:** 2026-03-08
 **Database:** MongoDB with Mongoose ODM
 **Collections:** 6
 
@@ -157,6 +157,7 @@
 ### Key Behaviors
 
 - The compound unique index on `(eventId, name)` is case-insensitive, so "John" and "john" are treated as the same name within an event.
+- When a name collision occurs during join, the backend automatically appends a random `#XXX` suffix (e.g., `John#472`) and retries, allowing multiple participants with the same base name.
 - No timestamps are enabled on this model.
 
 ---
