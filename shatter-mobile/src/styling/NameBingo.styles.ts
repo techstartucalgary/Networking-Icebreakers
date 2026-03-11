@@ -24,7 +24,6 @@ export const NameBingoStyling = StyleSheet.create({
 		marginBottom: 12,
 	},
 	card: {
-		width: "18%",
 		aspectRatio: 1,
 		backgroundColor: colors.white,
 		marginBottom: 10,
@@ -116,6 +115,30 @@ export const NameBingoStyling = StyleSheet.create({
 		padding: 10,
 		borderBottomWidth: 1,
 		borderBottomColor: colors.lightGrey2,
+	},
+	rollerVertical: {
+		maxHeight: 200,
+		marginTop: 4,
+		width: '100%',
+	},
+	rollerItemVertical: {
+	paddingVertical: 10,
+	paddingHorizontal: 6,
+	backgroundColor: '#eee',
+	borderRadius: 8,
+	marginBottom: 6,
+	width: '100%',
+	alignItems: 'center',
+	},
+	rollerItemActive: {
+		backgroundColor: colors.gold,
+	},
+	rollerText: {
+		fontSize: 14,
+	},
+	rollerHighlighted: {
+		borderWidth: 2,
+		borderColor: colors.gold,
 	},
 	err: {
 		fontSize: 12,

@@ -7,6 +7,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import {
+	DimensionValue,
 	ScrollView,
 	Text,
 	TextInput,
@@ -36,7 +37,8 @@ type WinningLine = {
 
 const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 	const { gameState, currentParticipantId } = useGame();
-	const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+	const [selectedCardId, setSelectedCardId] = useState<string | null>(null); //what user chooses
+	const [activeCardId, setActiveCardId] = useState<string | null>(null); //card in the roller
 	const [participants, setParticipants] = useState<Participant[]>([]);
 	const [categories, setCategories] = useState<string[][]>([]);
 	const [cards, setCards] = useState<Card[]>([]);
@@ -273,7 +275,17 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 		);
 	});
 
-	const selectedCard = cards.find((c) => c.cardId === selectedCardId); //find selected card for
+	const flatCategories = categories.flatMap((row, rowIdx) =>
+		row.map((cat, colIdx) => ({
+			category: cat,
+			cardId: `card-${rowIdx}-${colIdx}`,
+		})),
+	);
+
+	//grid management
+	const selectedCard = cards.find((c) => c.cardId === selectedCardId); //find selected card for category
+	const gridSize = categories.length || 5;
+	const cardSize = `${100 / gridSize}%` as DimensionValue; //dynamic card size for different grid sizes
 
 	if (loading) return <FullPageLoader message="Loading bingo..." />;
 
@@ -317,7 +329,7 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 				<ScrollView style={styles.dropdown}>
 					{filteredParticipants.map((p) => (
 						<TouchableOpacity
-							key={p.name}
+							key={p.participantId}
 							style={styles.dropdownItem}
 							onPress={() => handleAssign(p)}
 						>
@@ -328,55 +340,86 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 			)}
 
 			{/* Card grid */}
-			<View style={styles.grid}>
-				{cards.map((card) => {
-					let isWinningCard = false;
-					const isBlackoutAnimated = animatedBlackoutIds.includes(card.cardId);
+			<View style={{ padding: 12 }}>
+				<View style={styles.grid}>
+					{cards.map((card) => {
+						let isWinningCard = false;
+						const isBlackoutAnimated = animatedBlackoutIds.includes(
+							card.cardId,
+						);
 
-					//check for winning bingo line
-					if (winningLines.length > 0) {
-						winningLines.forEach((line) => {
-							const [rowIdx, colIdx] = card.cardId
-								.replace("card-", "")
-								.split("-")
-								.map(Number);
+						//check for winning bingo line
+						if (winningLines.length > 0) {
+							winningLines.forEach((line) => {
+								const [rowIdx, colIdx] = card.cardId
+									.replace("card-", "")
+									.split("-")
+									.map(Number);
 
-							if (line.type === "row" && line.index === rowIdx)
-								isWinningCard = true;
-
-							if (line.type === "col" && line.index === colIdx)
-								isWinningCard = true;
-
-							if (line.type === "diag") {
-								const size = categories.length;
-
-								if (!line.reverse && rowIdx === colIdx) isWinningCard = true;
-
-								if (line.reverse && colIdx === size - 1 - rowIdx)
+								if (line.type === "row" && line.index === rowIdx)
 									isWinningCard = true;
-							}
-						});
-					}
 
-					return (
+								if (line.type === "col" && line.index === colIdx)
+									isWinningCard = true;
+
+								if (line.type === "diag") {
+									const size = categories.length;
+
+									if (!line.reverse && rowIdx === colIdx) isWinningCard = true;
+
+									if (line.reverse && colIdx === size - 1 - rowIdx)
+										isWinningCard = true;
+								}
+							});
+						}
+
+						return (
+							<TouchableOpacity
+								key={card.cardId}
+								style={[
+									styles.card,
+									{ width: cardSize },
+									selectedCardId === card.cardId && styles.selectedCard,
+									activeCardId === card.cardId && styles.rollerHighlighted,
+									isWinningCard && styles.winningCard,
+									isBlackoutAnimated && styles.blackoutCard,
+								]}
+								onPress={() => {
+									setSelectedCardId(card.cardId);
+									setActiveCardId(card.cardId);
+								}}
+							>
+								<Text style={styles.category}>{card.category}</Text>
+								{card.assignedParticipantId && (
+									<Text style={styles.assignedName}>{card.assignedName}</Text>
+								)}
+							</TouchableOpacity>
+						);
+					})}
+					<Text style={styles.err}>{err}</Text>
+				</View>
+
+				{/* Roller */}
+				<ScrollView
+					style={styles.rollerVertical}
+					showsVerticalScrollIndicator={false}
+				>
+					{flatCategories.map((item) => (
 						<TouchableOpacity
-							key={card.cardId}
+							key={item.cardId}
 							style={[
-								styles.card,
-								selectedCardId === card.cardId && styles.selectedCard,
-								isWinningCard && styles.winningCard,
-								isBlackoutAnimated && styles.blackoutCard,
+								styles.rollerItemVertical,
+								activeCardId === item.cardId && styles.rollerItemActive,
 							]}
-							onPress={() => setSelectedCardId(card.cardId)}
+							onPress={() => {
+								setActiveCardId(item.cardId);
+								setSelectedCardId(item.cardId);
+							}}
 						>
-							<Text style={styles.category}>{card.category}</Text>
-							{card.assignedParticipantId && (
-								<Text style={styles.assignedName}>{card.assignedName}</Text>
-							)}
+							<Text style={styles.rollerText}>{item.category}</Text>
 						</TouchableOpacity>
-					);
-				})}
-				<Text style={styles.err}>{err}</Text>
+					))}
+				</ScrollView>
 			</View>
 		</View>
 	);

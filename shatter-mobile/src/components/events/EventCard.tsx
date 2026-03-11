@@ -35,8 +35,8 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	const [err, setError] = useState("");
 
 	//TODO: Remove hard coded statuses
-	const upcoming = event.currentState === EventState.UPCOMING;
-	const live = event.currentState === EventState.IN_PROGRESS;
+	const upcoming = false; //event.currentState === EventState.UPCOMING;
+	const live = true; //event.currentState === EventState.IN_PROGRESS;
 	const completed = event.currentState === EventState.COMPLETED;
 
 	useEffect(() => {
