@@ -1,4 +1,5 @@
 import { StyleSheet, Dimensions, Platform } from "react-native";
+import { colors, fonts } from "./constants";
 
 const { width, height } = Dimensions.get("window");
 
@@ -162,10 +163,10 @@ export const LoginFormStyling = StyleSheet.create({
     fontWeight: "700",
     color: "#1B2A4A",
   },
-  errorText: {
-    textAlign: "center",
-    color: "#e63232",
-    marginTop: vh(0.8),
-    fontSize: vw(3.4),
+  err: {
+    fontSize: 12,
+    fontFamily: fonts.body,
+    fontWeight: "bold",
+    color: colors.error,
   },
 });

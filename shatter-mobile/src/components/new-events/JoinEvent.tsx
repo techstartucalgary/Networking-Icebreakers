@@ -1,5 +1,5 @@
 import { useAuth } from "@/src/components/context/AuthContext";
-import { EventState, GameType } from "@/src/interfaces/Event";
+import { EventState } from "@/src/interfaces/Event";
 import {
 	getEventByCode,
 	JoinEventIdGuest,
@@ -61,18 +61,10 @@ export function useJoinEvent() {
 						authStorage.accessToken,
 					);
 
-					await setCurrentParticipantId(
-						guestUserInfo.participant._id,
-					);
+					await setCurrentParticipantId(guestUserInfo.participant._id);
 
 					await authenticate(user, guestUserInfo.token, true);
 				}
-			}
-
-			if (event.currentState !== EventState.IN_PROGRESS) {
-				//TODO: REMOVE hard-coded event data
-				event.currentState = EventState.IN_PROGRESS;
-				event.gameType = GameType.NAME_BINGO;
 			}
 
 			initializeGame(event.gameType, event._id, event.currentState);

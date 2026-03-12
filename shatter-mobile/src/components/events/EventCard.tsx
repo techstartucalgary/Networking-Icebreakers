@@ -31,7 +31,6 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
 
-	//TODO: Remove hard coded statuses
 	const upcoming = event.currentState === EventState.UPCOMING;
 	const live = event.currentState === EventState.IN_PROGRESS;
 	const completed = event.currentState === EventState.COMPLETED;

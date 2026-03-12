@@ -1,5 +1,5 @@
 import { Dimensions, Platform, StyleSheet } from "react-native";
-import { colors } from "./constants";
+import { colors, fonts } from "./constants";
 
 const { width, height } = Dimensions.get("window");
 
@@ -88,6 +88,12 @@ export const SignUpFormStyling = StyleSheet.create({
 		fontWeight: "700",
 		fontSize: vw(4),
 		letterSpacing: 0.5,
+	},
+	err: {
+		fontSize: 12,
+		fontFamily: fonts.body,
+		fontWeight: "bold",
+		color: colors.error,
 	},
 
 	// need to implement linkedin user

@@ -14,6 +14,7 @@ const POLL_INTERVAL = 4000; //4 seconds
 
 const IcebreakerGame = () => {
 	const { user } = useAuth();
+	const { setGameProgress } = useGame();
 	const { gameState, currentParticipantId } = useGame();
 	const router = useRouter();
 
@@ -24,11 +25,10 @@ const IcebreakerGame = () => {
 		const interval = setInterval(async () => {
 			try {
 				const res = await getEventById(gameState.eventId);
-				/* TODO: Reset hardcoded state
+
 				if (res.event.currentState) {
 					setGameProgress(res.event.currentState);
 				}
-				*/
 
 				//when game is finised
 				if (res?.event.currentState === EventState.COMPLETED) {

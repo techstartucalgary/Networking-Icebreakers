@@ -31,7 +31,7 @@ export default function EventsPage() {
 			const stored = await getStoredAuth();
 			if (stored.userId) {
 				//guest that has joined event or user with account
-				const data = await getUserEvents(stored.userId, stored.accessToken); //TODO: Needs to return participant data
+				const data = await getUserEvents(stored.userId, stored.accessToken);
 				setEvents(data.events || []);
 			}
 		} finally {
