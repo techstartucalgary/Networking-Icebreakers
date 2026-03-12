@@ -1,86 +1,65 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useGame } from "@/src/components/context/GameContext";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ImageBackground, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import FullPageLoader from "../../src/components/FullPageLoader";
 import IcebreakerGame from "../../src/components/games/IcebreakerGame";
 import { getEventById } from "../../src/services/event.service";
+import { GamePageStyling as styles } from "../../src/styling/GamePage.styles";
 
 const GamePage = () => {
 	const router = useRouter();
-	const searchParams = useLocalSearchParams();
-	const eventId = searchParams.eventId.toString();
+	const { gameState } = useGame();
 	const [event, setEvent] = useState<any>(null);
 	const [loading, setLoading] = useState(true);
 
-	const loadGameData = useCallback(async () => {
-		setLoading(true);
-
-		if (!eventId) {
-			router.replace("/Events");
+	const loadEvent = useCallback(async () => {
+		if (!gameState?.eventId) {
+			router.replace("/(tabs)/EventsPage");
 			return;
 		}
 
-		//fetch the event data
-		getEventById(eventId)
-			.then((data) => {
-				setEvent(data?.event);
-			})
-			.finally(() => setLoading(false));
-	}, []);
+		try {
+			const data = await getEventById(gameState.eventId);
+			setEvent(data?.event || null);
+		} catch (err) {
+			console.log("Failed to load event:", err);
+			setEvent(null);
+		} finally {
+			setLoading(false); //wait for children to load
+		}
+	}, [gameState?.eventId]);
 
 	useFocusEffect(
 		useCallback(() => {
-			loadGameData();
-		}, [loadGameData]),
+			loadEvent();
+		}, [loadEvent]),
 	);
 
-	if (loading) {
-		return (
-			<View style={styles.center}>
-				<ActivityIndicator size="large" color="#000" />
-				<Text>Loading event...</Text>
-			</View>
-		);
-	}
-
-	if (!event) {
-		return (
-			<View style={styles.center}>
-				<Text>Event not found.</Text>
-			</View>
-		);
-	}
+	if (loading) return <FullPageLoader message="Loading game..." />;
+	if (!event) return <FullPageLoader message="Event not found." />;
 
 	return (
-		<View style={styles.container}>
-			<Text style={styles.title}>{event.name}</Text>
-			<Text style={styles.description}>{event.description}</Text>
+		<ImageBackground
+			source={require("../../src/images/getStartedImage.png")}
+			style={styles.background}
+			resizeMode="cover"
+		>
+			<SafeAreaView style={styles.safe}>
+				<View style={styles.page}>
+					<View style={styles.eventCard}>
+						<Text style={styles.title}>{event.name}</Text>
+						<Text style={styles.description}>{event.description}</Text>
+					</View>
 
-			{/* Game Rendering */}
-			<IcebreakerGame eventId={event._id} gameType={event.gameType} />
-		</View>
+					<View style={styles.gameContainer}>
+						<IcebreakerGame />
+					</View>
+				</View>
+			</SafeAreaView>
+		</ImageBackground>
 	);
 };
 
 export default GamePage;
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		padding: 20,
-		backgroundColor: "#f8f8f8",
-	},
-	center: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-	},
-	title: {
-		fontSize: 24,
-		fontWeight: "bold",
-		marginBottom: 10,
-	},
-	description: {
-		fontSize: 16,
-		marginBottom: 20,
-	},
-});

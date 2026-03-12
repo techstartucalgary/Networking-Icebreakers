@@ -25,7 +25,7 @@ export default function GetStarted() {
           <Text style={styles.logo}>SHATTER</Text>
 
           <Text style={styles.tagline}>
-            Turn events into games
+            Break the Ice
           </Text>
 
           <TouchableOpacity
