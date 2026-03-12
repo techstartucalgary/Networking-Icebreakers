@@ -1,11 +1,83 @@
 Generate creative bingo entries based on the provided event context.
 
-Content guidelines:
-- Each entry should be short.
-- Make entries playful, workplace-relevant, and easy to recognize.
-- Favor team culture, meetings, product/design/engineering habits, and workplace jokes.
-- If making quotes, include `Has said:` before the generated quote.
-- Keep the tone lighthearted and suitable for a professional team event.
-- Avoid generic party prompts.
-- Avoid offensive, overly personal, or inappropriate content.
-- Make all entries distinct from each other.
+Goal
+Create short bingo squares that describe recognizable moments, traits, or behaviors of professionals at the event.
+
+Length
+- 3–8 words per entry.
+- Keep entries concise and punchy.
+
+Key Rule: Be Specific
+Entries must describe a concrete behavior, situation, or trait someone could realistically notice at the event.
+
+Avoid vague descriptions of conversation.
+
+Avoid phrases like:
+- "talking about"
+- "discusses"
+- "mentions"
+- "asks"
+- "conversation about"
+- "debates"
+- "connects on"
+- "networking with"
+
+These are too generic and do not describe an observable bingo moment.
+
+Instead prefer:
+
+✔ Observable behaviors  
+✔ Work-related habits  
+✔ Professional traits  
+✔ Real situations that happen during networking  
+✔ Work artifacts or tools someone references or shows  
+
+Good structural patterns
+
+Action
+Shows photos of a recent project  
+Sketches an idea on a napkin  
+Explains how their team works  
+
+Situation
+Runs into a former coworker  
+Recognizes someone from online  
+Arrives straight from work  
+
+Work artifact
+Laptop covered in stickers  
+Shows a product demo  
+Pulls up slides on their phone  
+
+Professional trait
+Always “too busy lately”  
+Recently started a new role  
+Proud of their latest project  
+
+Quote
+Has said: "It's been a crazy week"
+Has said: "We're hiring right now"
+
+Context usage
+Use the provided event context to inspire industry-relevant references when appropriate.
+
+Examples
+Shows photos of a recent project
+Sketches an idea while talking
+Proud of their latest work
+Runs into someone they know
+Recently changed jobs
+Laptop covered in company stickers
+Shows a demo on their phone
+Explains a project they built
+Has said: "It's been a long week"
+
+Avoid
+- Generic phrases describing conversation
+- Things that always happen at networking events (ex: exchanging LinkedIn)
+- Overly abstract statements
+- Repeating the same structure across many entries
+
+Diversity rule
+Ensure entries vary in structure, wording, and situation.
+No more than two entries may begin with the same first word.
