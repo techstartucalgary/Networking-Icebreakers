@@ -29,7 +29,7 @@ export const EventCardStyling = StyleSheet.create({
 		width: "100%",
 		height: 150,
 		borderRadius: 10,
-		marginBottom: 10,
+		marginBottom: 5,
 	},
 	title: {
 		fontSize: 24,
@@ -58,7 +58,7 @@ export const EventCardStyling = StyleSheet.create({
 		position: "absolute",
 		top: 10,
 		right: 10,
-		backgroundColor: colors.darkNavy,
+		backgroundColor: colors.darkNavy2,
 		paddingHorizontal: 8,
 		paddingVertical: 4,
 		borderRadius: 6,
@@ -81,7 +81,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	upcomingButton: {
 		marginTop: 12,
-		backgroundColor: colors.lightBlue,
+		backgroundColor: colors.lightNavy,
 		paddingVertical: 10,
 		borderRadius: 8,
 		alignItems: "center",
@@ -93,7 +93,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	joinButton: {
 		marginTop: 12,
-		backgroundColor: colors.lightBlue,
+		backgroundColor: colors.lightNavy,
 		paddingVertical: 10,
 		borderRadius: 8,
 		alignItems: "center",
@@ -105,7 +105,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	viewButton: {
 		marginTop: 12,
-		backgroundColor: colors.lightBlue,
+		backgroundColor: colors.lightNavy,
 		paddingVertical: 10,
 		borderRadius: 8,
 		alignItems: "center",
@@ -117,7 +117,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	connectionsButton: {
 		marginTop: 12,
-		backgroundColor: colors.lightGrey2,
+		backgroundColor: colors.lightNavy2,
 		paddingVertical: 10,
 		borderRadius: 8,
 		alignItems: "center",

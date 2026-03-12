@@ -19,7 +19,7 @@ export const EventPageStyling = StyleSheet.create({
 		alignItems: "center",
 	},
 	header: {
-		height: vh(6),
+		height: vh(7),
 		justifyContent: "center",
 	},
 	pageTitle: {
@@ -28,13 +28,22 @@ export const EventPageStyling = StyleSheet.create({
 		letterSpacing: 3,
 		color: "#A8C8E8",
 	},
+	subtitle: {
+		marginTop: 6,
+		fontSize: vw(4),
+		color: "#ffffff",
+		opacity: 0.9,
+		letterSpacing: 1,
+		textAlign: "center",
+	},
 	container: {
 		position: "absolute",
-		top: vh(14),
+		top: vh(15),
 		width: "100%",
 		bottom: 0,
 		backgroundColor: colors.lightGrey,
-		borderRadius: 8,
+		borderTopLeftRadius: 8,
+		borderTopRightRadius: 8,
 		padding: 5,
 	},
 	loadingContainer: {

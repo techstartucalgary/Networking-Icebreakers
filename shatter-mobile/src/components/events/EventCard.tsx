@@ -29,8 +29,16 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 			}}
 			style={styles.card}
 		>
+			{/* TODO: Swap to default image */}
 			<View style={styles.imageWrapper}>
-				<Image source={{ uri: event.eventImg }} style={styles.image} />
+				<Image
+					source={
+						event.eventImg
+							? { uri: event.eventImg }
+							: require("../../images/getStartedImage.png")
+					}
+					style={styles.image}
+				/>
 
 				{/* Badges */}
 				{upcoming && (
@@ -47,8 +55,19 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 			</View>
 			<Text style={styles.title}>{event.name}</Text>
 
+			{/* Date + Time */}
 			<Text style={styles.date}>
-				{new Date(event.startDate).toLocaleString()}
+				{new Date(event.startDate).toLocaleDateString(undefined, {
+					weekday: "short", // Mon, Tue
+					year: "numeric",
+					month: "short", // Jan, Feb
+					day: "numeric",
+				})}
+				{" • "}
+				{new Date(event.startDate).toLocaleTimeString(undefined, {
+					hour: "2-digit",
+					minute: "2-digit",
+				})}
 			</Text>
 
 			{expanded && (
