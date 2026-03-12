@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import QRCard from "../components/QRCard";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import EventSpotlight from "../components/EventSpotlight";
 import { CalendarIcon, ClipboardCopyIcon } from "../components/icons";
 
 export default function EventPage() {
@@ -157,6 +158,16 @@ export default function EventPage() {
               Join Code: <span className="font-mono font-semibold text-white">{joinCode}</span>
             </span>
           </div>
+        </div>
+
+        {/* Live Activity Spotlight */}
+        <div className="mb-12">
+          <EventSpotlight
+            participants={participants}
+            eventId={eventId}
+            useDemoConnections={false}
+            useDemoActivity={true}
+          />
         </div>
 
         {/* Main Content Grid */}
