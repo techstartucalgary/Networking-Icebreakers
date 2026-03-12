@@ -266,10 +266,7 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
   `.trim();
   const userContext = `Additional context for bingo content:\n${context}`;
 
-  const promptPath = "../ai/prompts/bingo.txt";
-  if (!fs.existsSync(promptPath)) {
-      throw new Error(`Prompt file missing: ${promptPath}`);
-  }
+  const promptPath = path.resolve(__dirname, "../ai/prompts/bingo.txt");
   const aiInstruction = fs.readFileSync(promptPath, "utf-8");
 
   const aiPrompt =  new Prompt([basePrompt_structure, userContext, aiInstruction])
