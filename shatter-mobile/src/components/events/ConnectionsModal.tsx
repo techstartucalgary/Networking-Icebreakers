@@ -4,13 +4,13 @@ import { participantFetch, userFetch } from "@/src/services/user.service";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    Modal,
-    Pressable,
-    Text,
-    View,
+	ActivityIndicator,
+	FlatList,
+	Image,
+	Modal,
+	Pressable,
+	Text,
+	View,
 } from "react-native";
 import { ConnectionsModalStyling as styles } from "../../styling/ConnectionsModal.styles";
 import { useAuth } from "../context/AuthContext";
@@ -19,7 +19,6 @@ import UserModal from "./UserModal";
 
 type ConnectionsModalProps = {
 	event: EventIB;
-	visible: boolean;
 	onRequestClose: () => void;
 };
 
@@ -112,10 +111,16 @@ const ConnectionsModal = ({ event, onRequestClose }: ConnectionsModalProps) => {
 									renderItem={({ item }) => (
 										<Pressable
 											style={styles.itemWrapper}
-											onPress={() => setSelectedUser(item)}
+											onPress={() => {
+												setSelectedUser(item);
+											}}
 										>
 											<Image
-												source={{ uri: item.profilePhoto }}
+												source={{
+													uri:
+														item.profilePhoto ??
+														`https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=random&format=png`,
+												}}
 												style={styles.avatar}
 											/>
 
@@ -143,10 +148,8 @@ const ConnectionsModal = ({ event, onRequestClose }: ConnectionsModalProps) => {
 				</View>
 				{selectedUser && (
 					<UserModal
-						visible={userModalVisible}
 						onRequestClose={() => setSelectedUser(null)}
 						user={selectedUser}
-						event={event}
 					></UserModal>
 				)}
 			</View>

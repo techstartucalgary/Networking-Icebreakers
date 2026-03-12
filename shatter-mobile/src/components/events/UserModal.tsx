@@ -1,70 +1,48 @@
-import EventIB from "@/src/interfaces/Event";
 import { User } from "@/src/interfaces/User";
-import { useState } from "react";
-import {
-    ActivityIndicator,
-    Image,
-    Modal,
-    Pressable,
-    Text,
-    View,
-} from "react-native";
+import { Image, Modal, Pressable, Text, View } from "react-native";
 import { UserModalStyling as styles } from "../../styling/UserModal.styles";
 
 type UserModalProps = {
-	event: EventIB;
 	user: User;
-	visible: boolean;
 	onRequestClose: () => void;
 };
 
-const UserModal = ({ user, event, onRequestClose }: UserModalProps) => {
-	const [loading, setLoading] = useState(false);
-	const [err, setError] = useState("");
-
+const UserModal = ({ user, onRequestClose }: UserModalProps) => {
 	return (
-		<Modal transparent animationType="fade">
+		<Modal transparent animationType="slide">
 			<View style={styles.overlay}>
 				<View style={styles.container}>
-					{loading ? (
-						<View style={styles.loadingContainer}>
-							<ActivityIndicator size="large" />
-							<Text style={styles.loading}>Loading...</Text>
-						</View>
-					) : (
-						<>
-							<Image
-								source={{
-									uri: user.profilePhoto ?? "https://i.pravatar.cc/150",
-								}}
-								style={styles.userAvatar}
-							/>
+					<View style={styles.headerRow}>
+						<Image
+							source={{
+								uri:
+									user.profilePhoto ??
+									`https://ui-avatars.com/api/?name=${encodeURIComponent(
+										user.name,
+									)}&background=random&format=png`,
+							}}
+							style={styles.userAvatar}
+						/>
 
+						<View style={styles.headerText}>
 							<Text style={styles.userName}>{user.name}</Text>
+						</View>
+					</View>
 
-							{user.bio && <Text style={styles.userBio}>{user.bio}</Text>}
+					{user.bio && <Text style={styles.userBio}>{user.bio}</Text>}
 
-							{user.socialLinks?.length > 0 && (
-								<View>
-									<Text style={styles.userName}>
-										{user.socialLinks[0].label}
-									</Text>
-									<Text style={styles.link}>{user.socialLinks[0].url}</Text>
-								</View>
-							)}
-
-							<Pressable
-								onPress={onRequestClose}
-								style={styles.leaveUserButton}
-							>
-								<Text style={styles.leaveUserButtonText}>
-									Back to Your Connections
-								</Text>
-							</Pressable>
-
-							{!!err && <Text style={styles.err}>{err}</Text>}
-						</>
+					{user.socialLinks?.length > 0 && (
+						<View>
+							<Text style={styles.linkLabel}>{user.socialLinks[0].label}</Text>
+							<Text style={styles.link}>{user.socialLinks[0].url}</Text>
+						</View>
 					)}
+
+					<Pressable onPress={onRequestClose} style={styles.leaveUserButton}>
+						<Text style={styles.leaveUserButtonText}>
+							Back to Your Connections
+						</Text>
+					</Pressable>
 				</View>
 			</View>
 		</Modal>

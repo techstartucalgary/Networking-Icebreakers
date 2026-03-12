@@ -4,7 +4,6 @@ import { colors, fonts } from "./constants";
 export const UserModalStyling = StyleSheet.create({
 	overlay: {
 		flex: 1,
-		backgroundColor: "rgba(0,0,0,0.45)",
 		justifyContent: "center",
 		alignItems: "center",
 		paddingHorizontal: 20,
@@ -16,79 +15,70 @@ export const UserModalStyling = StyleSheet.create({
 		width: "100%",
 		maxHeight: "75%",
 
-		shadowColor: "#000",
+		shadowColor: colors.black,
 		shadowOpacity: 0.25,
 		shadowOffset: { width: 0, height: 6 },
 		shadowRadius: 12,
 		elevation: 8,
 	},
-	connectionsTitle: {
-		fontFamily: fonts.title,
-		fontSize: 22,
-		color: colors.darkNavy,
-		fontWeight: "bold",
-		textAlign: "center",
-		marginBottom: 15,
-	},
-	itemWrapper: {
+	headerRow: {
 		flexDirection: "row",
 		alignItems: "center",
-		paddingVertical: 12,
-		paddingHorizontal: 12,
-		borderRadius: 12,
-		backgroundColor: colors.lightGrey,
-		marginBottom: 8,
+		marginBottom: 14,
+	},
+	headerText: {
+		flex: 1,
+		justifyContent: "center",
 	},
 	userAvatar: {
 		width: 80,
 		height: 80,
 		borderRadius: 40,
-		marginBottom: 12,
+		marginRight: 16,
 	},
 	userName: {
-		fontSize: 18,
+		fontSize: 20,
 		fontFamily: fonts.title,
 		color: colors.darkNavy,
 		fontWeight: "bold",
-		marginBottom: 12,
 	},
 	userBio: {
 		fontFamily: fonts.body,
 		fontSize: 15,
 		color: colors.darkNavy,
-		textAlign: "center",
-		marginBottom: 10,
-		lineHeight: 20,
+		marginBottom: 12,
+		lineHeight: 22,
 	},
+
+	linkLabel: {
+		fontFamily: fonts.title,
+		fontSize: 14,
+		color: colors.darkNavy,
+		fontWeight: "bold",
+		marginTop: 6,
+	},
+
 	link: {
 		fontFamily: fonts.body,
 		fontSize: 14,
 		color: colors.darkBlue,
-		marginBottom: 16,
+		marginBottom: 10,
 	},
+
 	leaveUserButton: {
 		backgroundColor: colors.darkNavy,
-		paddingVertical: 10,
-		paddingHorizontal: 20,
+		paddingVertical: 12,
 		borderRadius: 10,
+		alignItems: "center",
+		marginTop: 10,
 	},
+
 	leaveUserButtonText: {
 		color: colors.white,
 		fontWeight: "bold",
-	},
-	loadingContainer: {
-		justifyContent: "center",
-		alignItems: "center",
-		paddingVertical: 40,
+		fontSize: 15,
 	},
 
-	loading: {
-		color: colors.darkNavy,
-		fontFamily: fonts.body,
-		fontWeight: "bold",
-		marginTop: 10,
-		fontSize: 16,
-	},
 	err: {
 		fontSize: 13,
 		fontFamily: fonts.body,

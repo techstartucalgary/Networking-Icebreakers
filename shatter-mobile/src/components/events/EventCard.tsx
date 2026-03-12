@@ -120,7 +120,6 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					{/* Connections Modal */}
 					{modalVisible && (
 						<ConnectionsModal
-							visible={modalVisible}
 							onRequestClose={() => setModalVisible(false)}
 							event={event}
 						></ConnectionsModal>
