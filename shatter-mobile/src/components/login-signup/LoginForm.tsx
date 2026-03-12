@@ -105,7 +105,7 @@ export default function LoginForm() {
 							<View style={styles.inputWrap}>
 								<TextInput
 									style={styles.input}
-									placeholder="exemple@gmail.com"
+									placeholder="example@gmail.com"
 									value={email}
 									onChangeText={setEmail}
 									placeholderTextColor="#bbb"
@@ -145,6 +145,7 @@ export default function LoginForm() {
 									<Text style={styles.buttonText}>Log In</Text>
 								)}
 							</TouchableOpacity>
+							{err && <Text style={styles.err}>{err}</Text>}
 							<View style={styles.dividerRow}>
 								<View style={styles.dividerLine} />
 								<Text style={styles.dividerText}>-OR-</Text>

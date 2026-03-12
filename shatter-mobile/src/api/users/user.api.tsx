@@ -92,6 +92,7 @@ export async function UserFetchApi(
 			{ headers: { Authorization: `Bearer ${token}` } },
 		);
 
+		//TODO: Remove profile photo assigning here
 		//assign default photo if none stored (handled in signup as well)
 		if (!response.data.user.profilePhoto) {
 			const encodedName = encodeURIComponent(

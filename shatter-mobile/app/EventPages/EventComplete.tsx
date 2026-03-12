@@ -1,8 +1,8 @@
 import { useAuth } from "@/src/components/context/AuthContext";
 import { useGame } from "@/src/components/context/GameContext";
 import {
-    fetchConnections,
-    participantFetch,
+	participantFetch,
+	userFetch
 } from "@/src/services/user.service";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { EventCompletedStyling as styles } from "../../src/styling/EventCompleted.styles";
 
 export default function EventComplete() {
-	const { authStorage } = useAuth();
+	const { user, authStorage } = useAuth();
 	const { gameState, currentParticipantId } = useGame();
 	const [connections, setConnections] = useState<any[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -27,27 +27,46 @@ export default function EventComplete() {
 		try {
 			setLoading(true);
 
-			const participantId = currentParticipantId;
+			const userId = user?._id;
 			const accessToken = authStorage.accessToken;
+			const participantId = currentParticipantId;
 
-			const res = await fetchConnections(participantId, eventId, accessToken);
-			if (!res?.connections) throw new Error("No connections found.");
+			if (!userId) {
+				throw new Error("No user logged in.");
+			}
 
-			const detailedUsers = await Promise.all(
-				res.connections.map(async (conn) => {
-					const otherId =
-						conn.primaryParticipantId === participantId
-							? conn.secondaryParticipantId
-							: conn.primaryParticipantId;
+			if (!participantId) {
+				throw new Error("No participant set.");
+			}
 
-					const userRes = await participantFetch(otherId, eventId, accessToken);
-					return userRes.user;
-				}),
+			//fetch the connection  info
+			const participantConnections = await participantFetch(
+				participantId,
+				eventId,
+				accessToken,
 			);
 
+			if (participantConnections.length === 0) {
+				setConnections([]);
+				setErr("");
+				return;
+			}
+
+			const userPromises = participantConnections.map(async (conn) => {
+				if (!conn.user?._id) {
+					throw new Error(
+						`Missing userId for connection: ${conn.participantName}`,
+					);
+				}
+
+				const res = await userFetch(conn.user?._id, accessToken);
+				return res.user;
+			});
+
+			const detailedUsers = await Promise.all(userPromises);
 			setConnections(detailedUsers);
 		} catch (err) {
-			console.log("Error loading connections:", err);
+			console.log("Load connections error:", err);
 			setErr((err as Error).message);
 		} finally {
 			setLoading(false);
@@ -69,7 +88,7 @@ export default function EventComplete() {
 						<Text style={styles.connectionsTitle}>Your Connections:</Text>
 						<FlatList
 							data={connections}
-							keyExtractor={(item) => item._id!}
+							keyExtractor={(item) => item._id ?? ""}
 							renderItem={({ item }) => (
 								<View style={styles.itemWrapper}>
 									{item.profilePhoto && (
@@ -78,6 +97,7 @@ export default function EventComplete() {
 											style={styles.avatar}
 										/>
 									)}
+
 									<Text style={styles.item}>{item.name}</Text>
 								</View>
 							)}

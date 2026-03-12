@@ -1,10 +1,5 @@
-import { Dimensions, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { colors, fonts } from "./constants";
-
-const { width, height } = Dimensions.get("window");
-
-const vw = (percent: number) => (width * percent) / 100;
-const vh = (percent: number) => (height * percent) / 100;
 
 export const EventCompletedStyling = StyleSheet.create({
 	container: {

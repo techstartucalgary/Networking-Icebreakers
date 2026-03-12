@@ -71,7 +71,7 @@ export default function Profile() {
 			<View style={styles.container}>
 				<Image
 					source={{ uri: user.profilePhoto }}
-					style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8 }} //TODO: Swap to actual styling
+					style={styles.avatar}
 				/>
 				<Text style={styles.title}>Welcome, {user.name || "Guest"}!</Text>
 				<Text style={styles.subtitle}>
