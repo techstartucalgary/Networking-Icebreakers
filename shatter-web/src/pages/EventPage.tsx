@@ -137,13 +137,13 @@ export default function EventPage() {
                 backgroundColor:
                   eventDetails.currentState === "ongoing"
                     ? "rgba(34, 197, 94, 0.2)"
-                    : eventDetails.currentState === "upcoming"
+                    : eventDetails.currentState === "Upcoming"
                     ? "rgba(59, 130, 246, 0.2)"
                     : "rgba(156, 163, 175, 0.2)",
                 color:
                   eventDetails.currentState === "ongoing"
                     ? "#4ade80"
-                    : eventDetails.currentState === "upcoming"
+                    : eventDetails.currentState === "Upcoming"
                     ? "#60a5fa"
                     : "#9ca3af",
               }}

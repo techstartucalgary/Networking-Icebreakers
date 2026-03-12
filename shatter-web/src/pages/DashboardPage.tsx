@@ -56,7 +56,7 @@ function DashboardPage() {
     startDate: "",
     endDate: "",
     maxParticipant: 0,
-    currentState: "upcoming",
+    currentState: "Upcoming",
   });
 
   const [selectedIcebreaker, setSelectedIcebreaker] = useState<string | null>(null);
@@ -203,7 +203,7 @@ function DashboardPage() {
       startDate: selectedEvent.startDate?.substring(0, 16) || "",
       endDate: selectedEvent.endDate?.substring(0, 16) || "",
       maxParticipant: selectedEvent.maxParticipant || 0,
-      currentState: selectedEvent.currentState || "upcoming",
+      currentState: selectedEvent.currentState || "Upcoming",
     });
   };
 
@@ -349,7 +349,7 @@ function DashboardPage() {
     switch (state) {
       case "ongoing":
         return { bg: "rgba(34, 197, 94, 0.2)", text: "#4ade80", border: "rgba(34, 197, 94, 0.3)" };
-      case "upcoming":
+      case "Upcoming":
         return { bg: "rgba(59, 130, 246, 0.2)", text: "#60a5fa", border: "rgba(59, 130, 246, 0.3)" };
       case "completed":
         return { bg: "rgba(156, 163, 175, 0.2)", text: "#9ca3af", border: "rgba(156, 163, 175, 0.3)" };
@@ -576,7 +576,7 @@ function DashboardPage() {
                           onChange={(e) => setEditForm({ ...editForm, currentState: e.target.value })}
                           className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
                         >
-                          <option value="upcoming">Upcoming</option>
+                          <option value="Upcoming">Upcoming</option>
                           <option value="ongoing">Ongoing</option>
                           <option value="completed">Completed</option>
                         </select>
