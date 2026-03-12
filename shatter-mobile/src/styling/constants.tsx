@@ -12,6 +12,7 @@ export const colors = {
 	beige: "#F8F7DE",
 	gold: "#f1d622",
 	red: "#f07070",
+	darkGrey: "#444",
 
 	error: "#f16d6d",
 

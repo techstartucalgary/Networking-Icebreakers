@@ -35,6 +35,7 @@ export const EventPageStyling = StyleSheet.create({
 		padding: 10,
 		color: colors.darkNavy,
 		fontFamily: fonts.body,
+		fontWeight: "bold",
 		marginTop: 10,
 		fontSize: 16,
 	},

@@ -21,11 +21,11 @@ export default function GuestPage() {
 		let socialLink: SocialLink | null = null;
 
 		try {
-			const validUrl = new URL(contactLink); // throws if invalid
+			const validUrl = new URL(contactLink); //throws if invalid
 			socialLink = { label: "Contact Link", url: validUrl.href };
-		} catch (err) {
+		} catch {
 			console.log("Invalid URL:", contactLink);
-			setError("Please enter a valid contact link.")
+			setError("Please enter a valid contact link.");
 			return;
 		}
 
@@ -58,7 +58,7 @@ export default function GuestPage() {
 			<Button title="Continue" onPress={handleContinue} />
 			<Button title="Back" onPress={() => router.push("/UserPages/Signup")} />
 			<Text style={styles.inputInfo}>
-				Your contact link can be your email, your LinkedIn profile URL, or
+				Your contact link can be your LinkedIn profile URL, a portfolio link, or
 				another relevant personal link.
 			</Text>
 			{error && <Text style={styles.error}>{error}</Text>}
@@ -67,7 +67,12 @@ export default function GuestPage() {
 }
 
 const styles = StyleSheet.create({
-	container: { flex: 1, padding: 20, justifyContent: "center" },
+	container: {
+		flex: 1,
+		padding: 20,
+		justifyContent: "center",
+		backgroundColor: "rgba(255, 255, 255, 0.97)",
+	},
 	title: { fontSize: 24, fontWeight: "bold", marginBottom: 10 },
 	subtitle: { fontSize: 16, marginBottom: 20 },
 	input: {

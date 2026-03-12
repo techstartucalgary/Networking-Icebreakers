@@ -1,7 +1,8 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../src/components/context/AuthContext";
+import { ProfilePageStyling as styles } from "../../src/styling/ProfilePage.styles";
 
 export default function Profile() {
 	const { user, logout } = useAuth();
@@ -32,15 +33,10 @@ export default function Profile() {
 			<View style={styles.container}>
 				<Image
 					source={{ uri: user.profilePhoto }}
-					style={{
-						width: 50,
-						height: 50,
-						borderRadius: 12,
-						marginRight: 8,
-					}} //TODO: Swap to actual styling
+					style={styles.avatar}
 					onError={(e) => console.log("Image error:", e.nativeEvent.error)}
 				/>
-				<Text style={styles.title}>Welcome, {user.name}!</Text>
+				<Text style={styles.title}>Hey, {user.name}!</Text>
 				<Text style={styles.subtitle}>{user.email}</Text>
 
 				{socialLinks.length === 0 && (
@@ -63,7 +59,7 @@ export default function Profile() {
 					<Text style={styles.buttonText}>Update Profile</Text>
 				</TouchableOpacity>
 
-				<TouchableOpacity style={styles.button} onPress={logout}>
+				<TouchableOpacity style={styles.logoutButton} onPress={logout}>
 					<Text style={styles.buttonText}>Log Out</Text>
 				</TouchableOpacity>
 			</View>
@@ -117,116 +113,10 @@ export default function Profile() {
 					</View>
 				)}
 
-				<TouchableOpacity style={styles.button} onPress={logout}>
+				<TouchableOpacity style={styles.logoutButton} onPress={logout}>
 					<Text style={styles.buttonText}>Log Out</Text>
 				</TouchableOpacity>
 			</View>
 		);
 	}
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		justifyContent: "center",
-		padding: 24,
-		backgroundColor: "#A1C9F6",
-	},
-	title: {
-		fontSize: 28,
-		fontWeight: "600",
-		textAlign: "center",
-		color: "#1B253A",
-		marginBottom: 16,
-	},
-	subtitle: {
-		fontSize: 16,
-		textAlign: "center",
-		color: "#666",
-		marginBottom: 20,
-	},
-	label: {
-		fontWeight: "600",
-		marginTop: 12,
-	},
-	input: {
-		borderWidth: 1,
-		borderColor: "#1B253A",
-		color: "#000000",
-		backgroundColor: "#fff",
-		borderRadius: 8,
-		padding: 10,
-		marginTop: 5,
-	},
-	saveButton: {
-		backgroundColor: "#4CAF50",
-		padding: 14,
-		borderRadius: 8,
-		alignItems: "center",
-		marginTop: 15,
-	},
-	button: {
-		backgroundColor: "#1C1DEF",
-		padding: 14,
-		borderRadius: 8,
-		alignItems: "center",
-	},
-	buttonText: {
-		color: "#fff",
-		fontWeight: "600",
-		fontSize: 16,
-	},
-	sectionTitle: {
-		fontSize: 18,
-		fontWeight: "600",
-		marginTop: 20,
-		marginBottom: 10,
-	},
-	linkContainer: {
-		marginBottom: 15,
-		padding: 10,
-		backgroundColor: "#E6F0FF",
-		borderRadius: 8,
-	},
-	addButton: {
-		backgroundColor: "#1eb4f0",
-		padding: 12,
-		borderRadius: 8,
-		alignItems: "center",
-		marginTop: 10,
-	},
-	removeButton: {
-		backgroundColor: "#F44336",
-		padding: 10,
-		borderRadius: 6,
-		alignItems: "center",
-		marginTop: 5,
-	},
-	emptyText: {
-		textAlign: "center",
-		color: "#444",
-		marginTop: 10,
-	},
-	linkLabel: {
-		fontWeight: "600",
-		fontSize: 16,
-	},
-	linkUrl: {
-		color: "#1C1DEF",
-		marginTop: 4,
-	},
-	editButton: {
-		backgroundColor: "#FF9800",
-		padding: 14,
-		borderRadius: 8,
-		alignItems: "center",
-		marginTop: 15,
-	},
-	cancelButton: {
-		backgroundColor: "#9E9E9E",
-		padding: 14,
-		borderRadius: 8,
-		alignItems: "center",
-		marginTop: 10,
-	},
-});

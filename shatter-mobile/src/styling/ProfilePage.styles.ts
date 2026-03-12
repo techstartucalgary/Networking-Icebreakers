@@ -1,0 +1,130 @@
+import { Dimensions, StyleSheet } from "react-native";
+import { colors, fonts } from "./constants";
+
+const { width, height } = Dimensions.get("window");
+
+export const ProfilePageStyling = StyleSheet.create({
+	container: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		padding: 24,
+		backgroundColor: colors.lightGrey,
+	},
+	avatar: {
+		width: 50,
+		height: 50,
+		borderRadius: 16,
+		margin: 8,
+	},
+	title: {
+		fontSize: 28,
+		fontWeight: "600",
+		textAlign: "center",
+		color: colors.darkNavy,
+		fontFamily: fonts.title,
+		marginBottom: 16,
+	},
+	subtitle: {
+		fontSize: 16,
+		textAlign: "center",
+		color: colors.darkNavy,
+		fontFamily: fonts.body,
+		marginBottom: 20,
+	},
+	label: {
+		fontWeight: "600",
+		marginTop: 12,
+	},
+	input: {
+		borderWidth: 1,
+		borderColor: colors.lightGrey2,
+		color: colors.black,
+		backgroundColor: colors.white,
+		fontFamily: fonts.body,
+		borderRadius: 8,
+		padding: 10,
+		marginTop: 5,
+	},
+	saveButton: {
+		backgroundColor: colors.lightGreen,
+		padding: 14,
+		borderRadius: 8,
+		alignItems: "center",
+		marginTop: 15,
+	},
+	logoutButton: {
+		backgroundColor: colors.darkBlue,
+		padding: 14,
+		borderRadius: 8,
+		marginTop: 5,
+		margin: 15,
+		alignItems: "center",
+		width: "50%",
+	},
+	buttonText: {
+		color: colors.white,
+		fontFamily: fonts.body,
+		fontWeight: "600",
+		fontSize: 16,
+	},
+	sectionTitle: {
+		fontSize: 18,
+		fontWeight: "600",
+		fontFamily: fonts.title,
+		marginTop: 20,
+		marginBottom: 10,
+	},
+	linkContainer: {
+		marginBottom: 15,
+		padding: 10,
+		backgroundColor: colors.white,
+		borderRadius: 8,
+	},
+	addButton: {
+		backgroundColor: colors.lightBlue,
+		padding: 12,
+		borderRadius: 8,
+		alignItems: "center",
+		marginTop: 10,
+	},
+	removeButton: {
+		backgroundColor: colors.red,
+		padding: 10,
+		borderRadius: 6,
+		alignItems: "center",
+		marginTop: 5,
+	},
+	emptyText: {
+		textAlign: "center",
+		color: colors.darkGrey,
+		marginTop: 10,
+	},
+	linkLabel: {
+		fontWeight: "600",
+		fontSize: 16,
+		fontFamily: fonts.title,
+	},
+	linkUrl: {
+		color: colors.darkBlue,
+		marginTop: 4,
+		fontFamily: fonts.body,
+	},
+	editButton: {
+		backgroundColor: colors.lightBlue,
+		padding: 14,
+		borderRadius: 8,
+		alignItems: "center",
+		margin: 15,
+		fontFamily: fonts.body,
+		width: "50%",
+	},
+	cancelButton: {
+		backgroundColor: colors.lightGrey,
+		padding: 14,
+		borderRadius: 8,
+		alignItems: "center",
+		marginTop: 10,
+		fontFamily: fonts.body,
+	},
+});
