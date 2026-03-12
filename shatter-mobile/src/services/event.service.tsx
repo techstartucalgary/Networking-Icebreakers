@@ -5,31 +5,27 @@ import {
 	JoinEventByIdUserApi,
 } from "../api/events/event.api";
 import { GetUserEventsApi } from "../api/users/user.api";
-import EventResponse from "../interfaces/responses/GetEventByCodeResponse";
-import EventIdResponse from "../interfaces/responses/GetEventByIdResponse";
+import EventResponse from "../interfaces/responses/GetEventResponse";
 import UserEventsResponse from "../interfaces/responses/GetUserEventsResponse";
 import EventJoinIdResponse from "../interfaces/responses/JoinEventIdResponse";
 
 export async function getEventByCode(
 	joinCode: string,
-): Promise<EventResponse | undefined> {
-	const eventInfo = await GetEventByCodeApi(joinCode);
-	return eventInfo;
+): Promise<EventResponse> {
+	return await GetEventByCodeApi(joinCode);
 }
 
 export async function getEventById(
 	eventId: string,
-): Promise<EventIdResponse | undefined> {
-	const eventInfo = await GetEventByIdApi(eventId);
-	return eventInfo;
+): Promise<EventResponse> {
+	return await GetEventByIdApi(eventId);
 }
 
 export async function getUserEvents(
 	userId: string,
 	token: string
-): Promise<UserEventsResponse | undefined> {
-	const events = await GetUserEventsApi(userId, token);
-	return events;
+): Promise<UserEventsResponse> {
+	return await GetUserEventsApi(userId, token);
 }
 
 export async function JoinEventIdUser(
@@ -37,15 +33,13 @@ export async function JoinEventIdUser(
 	userId: string,
 	name: string,
 	token: string,
-): Promise<EventJoinIdResponse | undefined> {
-	const response = await JoinEventByIdUserApi(eventId, userId, name, token);
-	return response;
+): Promise<EventJoinIdResponse> {
+	return await JoinEventByIdUserApi(eventId, userId, name, token);
 }
 
 export async function JoinEventIdGuest(
 	eventId: string,
 	name: string,
-): Promise<EventJoinIdResponse | undefined> {
-	const response = await JoinEventByIdGuestApi(eventId, name);
-	return response;
+): Promise<EventJoinIdResponse> {
+	return await JoinEventByIdGuestApi(eventId, name);
 }
