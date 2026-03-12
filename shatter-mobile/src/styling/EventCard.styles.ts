@@ -115,35 +115,17 @@ export const EventCardStyling = StyleSheet.create({
 		fontWeight: "bold",
 		fontSize: 15,
 	},
-	connectionsTitle: {
+	connectionsButton: {
 		marginTop: 12,
-		fontFamily: fonts.title,
-		fontSize: 14,
-		color: colors.darkNavy,
-		fontWeight: "bold",
-	},
-	item: {
-		fontSize: 12,
-		color: colors.darkNavy,
-	},
-	avatar: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
-		marginRight: 8,
-	},
-	itemWrapper: {
-		flexDirection: "row",
+		backgroundColor: colors.lightGrey2,
+		paddingVertical: 10,
+		borderRadius: 8,
 		alignItems: "center",
-		marginVertical: 2,
 	},
-	noConnectionsText: {
-		fontFamily: fonts.body,
-		fontSize: 14,
-		color: colors.lightGrey2,
-		fontStyle: "italic",
-		marginVertical: 8,
-		textAlign: "center",
+	connectionsButtonText: {
+		color: colors.white,
+		fontWeight: "bold",
+		fontSize: 15,
 	},
 	err: {
 		fontSize: 12,
