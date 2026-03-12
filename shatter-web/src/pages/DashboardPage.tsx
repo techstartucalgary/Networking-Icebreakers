@@ -2,6 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import {
+  CalendarIcon,
+  ClipboardIcon,
+  ClockIcon,
+  InformationCircleIcon,
+  KeyIcon,
+  PlusIcon,
+  SearchIcon,
+  UsersIcon,
+  XIcon,
+} from "../components/icons";
 
 interface Event {
   _id: string;
@@ -383,9 +394,7 @@ function DashboardPage() {
         {!loading && events.length === 0 && (
           <div className="backdrop-blur-lg border border-white/20 rounded-2xl p-12 text-center" style={{ backgroundColor: "rgba(27, 37, 58, 0.5)" }}>
             <div className="mb-6">
-              <svg className="w-24 h-24 mx-auto text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+              <CalendarIcon className="w-24 h-24 mx-auto text-white/20" strokeWidth={1.5} />
             </div>
             <h2 className="text-2xl font-heading font-semibold text-white mb-3">No Events Yet</h2>
             <p className="text-white/60 font-body mb-6">You haven't created any events. Start by creating your first event!</p>
@@ -415,9 +424,7 @@ function DashboardPage() {
                     className="p-2 rounded-lg hover:bg-white/10 transition-colors"
                     title="Create new event"
                   >
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
+                    <PlusIcon className="w-5 h-5 text-white" />
                   </button>
                 </div>
 
@@ -447,9 +454,7 @@ function DashboardPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-white/60 font-body">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
+                          <CalendarIcon className="w-3 h-3" />
                           {formatDate(event.startDate)}
                         </div>
                       </button>
@@ -606,9 +611,7 @@ function DashboardPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="p-4 rounded-lg bg-white/5 border border-white/10">
                           <div className="flex items-center gap-2 text-white/60 mb-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
+                            <CalendarIcon className="w-4 h-4" />
                             <span className="text-sm font-body">Start Date</span>
                           </div>
                           <p className="text-white font-body font-semibold">{formatDate(selectedEvent.startDate)}</p>
@@ -617,9 +620,7 @@ function DashboardPage() {
 
                         <div className="p-4 rounded-lg bg-white/5 border border-white/10">
                           <div className="flex items-center gap-2 text-white/60 mb-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
+                            <CalendarIcon className="w-4 h-4" />
                             <span className="text-sm font-body">End Date</span>
                           </div>
                           <p className="text-white font-body font-semibold">{formatDate(selectedEvent.endDate)}</p>
@@ -628,9 +629,7 @@ function DashboardPage() {
 
                         <div className="p-4 rounded-lg bg-white/5 border border-white/10">
                           <div className="flex items-center gap-2 text-white/60 mb-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
+                            <UsersIcon className="w-4 h-4" />
                             <span className="text-sm font-body">Participants</span>
                           </div>
                           <p className="text-white font-body font-semibold">
@@ -640,9 +639,7 @@ function DashboardPage() {
 
                         <div className="p-4 rounded-lg bg-white/5 border border-white/10">
                           <div className="flex items-center gap-2 text-white/60 mb-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                            </svg>
+                            <KeyIcon className="w-4 h-4" />
                             <span className="text-sm font-body">Join Code</span>
                           </div>
                           <p className="text-white font-mono font-semibold text-lg">{selectedEvent.joinCode}</p>
@@ -662,9 +659,7 @@ function DashboardPage() {
                             >
                               <div className="flex items-center gap-3 mb-2">
                                 <div className="w-10 h-10 rounded-lg bg-[#4DC4FF]/20 flex items-center justify-center group-hover:bg-[#4DC4FF]/30 transition-colors">
-                                  <svg className="w-6 h-6 text-[#4DC4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                  </svg>
+                                  <ClipboardIcon className="w-6 h-6 text-[#4DC4FF]" />
                                 </div>
                                 <h4 className="font-heading font-semibold text-white">Name Bingo</h4>
                               </div>
@@ -674,9 +669,7 @@ function DashboardPage() {
                             <button className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group opacity-50 cursor-not-allowed">
                               <div className="flex items-center gap-3 mb-2">
                                 <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                                  <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                  </svg>
+                                  <SearchIcon className="w-6 h-6 text-white/60" />
                                 </div>
                                 <h4 className="font-heading font-semibold text-white/60">Scavenger Hunt</h4>
                               </div>
@@ -686,9 +679,7 @@ function DashboardPage() {
                             <button className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group opacity-50 cursor-not-allowed">
                               <div className="flex items-center gap-3 mb-2">
                                 <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                                  <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
+                                  <ClockIcon className="w-6 h-6 text-white/60" />
                                 </div>
                                 <h4 className="font-heading font-semibold text-white/60">Speed Networking</h4>
                               </div>
@@ -703,9 +694,7 @@ function DashboardPage() {
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-lg bg-[#4DC4FF]/20 flex items-center justify-center">
-                                  <svg className="w-6 h-6 text-[#4DC4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                  </svg>
+                                  <ClipboardIcon className="w-6 h-6 text-[#4DC4FF]" />
                                 </div>
                                 <h4 className="text-xl font-heading font-semibold text-white">Edit Name Bingo</h4>
                               </div>
@@ -713,9 +702,7 @@ function DashboardPage() {
                                 onClick={handleCancelBingo}
                                 className="text-white/60 hover:text-white transition-colors"
                               >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <XIcon className="w-6 h-6" />
                               </button>
                             </div>
 
@@ -762,9 +749,7 @@ function DashboardPage() {
 
                             <div className="bg-[#4DC4FF]/10 border border-[#4DC4FF]/30 rounded-lg p-4">
                               <div className="flex items-start gap-3">
-                                <svg className="w-5 h-5 text-[#4DC4FF] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <InformationCircleIcon className="w-5 h-5 text-[#4DC4FF] flex-shrink-0 mt-0.5" />
                                 <div className="text-sm text-white/80 font-body">
                                   <p className="font-semibold mb-1">Tips for creating good bingo questions:</p>
                                   <ul className="space-y-1 text-white/70">
