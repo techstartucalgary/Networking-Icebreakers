@@ -4,7 +4,7 @@ export const barStyles = {
 	//bottom tab bar
 	tabBarStyle: {
 		backgroundColor: colors.darkNavy,
-		height: 90,
+		height: 80,
 		borderTopWidth: 0,
 		overflow: "hidden",
 		shadowColor: "#000",

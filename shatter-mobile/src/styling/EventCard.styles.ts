@@ -34,12 +34,12 @@ export const EventCardStyling = StyleSheet.create({
 	title: {
 		fontSize: 24,
 		fontWeight: "bold",
-		color: colors.darkBlue,
+		color: colors.darkNavy,
 		fontFamily: fonts.title,
 	},
 	date: {
 		fontSize: 14,
-		color: colors.darkNavy,
+		color: colors.black,
 		fontFamily: fonts.body,
 	},
 	expandedContent: {

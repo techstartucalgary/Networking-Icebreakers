@@ -18,13 +18,24 @@ export const EventPageStyling = StyleSheet.create({
 		flexDirection: "column",
 		alignItems: "center",
 	},
+	header: {
+		height: vh(6),
+		justifyContent: "center",
+	},
+	pageTitle: {
+		fontSize: vw(8),
+		fontWeight: "900",
+		letterSpacing: 3,
+		color: "#A8C8E8",
+	},
 	container: {
-		flex: 1,
+		position: "absolute",
+		top: vh(14),
+		width: "100%",
+		bottom: 0,
 		backgroundColor: colors.lightGrey,
-		width: "95%",
 		borderRadius: 8,
 		padding: 5,
-		marginTop: vh(3),
 	},
 	loadingContainer: {
 		justifyContent: "center",

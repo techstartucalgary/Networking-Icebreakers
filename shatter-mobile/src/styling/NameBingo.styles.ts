@@ -61,7 +61,7 @@ export const NameBingoStyling = StyleSheet.create({
 	category: {
 		fontFamily: fonts.body,
 		fontWeight: "bold",
-		fontSize: 8,
+		fontSize: 10,
 		textAlign: "center",
 	},
 	assignedName: {

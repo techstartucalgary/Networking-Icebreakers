@@ -71,6 +71,9 @@ export default function EventsPage() {
 			resizeMode="cover"
 		>
 			<SafeAreaView style={styles.safe}>
+				<View style={styles.header}>
+					<Text style={styles.pageTitle}>Upcoming Events</Text>
+				</View>
 				<View style={styles.container}>
 					{loading ? (
 						<View style={styles.loadingContainer}>
