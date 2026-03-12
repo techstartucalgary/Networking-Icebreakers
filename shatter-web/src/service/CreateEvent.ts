@@ -25,7 +25,8 @@ export async function CreateEvent(eventData: {
             startDate,
             endDate,
             maxParticipant: eventData.maxParticipants,
-            currentState: 'upcoming',
+            currentState: 'Upcoming',
+            gameType: 'Name Bingo',
         };
 
         const apiUrl = `${import.meta.env.VITE_API_URL}/events/createEvent`;
