@@ -3,6 +3,17 @@ import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { Bingo } from "../models/bingo_model";
 import { Event } from "../models/event_model";
+import { Prompt } from "../ai/prompt_builder";
+
+import { GoogleGenAI } from "@google/genai";
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import "dotenv/config";
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { Console } from "node:console";
 
 /**
  * POST /api/bingo
@@ -72,6 +83,9 @@ export async function createBingo(req: Request, res: Response) {
   }
 }
 
+/**
+ * @param req.body.eventId - Bingo for a given eventId (string) (required)
+ */
 export async function getBingo(req: Request, res: Response) {
   try {
     const { eventId } = req.params;
@@ -176,5 +190,223 @@ export async function updateBingo(req: Request, res: Response) {
     return res.status(200).json({ success: true, bingo });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+
+
+function makeEmptyGrid(rows: number, cols: number): Record<string, string[]> {
+
+  console.log(`Creating fallback grid ${rows}x${cols}`);
+
+  const grid: Record<string, string[]> = {};
+
+  for (let r = 1; r <= rows; r++) {
+    grid[`row${r}`] = Array(cols).fill("");
+  }
+
+  return grid;
+}
+
+function buildSchema(rows: number, cols: number): Object {
+
+  console.log("Building dynamic Zod schema...");
+
+  const shape: Record<string, z.ZodTypeAny> = {};
+
+  for (let r = 1; r <= rows; r++) {
+
+    shape[`row${r}`] = z
+      .array(
+        z
+          .string()
+          .describe("A humorous bingo square phrase related to tech culture")
+      )
+      .length(cols)
+      .describe(`Row ${r} of the bingo board`);
+  }
+
+  return z.object(shape);
+}
+
+function buildShapeExample(rows: number, cols: number): string {
+
+  console.log("Building JSON example for prompt");
+
+  const obj: Record<string, string[]> = {};
+
+  for (let r = 1; r <= rows; r++) {
+    obj[`row${r}`] = Array.from(
+      { length: cols },
+      (_, c) => `Row ${r} Col ${c + 1}`
+    );
+  }
+
+  return JSON.stringify(obj, null, 2);
+}
+
+/**
+ * Calls Gemini to generate a bingo grid
+ */
+async function generateBingoGrid(n_rows: number, n_cols: number, topic: string): Promise<Record<string, string[]>> {
+
+  const schema = buildSchema(n_rows, n_cols);
+    const schemaJson = zodToJsonSchema(schema); 
+    const example = buildShapeExample(n_rows, n_cols);
+
+    const basePrompt = `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
+      ${example}
+      Rules:
+      - Keys must be row1, row2, row3, etc.
+      - Each row must contain ${n_cols} strings.
+      - Each string is a humorous bingo phrase about software development culture.
+      Return ONLY valid JSON.
+    `.trim();
+    const promptPath = "../ai/prompts/bingo.txt";
+
+    if (!fs.existsSync(promptPath)) {
+        throw new Error(`Prompt file missing: ${promptPath}`);
+    }
+    const aiInstruction = fs.readFileSync(promptPath, "utf-8");
+
+    const aiPrompt =  new Prompt([basePrompt, aiInstruction])
+
+    aiPrompt.generatePrompt();
+
+    const prompt = aiPrompt.getPrompt();
+    console.log("----------- Final Prompt -----------");
+    console.log(prompt);
+    console.log("------------------------------------");
+
+    try {
+
+      const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseJsonSchema: schemaJson,
+        temperature: 0.7,
+      },
+    });
+
+    console.log("RAW RESPONSE:");
+    console.log(response.text);
+
+    const parsed = JSON.parse(response.text);
+    const validated: Record<string, string[]> = schema.parse(parsed);
+    return validated;
+
+    } catch (error) {
+      console.error("Generation failed:", error);  
+      return makeEmptyGrid(n_rows, n_cols)    
+    }
+}
+
+const apiKey = process.env.GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey });
+
+function process_ai_result(ai_result: Record<string, string[]>) {
+  let grid: string[][] = [];
+
+  const keys: string[] = Object.keys(ai_result);
+  for(let i = 0; i < keys.length; i++) {
+    let val: string[] = ai_result[keys[i]];
+    grid.push(val)
+  }
+
+  return grid;
+}
+
+/**
+ * POST /api/bingo/generate
+ *
+ * Generate an AI bingo grid for an event.
+ *
+ * @param req.body._eventId - Event ObjectId (required)
+ * @param req.body.description - Description string (required but not used)
+ * @param req.body.topic - Topic for bingo content (required)
+ * @param req.body.n_rows - Number of grid rows (1-5)
+ * @param req.body.n_cols - Number of grid columns (1-5)
+ *
+ * @returns 201 with created bingo
+ * @returns 400 if validation fails
+ * @returns 404 if event does not exist
+ */
+export async function generateBingo(req: Request, res: Response) {
+  try {
+    const { _eventId, description, topic, n_rows, n_cols } = req.body;
+
+    if (!_eventId) {
+      return res.status(400).json({
+        success: false,
+        msg: "_eventId is required",
+      });
+    }
+
+    if (!Types.ObjectId.isValid(_eventId)) {
+      return res.status(400).json({
+        success: false,
+        msg: "_eventId must be a valid ObjectId",
+      });
+    }
+
+    if (!description) {
+      return res.status(400).json({
+        success: false,
+        msg: "description is required",
+      });
+    }
+
+    if (!topic) {
+      return res.status(400).json({
+        success: false,
+        msg: "topic is required",
+      });
+    }
+
+    if (
+      typeof n_rows !== "number" ||
+      typeof n_cols !== "number" ||
+      n_rows <= 0 ||
+      n_cols <= 0 ||
+      n_rows > 5 ||
+      n_cols > 5
+    ) {
+      return res.status(400).json({
+        success: false,
+        msg: "n_rows and n_cols must be numbers where 0 < value <= 5",
+      });
+    }
+
+    const eventExists = await Event.findById(_eventId).select("_id");
+    if (!eventExists) {
+      return res.status(404).json({
+        success: false,
+        msg: "Event not found",
+      });
+    }
+
+    const aiResult = await generateBingoGrid( n_rows, n_cols, topic);
+
+    let processed_ai_result: string[][] = process_ai_result(aiResult);
+    
+
+    const bingo = await Bingo.create({
+      _eventId,
+      description,
+      grid: processed_ai_result,
+    });
+
+    return res.status(201).json({
+      success: true,
+      bingoId: bingo._id,
+      bingo,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 }

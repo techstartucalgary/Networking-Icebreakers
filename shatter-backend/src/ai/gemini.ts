@@ -90,7 +90,7 @@ function buildShapeExample(rows: number, cols: number) {
 
 console.log("Initializing Gemini client...");
 
-const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
   throw new Error("Missing API key");
@@ -202,7 +202,7 @@ async function main() {
 
   console.log("Generating Bingo Grid...");
 
-  const result = await generateNameBingo(4, 4);
+  const result = await generateNameBingo(3, 2);
 
   console.log("Result:");
 
