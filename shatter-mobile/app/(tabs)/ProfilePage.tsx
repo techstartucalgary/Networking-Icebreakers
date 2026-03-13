@@ -46,10 +46,15 @@ export default function Profile() {
 				<SafeAreaView style={styles.safe}>
 					<View style={styles.header}>
 						<Text style={styles.pageTitle}>Your Profile</Text>
-						<Text style={styles.subtitle}>Welcome back, {user.name || "there"}!</Text>
+						<Text style={styles.subtitle}>
+							Welcome back, {user.name || "Networker"}!
+						</Text>
 					</View>
 					<View style={styles.container}>
-						<ScrollView contentContainerStyle={{ alignItems: "center" }} showsVerticalScrollIndicator={false}>
+						<ScrollView
+							contentContainerStyle={{ alignItems: "center" }}
+							showsVerticalScrollIndicator={false}
+						>
 							<Image
 								source={{ uri: user.profilePhoto }}
 								style={styles.avatar}
@@ -84,54 +89,76 @@ export default function Profile() {
 		);
 	}
 
+	//guest user
 	if (user.isGuest) {
 		return (
-			<View style={styles.container}>
-				<Image source={{ uri: user.profilePhoto }} style={styles.avatar} />
-				<Text style={styles.title}>Welcome, {user.name || "Guest"}!</Text>
-				<Text style={styles.subtitle}>
-					You are logged in as a guest. Some features may be limited.
-				</Text>
-				{!user._id && (
-					<Text style={styles.subtitle}>
-						To upgrade your account, join an event and then come back here to
-						set it up!
-					</Text>
-				)}
-
-				{socialLinks.length === 0 && (
-					<Text style={styles.emptyText}>No social links added yet.</Text>
-				)}
-
-				{socialLinks.map((link, index) => (
-					<View key={index} style={styles.linkContainer}>
-						<>
-							<Text style={styles.linkLabel}>{link.label}</Text>
-							<Text style={styles.linkUrl}>{link.url}</Text>
-						</>
-					</View>
-				))}
-
-				{/* Guest user who has joined event / has userId */}
-				{user._id && (
-					<View>
-						<TouchableOpacity
-							style={styles.editButton}
-							onPress={() => router.push("/UserPages/UpdateProfile")}
-						>
-							<Text style={styles.buttonText}>Update Profile</Text>
-						</TouchableOpacity>
-
+			<ImageBackground
+				source={require("../../src/images/getStartedImage.png")}
+				style={styles.background}
+				resizeMode="cover"
+			>
+				<SafeAreaView style={styles.safe}>
+					<View style={styles.header}>
+						<Text style={styles.pageTitle}>Your Profile</Text>
 						<Text style={styles.subtitle}>
-							Go here to upgrade your account to a user!
+							Welcome, {user.name || "Networker"}!
 						</Text>
 					</View>
-				)}
+					<View style={styles.container}>
+						<ScrollView
+							contentContainerStyle={{ alignItems: "center" }}
+							showsVerticalScrollIndicator={false}
+						>
+							<Image
+								source={{ uri: user.profilePhoto }}
+								style={styles.avatar}
+							/>
+							<Text style={styles.notice}>
+								You are logged in as a guest. Some features may be limited.
+							</Text>
+							{!user._id && (
+								<Text style={styles.notice}>
+									To upgrade your account, join an event and then come back here
+									to set it up!
+								</Text>
+							)}
 
-				<TouchableOpacity style={styles.logoutButton} onPress={logout}>
-					<Text style={styles.buttonText}>Log Out</Text>
-				</TouchableOpacity>
-			</View>
+							{socialLinks.length === 0 && (
+								<Text style={styles.emptyText}>No social links added yet.</Text>
+							)}
+
+							{socialLinks.map((link, index) => (
+								<View key={index} style={styles.linkContainer}>
+									<>
+										<Text style={styles.linkLabel}>{link.label}</Text>
+										<Text style={styles.linkUrl}>{link.url}</Text>
+									</>
+								</View>
+							))}
+
+							{/* Guest user who has joined event / has userId */}
+							{user._id && (
+								<View>
+									<TouchableOpacity
+										style={styles.editButton}
+										onPress={() => router.push("/UserPages/UpdateProfile")}
+									>
+										<Text style={styles.buttonText}>Update Profile</Text>
+									</TouchableOpacity>
+
+									<Text style={styles.subtitle}>
+										Go here to upgrade your account to a user!
+									</Text>
+								</View>
+							)}
+
+							<TouchableOpacity style={styles.logoutButton} onPress={logout}>
+								<Text style={styles.buttonText}>Log Out</Text>
+							</TouchableOpacity>
+						</ScrollView>
+					</View>
+				</SafeAreaView>
+			</ImageBackground>
 		);
 	}
 }

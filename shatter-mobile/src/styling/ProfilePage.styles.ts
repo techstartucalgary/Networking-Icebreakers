@@ -1,5 +1,5 @@
 import { Dimensions, StyleSheet } from "react-native";
-import { colors, fonts } from "./constants";
+import { colors } from "./constants";
 
 const { width, height } = Dimensions.get("window");
 
@@ -34,6 +34,15 @@ export const ProfilePageStyling = StyleSheet.create({
 		marginTop: 6,
 		fontSize: vw(4),
 		color: "#ffffff",
+		opacity: 0.9,
+		letterSpacing: 1,
+		textAlign: "center",
+		paddingHorizontal: 10,
+	},
+	notice: {
+		marginTop: 6,
+		fontSize: vw(4),
+		color: colors.lightGrey2,
 		opacity: 0.9,
 		letterSpacing: 1,
 		textAlign: "center",
