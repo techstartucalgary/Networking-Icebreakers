@@ -1,9 +1,18 @@
 import { useJoinEvent } from "@/src/components/new-events/JoinEvent";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+	ActivityIndicator,
+	Button,
+	ImageBackground,
+	Text,
+	TextInput,
+	View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/components/context/AuthContext";
 import QRScannerBox from "../../src/components/new-events/QRScannerBox";
+import { JoinEventStyling as styles } from "../../src/styling/JoinEventPage.styles";
 
 export default function JoinEventPage() {
 	const { user } = useAuth();
@@ -31,74 +40,68 @@ export default function JoinEventPage() {
 	};
 
 	return (
-		<View style={styles.container}>
-			{user ? (
-				<Text style={styles.title}>Welcome {user.name}! Join an Event</Text>
-			) : (
-				<Text style={styles.title}>Welcome! Join an Event</Text>
-			)}
+		<ImageBackground
+			source={require("../../src/images/getStartedImage.png")}
+			style={styles.background}
+			resizeMode="cover"
+		>
+			<SafeAreaView style={styles.safe}>
+				<View style={styles.header}>
+					<Text style={styles.pageTitle}>Start Shattering</Text>
+					<Text style={styles.subtitle}>
+						Hey {user?.name || "there"}, Ready to Start Shattering Some
+						Boundaries?
+					</Text>
+				</View>
 
-			{!showScanner && (
-				<Button title="Scan QR Code" onPress={() => setShowScanner(true)} />
-			)}
+				<View style={styles.container}>
+					{loading && (
+						<View style={styles.loadingContainer}>
+							<ActivityIndicator size="large" color="#1e3a8a" />
+							<Text style={styles.loading}>Joining event...</Text>
+						</View>
+					)}
 
-			{showScanner && <QRScannerBox onClose={() => setShowScanner(false)} />}
+					{!loading && (
+						<>
+							{!showScanner && (
+								<Button
+									title="Scan QR Code"
+									onPress={() => setShowScanner(true)}
+								/>
+							)}
 
-			{/* Manual code entry */}
-			<View style={styles.codeContainer}>
-				<TextInput
-					style={styles.input}
-					placeholder="Enter event code"
-					value={eventCode}
-					onChangeText={(text) => {
-						setEventCode(text);
-						setErrorMessage("");
-					}}
-					autoCapitalize="characters"
-					autoCorrect={false}
-				/>
+							{showScanner && (
+								<QRScannerBox onClose={() => setShowScanner(false)} />
+							)}
 
-				<Button
-					title="Join Event"
-					onPress={() => handleJoinEvent()}
-					disabled={!eventCode.trim()}
-				/>
+							<View style={styles.codeContainer}>
+								<TextInput
+									style={styles.input}
+									placeholder="Enter event code"
+									value={eventCode}
+									onChangeText={(text) => {
+										setEventCode(text);
+										setErrorMessage("");
+									}}
+									autoCapitalize="characters"
+									autoCorrect={false}
+								/>
 
-				{errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
-			</View>
-		</View>
+								<Button
+									title="Join Event"
+									onPress={handleJoinEvent}
+									disabled={!eventCode.trim()}
+								/>
+
+								{errorMessage && (
+									<Text style={styles.errorText}>{errorMessage}</Text>
+								)}
+							</View>
+						</>
+					)}
+				</View>
+			</SafeAreaView>
+		</ImageBackground>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		padding: 20,
-		justifyContent: "flex-start",
-		alignItems: "center",
-	},
-	title: {
-		fontSize: 24,
-		fontWeight: "600",
-		marginBottom: 20,
-	},
-	codeContainer: {
-		width: "100%",
-		marginTop: 20,
-	},
-	input: {
-		borderWidth: 1,
-		borderColor: "#ccc",
-		borderRadius: 8,
-		padding: 12,
-		marginBottom: 10,
-		fontSize: 16,
-	},
-	errorText: {
-		color: "#d32f2f",
-		textAlign: "center",
-		marginTop: 8,
-		fontSize: 14,
-		justifyContent: "center",
-	},
-});

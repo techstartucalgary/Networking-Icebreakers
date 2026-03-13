@@ -28,7 +28,6 @@ const ConnectionsModal = ({ event, onRequestClose }: ConnectionsModalProps) => {
 	const { currentParticipantId } = useGame();
 	const [selectedUser, setSelectedUser] = useState<User | null>(null);
 	const [connections, setConnections] = useState<User[]>([]);
-	const [userModalVisible, setUserModalVisible] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
 

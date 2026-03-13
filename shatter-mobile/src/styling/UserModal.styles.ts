@@ -8,6 +8,8 @@ export const UserModalStyling = StyleSheet.create({
 		alignItems: "center",
 		paddingHorizontal: 20,
 		paddingVertical: 20,
+		backgroundColor: "rgba(0, 0, 0, 0.85)",
+		borderRadius: 8,
 	},
 	container: {
 		backgroundColor: colors.white,

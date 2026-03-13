@@ -9,7 +9,7 @@ type UserModalProps = {
 
 const UserModal = ({ user, onRequestClose }: UserModalProps) => {
 	return (
-		<Modal transparent animationType="slide">
+		<Modal transparent animationType="fade">
 			<View style={styles.overlay}>
 				<View style={styles.container}>
 					<View style={styles.headerRow}>

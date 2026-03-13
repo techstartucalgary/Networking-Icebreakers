@@ -1,6 +1,14 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import {
+	Image,
+	ImageBackground,
+	ScrollView,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/components/context/AuthContext";
 import { ProfilePageStyling as styles } from "../../src/styling/ProfilePage.styles";
 
@@ -30,49 +38,56 @@ export default function Profile() {
 	//logged in
 	if (user && !user.isGuest) {
 		return (
-			<View style={styles.container}>
-				<Image
-					source={{ uri: user.profilePhoto }}
-					style={styles.avatar}
-					onError={(e) => console.log("Image error:", e.nativeEvent.error)}
-				/>
-				<Text style={styles.title}>Hey, {user.name}!</Text>
-				<Text style={styles.subtitle}>{user.email}</Text>
-
-				{socialLinks.length === 0 && (
-					<Text style={styles.emptyText}>No social links added yet.</Text>
-				)}
-
-				{socialLinks.map((link, index) => (
-					<View key={index} style={styles.linkContainer}>
-						<>
-							<Text style={styles.linkLabel}>{link.label}</Text>
-							<Text style={styles.linkUrl}>{link.url}</Text>
-						</>
+			<ImageBackground
+				source={require("../../src/images/getStartedImage.png")}
+				style={styles.background}
+				resizeMode="cover"
+			>
+				<SafeAreaView style={styles.safe}>
+					<View style={styles.header}>
+						<Text style={styles.pageTitle}>Your Profile</Text>
+						<Text style={styles.subtitle}>Welcome back, {user.name || "there"}!</Text>
 					</View>
-				))}
+					<View style={styles.container}>
+						<ScrollView contentContainerStyle={{ alignItems: "center" }} showsVerticalScrollIndicator={false}>
+							<Image
+								source={{ uri: user.profilePhoto }}
+								style={styles.avatar}
+							/>
+							<Text style={styles.subtitleText}>{user.email}</Text>
 
-				<TouchableOpacity
-					style={styles.editButton}
-					onPress={() => router.push("/UserPages/UpdateProfile")}
-				>
-					<Text style={styles.buttonText}>Update Profile</Text>
-				</TouchableOpacity>
+							{socialLinks.length === 0 && (
+								<Text style={styles.emptyText}>No social links added yet.</Text>
+							)}
 
-				<TouchableOpacity style={styles.logoutButton} onPress={logout}>
-					<Text style={styles.buttonText}>Log Out</Text>
-				</TouchableOpacity>
-			</View>
+							{socialLinks.map((link, index) => (
+								<View key={index} style={styles.linkContainer}>
+									<Text style={styles.linkLabel}>{link.label}</Text>
+									<Text style={styles.linkUrl}>{link.url}</Text>
+								</View>
+							))}
+
+							<TouchableOpacity
+								style={styles.editButton}
+								onPress={() => router.push("/UserPages/UpdateProfile")}
+							>
+								<Text style={styles.buttonText}>Update Profile</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity style={styles.logoutButton} onPress={logout}>
+								<Text style={styles.buttonText}>Log Out</Text>
+							</TouchableOpacity>
+						</ScrollView>
+					</View>
+				</SafeAreaView>
+			</ImageBackground>
 		);
 	}
 
 	if (user.isGuest) {
 		return (
 			<View style={styles.container}>
-				<Image
-					source={{ uri: user.profilePhoto }}
-					style={styles.avatar}
-				/>
+				<Image source={{ uri: user.profilePhoto }} style={styles.avatar} />
 				<Text style={styles.title}>Welcome, {user.name || "Guest"}!</Text>
 				<Text style={styles.subtitle}>
 					You are logged in as a guest. Some features may be limited.
