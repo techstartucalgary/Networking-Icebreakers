@@ -380,7 +380,7 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 									setActiveCardId(card.cardId);
 								}}
 							>
-								{/* TODO: Want to display number instead of category text*/}
+								{/* TODO: Want to display shortened category instead of full category text*/}
 								<Text style={styles.category}>{card.category}</Text>
 								{card.assignedParticipantId && (
 									<Text style={styles.assignedName}>{card.assignedName}</Text>
@@ -392,10 +392,7 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 				</View>
 
 				{/* Roller */}
-				<ScrollView
-					style={styles.rollerVertical}
-					showsVerticalScrollIndicator={false}
-				>
+				<ScrollView style={styles.rollerVertical}>
 					{flatCategories.map((item) => (
 						<TouchableOpacity
 							key={item.cardId}

@@ -67,7 +67,7 @@ export const EventCardStyling = StyleSheet.create({
 		position: "absolute",
 		top: 10,
 		right: 10,
-		backgroundColor: colors.red,
+		backgroundColor: "#A8C8E8",
 		paddingHorizontal: 8,
 		paddingVertical: 4,
 		borderRadius: 6,

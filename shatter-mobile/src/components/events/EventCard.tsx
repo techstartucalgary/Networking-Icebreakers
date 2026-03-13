@@ -58,9 +58,9 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 			{/* Date + Time */}
 			<Text style={styles.date}>
 				{new Date(event.startDate).toLocaleDateString(undefined, {
-					weekday: "short", // Mon, Tue
+					weekday: "short",
 					year: "numeric",
-					month: "short", // Jan, Feb
+					month: "short",
 					day: "numeric",
 				})}
 				{" • "}

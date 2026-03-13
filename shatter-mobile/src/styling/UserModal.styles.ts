@@ -7,6 +7,7 @@ export const UserModalStyling = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		paddingHorizontal: 20,
+		paddingVertical: 20,
 	},
 	container: {
 		backgroundColor: colors.white,

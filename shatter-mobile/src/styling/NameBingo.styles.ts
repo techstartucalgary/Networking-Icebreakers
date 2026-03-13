@@ -9,7 +9,7 @@ const vh = (percent: number) => (height * percent) / 100;
 export const NameBingoStyling = StyleSheet.create({
 	container: {
 		flex: 1,
-		padding: 12,
+		padding: 10,
 		backgroundColor: colors.lightGrey,
 	},
 	center: {
@@ -29,7 +29,7 @@ export const NameBingoStyling = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		padding: 6,
-		shadowColor: "#000",
+		shadowColor: colors.black,
 		shadowOpacity: 0.1,
 		shadowOffset: { width: 0, height: 2 },
 		shadowRadius: 4,
@@ -131,28 +131,36 @@ export const NameBingoStyling = StyleSheet.create({
 		textAlign: "center",
 	},
 	rollerVertical: {
-		maxHeight: 100,
+		maxHeight: 125,
 		marginTop: 2,
 		width: "100%",
+		backgroundColor: "rgba(252, 250, 250, 0.97))",
+		padding: 5,
+		shadowColor: colors.black,
+		shadowOpacity: 0.1,
+		shadowOffset: { width: 0, height: 2 },
+		shadowRadius: 4,
+		elevation: 2,
+		borderRadius: 8,
 	},
 	rollerItemVertical: {
 		paddingVertical: 10,
 		paddingHorizontal: 6,
-		backgroundColor: "#eee",
+		backgroundColor: colors.white,
 		borderRadius: 8,
 		marginBottom: 6,
 		width: "100%",
 		alignItems: "center",
 	},
 	rollerItemActive: {
-		backgroundColor: colors.lightBlue,
+		backgroundColor: "#A8C8E8",
 	},
 	rollerText: {
 		fontSize: 14,
 	},
 	rollerHighlighted: {
 		borderWidth: 2,
-		borderColor: colors.lightBlue,
+		borderColor: "#A8C8E8",
 	},
 	err: {
 		fontSize: 12,
