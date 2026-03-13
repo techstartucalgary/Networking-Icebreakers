@@ -208,19 +208,13 @@ function makeEmptyGrid(rows: number, cols: number): Record<string, string[]> {
   return grid;
 }
 
-function buildSchema(rows: number, cols: number): Object {
-
-  console.log("Building dynamic Zod schema...");
-
-  const shape: Record<string, z.ZodTypeAny> = {};
+function buildSchema(rows: number, cols: number): z.ZodObject<Record<string, z.ZodArray<z.ZodString>>> {
+  const shape: Record<string, z.ZodArray<z.ZodString>> = {};
 
   for (let r = 1; r <= rows; r++) {
-
     shape[`row${r}`] = z
       .array(
-        z
-          .string()
-          .describe("A humorous bingo square phrase related to tech culture")
+        z.string().describe("A humorous bingo square phrase related to tech culture")
       )
       .length(cols)
       .describe(`Row ${r} of the bingo board`);
@@ -252,7 +246,7 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
   
 
   const schema = buildSchema(n_rows, n_cols);
-  const schemaJson = zodToJsonSchema(schema); 
+  const schemaJson = z.toJSONSchema(schema); 
   const example = buildShapeExample(n_rows, n_cols);
 
   const basePrompt_structure = `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
@@ -291,7 +285,7 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
   console.log("RAW RESPONSE:");
   console.log(response.text);
 
-  const parsed = JSON.parse(response.text);
+  const parsed = JSON.parse(response.text!);
   const validated: Record<string, string[]> = schema.parse(parsed);
   return validated;
 
@@ -302,6 +296,10 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
 }
 
 const apiKey = process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+  throw new Error("GEMINI_API_KEY is not set");
+}
 const ai = new GoogleGenAI({ apiKey });
 //takes geminis dumbass output and turns it into a more usable format
 function process_ai_result(ai_result: Record<string, string[]>) {
