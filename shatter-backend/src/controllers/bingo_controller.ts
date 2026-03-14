@@ -88,7 +88,8 @@ export async function createBingo(req: Request, res: Response) {
  */
 export async function getBingo(req: Request, res: Response) {
   try {
-    const { eventId } = req.params;
+    const rawEventId = req.params.eventId;
+    const eventId : string  = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
 
     if (!eventId) {
       return res.status(400).json({

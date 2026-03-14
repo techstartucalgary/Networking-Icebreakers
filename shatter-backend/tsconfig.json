@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
-    "target": "ES2021",
-    "module": "node16",
-    "moduleResolution": "node16",
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "strict": true,
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./",
-    "lib": ["ES2021"],
-    "typeRoots": ["./src/types", "./node_modules/@types"]
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "typeRoots": ["./src/types", "./node_modules/@types"],
+    "skipLibCheck": true
   },
   "include": ["src/**/*", "api/**/*"],
   "exclude": ["node_modules", "dist"]

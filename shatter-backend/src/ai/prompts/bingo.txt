@@ -26,11 +26,11 @@ These are too generic and do not describe an observable bingo moment.
 
 Instead prefer:
 
-✔ Observable behaviors  
-✔ Work-related habits  
-✔ Professional traits  
-✔ Real situations that happen during networking  
-✔ Work artifacts or tools someone references or shows  
+Observable behaviors  
+Work-related habits  
+Professional traits  
+Real situations that happen during networking  
+Work artifacts or tools someone references or shows  
 
 Good structural patterns
 
