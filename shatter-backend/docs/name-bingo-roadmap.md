@@ -159,8 +159,10 @@ These features are specified in `bingo_walkthrough.md` Section 3.1 as primary au
 **Approach**: Instead of a separate signup endpoint, guest users are created automatically when joining an event.
 
 **Endpoint**: `POST /api/events/:eventId/join/guest`
-- Takes only `{ name }` in request body
-- Creates a User record with `authProvider: 'guest'` (no email/password required)
+- Takes `{ name, email?, socialLinks? }` in request body
+- **Requires at least one contact method**: either `email` or at least one non-empty social link (`linkedin`, `github`, `other`)
+- Validates email format if provided; rejects duplicate emails
+- Creates a User record with `authProvider: 'guest'` and the provided contact info
 - Returns `{ success, participant, userId, token }` — guest gets a JWT immediately
 
 **Profile Completion**: `PUT /api/users/:userId` (protected, self-only)
@@ -1080,3 +1082,18 @@ GET    /api/bingo/:bingoId/state/:participantId - Get player's board state (prot
 POST   /api/bingo/:bingoId/fill-cell            - Fill a cell (protected)
 GET    /api/events/:eventId/bingo/leaderboard   - Get leaderboard (protected)
 ```
+
+----------------
+personal notes from last meeting
+
+0.3 - Task B - Linkedin Account linking for guest users
+0.3 - Task C - Connection acess control for gues users 
+after conversation with minh and keeryn, this would only be done on frontend
+
+--------
+leave event
+delete/cancel event
+get current event api
+
+---------
+speak with Jason about web implementation of event status on web

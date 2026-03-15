@@ -747,9 +747,16 @@ Join an event as a guest (no account required).
 
 **Request Body:**
 
-| Field  | Type   | Required |
-|--------|--------|----------|
-| `name` | string | Yes      |
+| Field  | Type   | Required | Description |
+|--------|--------|----------|-------------|
+| `name` | string | Yes | Display name |
+| `email` | string | No* | Email address |
+| `socialLinks` | object | No* | Social links |
+| `socialLinks.linkedin` | string | No | LinkedIn URL |
+| `socialLinks.github` | string | No | GitHub URL |
+| `socialLinks.other` | string | No | Other URL |
+
+\* At least one contact method is required: either `email` or at least one non-empty field in `socialLinks`.
 
 **Success Response (200):**
 
@@ -772,11 +779,14 @@ Join an event as a guest (no account required).
 | Status | Error |
 |--------|-------|
 | 400    | `"Missing fields: guest name and eventId are required"` |
+| 400    | `"At least one contact method is required (email or a social link)"` |
+| 400    | `"Invalid email format"` |
 | 400    | `"Event is full"` |
 | 404    | `"Event not found"` |
+| 409    | `"A user with this email already exists"` |
 
 **Special Behavior:**
-- Creates a guest User (`authProvider: 'guest'`, no email/password)
+- Creates a guest User (`authProvider: 'guest'`) with the provided contact info (email and/or social links)
 - If the display name is already taken in the event, a `#XXX` suffix is automatically appended (e.g., `John` becomes `John#472`). The response `participant.name` reflects the final display name, and the guest User's name is updated to match.
 - Returns a JWT so the guest can make authenticated requests
 - Guest can later upgrade to a full account via `PUT /api/users/:userId`
