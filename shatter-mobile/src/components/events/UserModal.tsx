@@ -17,9 +17,7 @@ const UserModal = ({ user, onRequestClose }: UserModalProps) => {
 							source={{
 								uri:
 									user.profilePhoto ??
-									`https://ui-avatars.com/api/?name=${encodeURIComponent(
-										user.name,
-									)}&background=random&format=png`,
+									`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user.name)}`,
 							}}
 							style={styles.userAvatar}
 						/>

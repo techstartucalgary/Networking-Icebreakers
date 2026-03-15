@@ -118,7 +118,7 @@ const ConnectionsModal = ({ event, onRequestClose }: ConnectionsModalProps) => {
 												source={{
 													uri:
 														item.profilePhoto ??
-														`https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=random&format=png`,
+														`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(item.name)}`,
 												}}
 												style={styles.avatar}
 											/>
