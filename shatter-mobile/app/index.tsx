@@ -9,12 +9,17 @@ export default function Index() {
 	//page mounted, set base page
 	useEffect(() => {
 		const checkAuth = async () => {
+			try {
 			const stored = await getStoredAuth();
 
 			if (stored?.userId) {
 				router.replace("/JoinEventPage"); //skip onboarding
 			} else {
 				router.replace("/GetStarted");
+			}
+			} catch (err) {
+			console.error("Failed to load auth:", err);
+			router.replace("/GetStarted"); 
 			}
 		};
 
