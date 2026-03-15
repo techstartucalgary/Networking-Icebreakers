@@ -272,13 +272,41 @@ export async function joinEventAsUser(req: Request, res: Response) {
  */
 export async function joinEventAsGuest(req: Request, res: Response) {
   try {
-    const { name } = req.body;
+    const { name, email, socialLinks } = req.body as {
+      name?: string;
+      email?: string;
+      socialLinks?: { linkedin?: string; github?: string; other?: string };
+    };
     const { eventId } = req.params;
 
     if (!name || !eventId) {
       return res.status(400).json({
         success: false,
         msg: "Missing fields: guest name and eventId are required",
+      });
+    }
+
+    // Require at least one contact method
+    const hasEmail = email && email.trim();
+    const hasSocialLink = socialLinks && (
+      socialLinks.linkedin?.trim() ||
+      socialLinks.github?.trim() ||
+      socialLinks.other?.trim()
+    );
+
+    if (!hasEmail && !hasSocialLink) {
+      return res.status(400).json({
+        success: false,
+        msg: "At least one contact method is required (email or a social link)",
+      });
+    }
+
+    // Validate email format if provided
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (hasEmail && !EMAIL_REGEX.test(email.toLowerCase().trim())) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid email format",
       });
     }
 
@@ -295,6 +323,8 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     const user = await User.create({
       name,
       authProvider: 'guest',
+      ...(hasEmail && { email: email.toLowerCase().trim() }),
+      ...(hasSocialLink && { socialLinks }),
     });
 
     const userId = user._id as Types.ObjectId;
