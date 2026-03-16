@@ -272,10 +272,12 @@ export async function joinEventAsUser(req: Request, res: Response) {
  */
 export async function joinEventAsGuest(req: Request, res: Response) {
   try {
-    const { name, email, socialLinks } = req.body as {
+    const { name, email, socialLinks, organization, title } = req.body as {
       name?: string;
       email?: string;
       socialLinks?: { linkedin?: string; github?: string; other?: string };
+      organization?: string;
+      title?: string;
     };
     const { eventId } = req.params;
 
@@ -286,18 +288,19 @@ export async function joinEventAsGuest(req: Request, res: Response) {
       });
     }
 
-    // Require at least one contact method
+    // Require at least one contact method or organization
     const hasEmail = email && email.trim();
     const hasSocialLink = socialLinks && (
       socialLinks.linkedin?.trim() ||
       socialLinks.github?.trim() ||
       socialLinks.other?.trim()
     );
+    const hasOrganization = organization && organization.trim();
 
-    if (!hasEmail && !hasSocialLink) {
+    if (!hasEmail && !hasSocialLink && !hasOrganization) {
       return res.status(400).json({
         success: false,
-        msg: "At least one contact method is required (email or a social link)",
+        msg: "At least one contact method (email or social link) or organization is required",
       });
     }
 
@@ -325,6 +328,8 @@ export async function joinEventAsGuest(req: Request, res: Response) {
       authProvider: 'guest',
       ...(hasEmail && { email: email.toLowerCase().trim() }),
       ...(hasSocialLink && { socialLinks }),
+      ...(hasOrganization && { organization: organization.trim() }),
+      ...(title && title.trim() && { title: title.trim() }),
     });
 
     const userId = user._id as Types.ObjectId;
