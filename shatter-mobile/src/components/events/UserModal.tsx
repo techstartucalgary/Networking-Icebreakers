@@ -1,5 +1,6 @@
 import { User } from "@/src/interfaces/User";
-import { Image, Modal, Pressable, Text, View } from "react-native";
+import { Linking, Modal, Pressable, Text, View } from "react-native";
+import { SvgUri } from "react-native-svg";
 import { UserModalStyling as styles } from "../../styling/UserModal.styles";
 
 type UserModalProps = {
@@ -13,13 +14,18 @@ const UserModal = ({ user, onRequestClose }: UserModalProps) => {
 			<View style={styles.overlay}>
 				<View style={styles.container}>
 					<View style={styles.headerRow}>
-						<Image
-							source={{
-								uri:
-									user.profilePhoto ??
-									`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user.name)}`,
+						<SvgUri
+							style={{
+								width: 40,
+								height: 40,
+								borderRadius: 20,
+								overflow: "hidden",
+								marginRight: 12,
 							}}
-							style={styles.userAvatar}
+							uri={
+								user.profilePhoto ??
+								`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user.name || "Unknown")}`
+							}
 						/>
 
 						<View style={styles.headerText}>
@@ -31,8 +37,22 @@ const UserModal = ({ user, onRequestClose }: UserModalProps) => {
 
 					{user.socialLinks?.length > 0 && (
 						<View>
-							<Text style={styles.linkLabel}>{user.socialLinks[0].label}</Text>
-							<Text style={styles.link}>{user.socialLinks[0].url}</Text>
+							{user.socialLinks.map((link, index) => (
+								<Pressable
+									key={index}
+									onPress={() => {
+										if (link.url) {
+											Linking.openURL(link.url).catch((err) =>
+												console.log("Failed to open URL:", err),
+											);
+										}
+									}}
+									style={{ marginBottom: 8 }}
+								>
+									<Text style={styles.linkLabel}>{link.label}</Text>
+									<Text style={styles.link}>{link.url}</Text>
+								</Pressable>
+							))}
 						</View>
 					)}
 

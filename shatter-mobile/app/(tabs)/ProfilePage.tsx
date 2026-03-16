@@ -9,6 +9,7 @@ import {
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { SvgUri } from "react-native-svg";
 import { useAuth } from "../../src/components/context/AuthContext";
 import { ProfilePageStyling as styles } from "../../src/styling/ProfilePage.styles";
 
@@ -109,8 +110,8 @@ export default function Profile() {
 							contentContainerStyle={{ alignItems: "center" }}
 							showsVerticalScrollIndicator={false}
 						>
-							<Image
-								source={{ uri: user.profilePhoto }}
+							<SvgUri
+								uri={user.profilePhoto ?? `https://api.dicebear.com/9.1.1/initials/png?seed=${encodeURIComponent(user.name || "Unknown")}&size=128`}
 								style={styles.avatar}
 							/>
 							<Text style={styles.notice}>

@@ -6,12 +6,12 @@ import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	FlatList,
-	Image,
 	Modal,
 	Pressable,
 	Text,
 	View,
 } from "react-native";
+import { SvgUri } from "react-native-svg";
 import { ConnectionsModalStyling as styles } from "../../styling/ConnectionsModal.styles";
 import { useAuth } from "../context/AuthContext";
 import { useGame } from "../context/GameContext";
@@ -52,28 +52,27 @@ const ConnectionsModal = ({ event, onRequestClose }: ConnectionsModalProps) => {
 			}
 
 			//fetch the connection  info
-			const participantConnections = await participantFetch(
-				participantId,
-				eventId,
-				accessToken,
-			);
+			const participantConnections =
+				(await participantFetch(participantId, eventId, accessToken)) || [];
 
-			if (participantConnections.length === 0) {
+			if (participantConnections && participantConnections.length === 0) {
 				setConnections([]);
 				setError("");
 				return;
 			}
 
-			const userPromises = participantConnections.map(async (conn) => {
-				if (!conn.user?._id) {
-					throw new Error(
-						`Missing userId for connection: ${conn.participantName}`,
-					);
-				}
+			const userPromises = participantConnections
+				.filter((conn) => conn?.user?._id)
+				.map(async (conn) => {
+					if (!conn.user?._id) {
+						throw new Error(
+							`Missing userId for connection: ${conn.participantName}`,
+						);
+					}
 
-				const res = await userFetch(conn.user?._id, accessToken);
-				return res.user;
-			});
+					const res = await userFetch(conn.user?._id, accessToken);
+					return res.user;
+				});
 
 			const detailedUsers = await Promise.all(userPromises);
 			setConnections(detailedUsers);
@@ -104,7 +103,7 @@ const ConnectionsModal = ({ event, onRequestClose }: ConnectionsModalProps) => {
 								</Text>
 							) : (
 								<FlatList
-									data={connections}
+									data={connections.filter(Boolean)}
 									keyExtractor={(item, index) => item._id ?? index.toString()}
 									showsVerticalScrollIndicator={false}
 									renderItem={({ item }) => (
@@ -114,13 +113,18 @@ const ConnectionsModal = ({ event, onRequestClose }: ConnectionsModalProps) => {
 												setSelectedUser(item);
 											}}
 										>
-											<Image
-												source={{
-													uri:
-														item.profilePhoto ??
-														`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(item.name)}`,
+											<SvgUri
+												style={{
+													width: 30,
+													height: 30,
+													borderRadius: 20,
+													overflow: "hidden",
+													marginRight: 12,
 												}}
-												style={styles.avatar}
+												uri={
+													item.profilePhoto ??
+													`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(item.name || "Unknown")}`
+												}
 											/>
 
 											<Text style={styles.item}>{item.name}</Text>
