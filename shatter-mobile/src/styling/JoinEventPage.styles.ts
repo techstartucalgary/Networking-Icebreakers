@@ -6,7 +6,7 @@ const { width, height } = Dimensions.get("window");
 const vw = (percent: number) => (width * percent) / 100;
 const vh = (percent: number) => (height * percent) / 100;
 
-export const EventPageStyling = StyleSheet.create({
+export const JoinEventStyling = StyleSheet.create({
 	background: {
 		flex: 1,
 		width: "100%",
@@ -19,14 +19,17 @@ export const EventPageStyling = StyleSheet.create({
 		alignItems: "center",
 	},
 	header: {
-		height: vh(7),
+		height: vh(10),
 		justifyContent: "center",
+		alignItems: "center",
+		marginTop: 5,
 	},
 	pageTitle: {
 		fontSize: vw(8),
 		fontWeight: "900",
 		letterSpacing: 3,
 		color: "#A8C8E8",
+		textAlign: "center",
 	},
 	subtitle: {
 		marginTop: 6,
@@ -35,16 +38,35 @@ export const EventPageStyling = StyleSheet.create({
 		opacity: 0.9,
 		letterSpacing: 1,
 		textAlign: "center",
+		paddingHorizontal: 10,
 	},
 	container: {
 		position: "absolute",
-		top: vh(15),
+		top: vh(20),
 		width: "100%",
 		bottom: 0,
 		backgroundColor: colors.lightGrey,
 		borderTopLeftRadius: 8,
 		borderTopRightRadius: 8,
-		padding: 5,
+		padding: 20,
+	},
+	codeContainer: {
+		width: "100%",
+		marginTop: 20,
+	},
+	input: {
+		borderWidth: 1,
+		borderColor: "#ccc",
+		borderRadius: 8,
+		padding: 12,
+		marginBottom: 10,
+		fontSize: 16,
+	},
+	errorText: {
+		color: "#d32f2f",
+		textAlign: "center",
+		marginTop: 8,
+		fontSize: 14,
 	},
 	loadingContainer: {
 		justifyContent: "center",
