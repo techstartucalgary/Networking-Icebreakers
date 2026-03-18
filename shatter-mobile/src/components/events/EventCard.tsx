@@ -1,6 +1,12 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Image, LayoutAnimation, Pressable, Text, View } from "react-native";
+import {
+	Image,
+	LayoutAnimation,
+	Pressable,
+	Text,
+	View
+} from "react-native";
 import EventIB, { EventState, GameType } from "../../interfaces/Event";
 import { EventCardStyling as styles } from "../../styling/EventCard.styles";
 import { useGame } from "../context/GameContext";
@@ -15,6 +21,7 @@ type EventCardProps = {
 const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	const router = useRouter();
 	const { initializeGame } = useGame();
+	const [imageLoaded, setImageLoaded] = useState(false);
 	const [modalVisible, setModalVisible] = useState(false);
 
 	const upcoming = event.currentState === EventState.UPCOMING;
@@ -27,17 +34,18 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 				LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 				onPress();
 			}}
-			style={styles.card}
+			style={[styles.card, { opacity: imageLoaded ? 1 : 0 }]}
 		>
-			{/* TODO: Swap to default image */}
+			{/* TODO: Swap to dynamic event image */}
 			<View style={styles.imageWrapper}>
 				<Image
 					source={
 						event.eventImg
 							? { uri: event.eventImg }
-							: require("../../images/getStartedImage.png")
+							: require("../../images/EventDrinksDark.png")
 					}
 					style={styles.image}
+					onLoad={() => setImageLoaded(true)}
 				/>
 
 				{/* Badges */}

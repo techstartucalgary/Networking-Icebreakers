@@ -111,7 +111,10 @@ export default function Profile() {
 							showsVerticalScrollIndicator={false}
 						>
 							<SvgUri
-								uri={user.profilePhoto ?? `https://api.dicebear.com/9.1.1/initials/png?seed=${encodeURIComponent(user.name || "Unknown")}&size=128`}
+								uri={
+									user.profilePhoto ??
+									`https://api.dicebear.com/9.1.1/initials/png?seed=${encodeURIComponent(user.name || "Unknown")}&size=128`
+								}
 								style={styles.avatar}
 							/>
 							<Text style={styles.notice}>
@@ -147,7 +150,7 @@ export default function Profile() {
 										<Text style={styles.buttonText}>Update Profile</Text>
 									</TouchableOpacity>
 
-									<Text style={styles.subtitle}>
+									<Text style={styles.notice}>
 										Go here to upgrade your account to a user!
 									</Text>
 								</View>

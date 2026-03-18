@@ -75,7 +75,16 @@ const ConnectionsModal = ({ event, onRequestClose }: ConnectionsModalProps) => {
 				});
 
 			const detailedUsers = await Promise.all(userPromises);
-			setConnections(detailedUsers);
+
+			//hide duplicate connections
+			const seen = new Set<string>();
+			const uniqueUsers = detailedUsers.filter((u) => {
+				if (!u?._id || seen.has(u._id)) return false;
+				seen.add(u._id);
+				return true;
+			});
+
+			setConnections(uniqueUsers);
 		} catch (err) {
 			console.log("Load connections error:", err);
 			setError((err as Error).message);

@@ -1,31 +1,54 @@
+import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 import { GameProvider } from "@/src/components/context/GameContext";
-import { colors } from "@/src/styling/constants";
 import { Poppins_600SemiBold, useFonts } from "@expo-google-fonts/poppins";
 import { WorkSans_400Regular } from "@expo-google-fonts/work-sans";
-import { Slot } from "expo-router";
-import { ActivityIndicator, View } from "react-native";
+import { Slot, SplashScreen, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { AuthProvider } from "../src/components/context/AuthContext";
 
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
-	const [fontsLoaded] = useFonts({
-		"Poppins-SemiBold": Poppins_600SemiBold,
-		"WorkSans-Regular": WorkSans_400Regular,
-	});
+	const router = useRouter();
+  const [authReady, setAuthReady] = useState(false);
+  const redirectTo = useRef<string>("/GetStarted");
 
-	if (!fontsLoaded) {
-		//loader while fonts load
-		return (
-			<View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-				<ActivityIndicator size="large" color={colors.darkNavy} />
-			</View>
-		);
-	}
+  const [fontsLoaded] = useFonts({
+    "Poppins-SemiBold": Poppins_600SemiBold,
+    "WorkSans-Regular": WorkSans_400Regular,
+  });
 
-	return (
-		<AuthProvider>
-			<GameProvider>
-				<Slot />
-			</GameProvider>
-		</AuthProvider>
-	);
+  //check auth and store result
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const stored = await getStoredAuth();
+        redirectTo.current = stored?.userId ? "/JoinEventPage" : "/GetStarted";
+      } catch {
+        redirectTo.current = "/GetStarted";
+      } finally {
+        setAuthReady(true);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  //navigate and hide splash once both are ready
+  useEffect(() => {
+    if (!fontsLoaded || !authReady) return;
+
+    router.replace(redirectTo.current as any);
+    SplashScreen.hideAsync();
+  }, [fontsLoaded, authReady]);
+
+  if (!fontsLoaded || !authReady) return null;
+
+  return (
+    <AuthProvider>
+      <GameProvider>
+        <Slot />
+      </GameProvider>
+    </AuthProvider>
+  );
 }
