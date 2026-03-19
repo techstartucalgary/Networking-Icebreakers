@@ -65,6 +65,7 @@ function DashboardPage() {
   const GRID_SIZE = 3;
   const [bingoGrid, setBingoGrid] = useState<string[][]>(createEmptyGrid(GRID_SIZE));  const [bingoDescription, setBingoDescription] = useState("");
   const [isSavingBingo, setIsSavingBingo] = useState(false);
+  const [bingoSaveMessage, setBingoSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const navigate = useNavigate();
 
@@ -239,6 +240,8 @@ function DashboardPage() {
   const handleSaveBingo = async () => {
     if (!selectedEvent) return;
 
+    setBingoSaveMessage(null);
+
     try {
       setIsSavingBingo(true);
       const token = localStorage.getItem("token");
@@ -246,7 +249,7 @@ function DashboardPage() {
       // Check if all grid cells are filled
       const hasEmptyCells = bingoGrid.some(row => row.some(cell => !cell.trim()));
       if (hasEmptyCells) {
-        alert("Please fill in all bingo grid cells before saving.");
+        setBingoSaveMessage({ type: "error", text: "Please fill in all bingo grid cells before saving." });
         setIsSavingBingo(false);
         return;
       }
@@ -288,14 +291,16 @@ function DashboardPage() {
 
       const data = await response.json();
       if (data.success) {
-        alert("Bingo game saved successfully!");
-        setSelectedIcebreaker(null);
+        setBingoSaveMessage({ type: "success", text: "Bingo game saved successfully!" });
+        setTimeout(() => {
+          setSelectedIcebreaker(null);
+          setBingoSaveMessage(null);
+        }, 1500);
       } else {
         throw new Error(data.message || "Failed to save bingo game");
       }
     } catch (err: any) {
-      console.error("Error saving bingo:", err);
-      alert(err?.message || "Failed to save bingo game");
+      setBingoSaveMessage({ type: "error", text: err?.message || "Failed to save bingo game" });
     } finally {
       setIsSavingBingo(false);
     }
@@ -303,6 +308,7 @@ function DashboardPage() {
 
   const handleCancelBingo = () => {
     setSelectedIcebreaker(null);
+    setBingoSaveMessage(null);
     // Reload bingo data to reset any unsaved changes
     if (selectedEvent) {
       loadBingoData(selectedEvent._id);
@@ -629,6 +635,7 @@ function DashboardPage() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <button
                               onClick={() => {
+                                setBingoSaveMessage(null);
                                 setSelectedIcebreaker('bingo');
                                 if (selectedEvent) loadBingoData(selectedEvent._id);
                               }}
@@ -719,6 +726,26 @@ function DashboardPage() {
                                 </div>
                               </div>
                             </div>
+
+                            {bingoSaveMessage && (
+                              <div
+                                className={`mb-4 px-4 py-3 rounded-lg font-body text-sm flex items-center justify-between ${
+                                  bingoSaveMessage.type === "success"
+                                    ? "bg-green-500/20 border border-green-500/40 text-green-400"
+                                    : "bg-red-500/20 border border-red-500/40 text-red-400"
+                                }`}
+                              >
+                                <span>{bingoSaveMessage.text}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setBingoSaveMessage(null)}
+                                  className="text-white/60 hover:text-white ml-2"
+                                  aria-label="Dismiss"
+                                >
+                                  <XIcon className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
 
                             <div className="flex gap-3 pt-2">
                               <button
