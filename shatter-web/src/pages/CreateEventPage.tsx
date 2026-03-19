@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import BingoTable from "../components/BingoTable";
 import { CreateEvent } from "../service/CreateEvent";
 import { createBingoGame } from "../service/BingoGame"; // ✅ NEW
 import { useNavigate } from "react-router-dom";
@@ -16,7 +16,10 @@ function CreateEventPage() {
     );
 
     // ✅ NEW: Name Bingo selection
+    const createEmptyGrid = (size: number) => Array.from({ length: size }, () => Array(size).fill(""));
     const [nameBingoSelected, setNameBingoSelected] = useState(false);
+    const [bingoGrid, setBingoGrid] = useState<string[][]>(createEmptyGrid(3));
+    const [bingoDescription, setBingoDescription] = useState("");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -28,6 +31,26 @@ function CreateEventPage() {
             setLoading(true);
             setError(null);
 
+            // ✅ Validate main form
+            if (!name.trim() || !description.trim() || !startDate || !maxParticipant || maxParticipant <= 0) {
+                throw new Error("Please fill in all required fields.");
+            }
+
+            // ✅ Validate bingo (if selected)
+            if (nameBingoSelected) {
+                const hasEmptyCells = bingoGrid.some(row =>
+                    row.some(cell => !cell.trim())
+                );
+
+                if (hasEmptyCells) {
+                    throw new Error("Please fill in all bingo grid cells.");
+                }
+
+                if (!bingoDescription.trim()) {
+                    throw new Error("Please add a bingo description.");
+                }
+            }
+
             // 1️⃣ Create event
             const { eventId, joinCode } = await CreateEvent({
                 name,
@@ -37,19 +60,36 @@ function CreateEventPage() {
                 maxParticipants: maxParticipant ?? 0,
             });
 
-            // 2️⃣ If Name Bingo selected, create bingo game
+            // 2️⃣ Create bingo (ONLY ONE CALL)
             if (nameBingoSelected) {
                 const token = localStorage.getItem("token");
-                if (!token) {
-                    throw new Error("Authentication required to create bingo game.");
-                }
+                if (!token) throw new Error("Authentication required.");
 
-                await createBingoGame(eventId, token);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/bingo/createBingo`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        _eventId: eventId,
+                        description: bingoDescription,
+                        grid: bingoGrid,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.message || "Failed to create bingo game.");
+                }
             }
 
-            // 3️⃣ Navigate to the newly created event page
+            // 3️⃣ Navigate
+            setLoading(false);
             navigate(`/events/${joinCode}`);
+
         } catch (err: any) {
+            console.error("Create event error:", err);
             setError(err.message || "Failed to create event. Please try again.");
             setLoading(false);
         }
@@ -74,6 +114,11 @@ function CreateEventPage() {
         maxParticipant !== undefined && 
         maxParticipant > 0;
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+        navigate("/login");
+        return;
+    }
     return (
         <div
             className="min-h-screen text-white"
@@ -174,7 +219,10 @@ function CreateEventPage() {
                             placeholder="e.g., 50"
                             className="w-full p-3 rounded bg-white border border-gray-700 text-black font-body"
                             value={maxParticipant ?? ""}
-                            onChange={(e) => setMaxParticipant(Number(e.target.value))}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setMaxParticipant(val === "" ? undefined : Number(val));
+                            }}
                             min="1"
                             disabled={loading}
                         />
@@ -238,6 +286,31 @@ function CreateEventPage() {
                         </div>
                     </div>
                 </div>
+
+                {/*Icebreaker Properties*/}
+                                        {nameBingoSelected && (
+                            <div className="mt-6 space-y-4">
+                                <div>
+                                    <label className="text-sm text-white mb-2 block">
+                                        Bingo Description
+                                    </label>
+                                    <input
+                                        value={bingoDescription}
+                                        onChange={(e) => setBingoDescription(e.target.value)}
+                                        className="w-full p-3 rounded bg-white border text-black"
+                                    />
+                                </div>
+
+                                <BingoTable
+                                    grid={bingoGrid}
+                                    onChange={(row, col, value) => {
+                                        const newGrid = bingoGrid.map(r => [...r]); // ✅ deep copy
+                                        newGrid[row][col] = value;
+                                        setBingoGrid(newGrid);
+                                    }}
+                                />
+                            </div>
+                        )}
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-end gap-4 mt-12">

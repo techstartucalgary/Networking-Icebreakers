@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import BingoTable from "../components/BingoTable";
 
 interface Event {
   _id: string;
@@ -48,15 +49,10 @@ function DashboardPage() {
     currentState: "upcoming",
   });
 
+  const createEmptyGrid = (size: number) => Array.from({ length: size }, () => Array(size).fill(""));
   const [selectedIcebreaker, setSelectedIcebreaker] = useState<string | null>(null);
-  const [bingoGrid, setBingoGrid] = useState<string[][]>([
-    ["", "", "", "", ""],
-    ["", "", "", "", ""],
-    ["", "", "", "", ""],
-    ["", "", "", "", ""],
-    ["", "", "", "", ""],
-  ]);
-  const [bingoDescription, setBingoDescription] = useState("");
+  const GRID_SIZE = 3;
+  const [bingoGrid, setBingoGrid] = useState<string[][]>(createEmptyGrid(GRID_SIZE));  const [bingoDescription, setBingoDescription] = useState("");
   const [isSavingBingo, setIsSavingBingo] = useState(false);
 
   const navigate = useNavigate();
@@ -148,36 +144,18 @@ function DashboardPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.bingo) {
-          setBingoGrid(data.bingo.grid || [
-            ["", "", "", "", ""],
-            ["", "", "", "", ""],
-            ["", "", "", "", ""],
-            ["", "", "", "", ""],
-            ["", "", "", "", ""],
-          ]);
+          setBingoGrid(data.bingo.grid || createEmptyGrid(3));
           setBingoDescription(data.bingo.description || "");
         }
       } else {
         // No bingo exists yet, reset to empty
-        setBingoGrid([
-          ["", "", "", "", ""],
-          ["", "", "", "", ""],
-          ["", "", "", "", ""],
-          ["", "", "", "", ""],
-          ["", "", "", "", ""],
-        ]);
+        setBingoGrid(createEmptyGrid(3));
         setBingoDescription("");
       }
     } catch (err) {
       console.error("Error loading bingo data:", err);
       // Reset to empty on error
-      setBingoGrid([
-        ["", "", "", "", ""],
-        ["", "", "", "", ""],
-        ["", "", "", "", ""],
-        ["", "", "", "", ""],
-        ["", "", "", "", ""],
-      ]);
+      setBingoGrid(createEmptyGrid(3));
       setBingoDescription("");
     }
   };
@@ -233,12 +211,12 @@ function DashboardPage() {
 
       await fetchUserEvents();
       setIsEditing(false);
-      
-      // Update selected event with new data
-      const updatedEvent = events.find(e => e._id === selectedEvent._id);
-      if (updatedEvent) {
-        setSelectedEvent(updatedEvent);
-      }
+
+      // reselect AFTER fetch (using fresh data)
+      setSelectedEvent(prev => {
+          if (!prev) return prev;
+          return events.find(e => e._id === prev._id) || prev;
+      });
     } catch (err: any) {
       console.error("Error updating event:", err);
       alert(err?.message || "Failed to update event. The backend may not support updates yet.");
@@ -246,7 +224,7 @@ function DashboardPage() {
   };
 
   const handleBingoGridChange = (row: number, col: number, value: string) => {
-    const newGrid = [...bingoGrid];
+    const newGrid = bingoGrid.map(r => [...r]);
     newGrid[row][col] = value;
     setBingoGrid(newGrid);
   };
@@ -736,28 +714,14 @@ function DashboardPage() {
                                 <span className="text-white/60 text-xs ml-2">Fill in each box with a question or trait</span>
                               </label>
                               
-                              <div className="grid grid-cols-5 gap-2">
-                                {bingoGrid.map((row, rowIndex) =>
-                                  row.map((cell, colIndex) => (
-                                    <div key={`${rowIndex}-${colIndex}`} className="relative group">
-                                      <input
-                                        type="text"
-                                        value={cell}
-                                        onChange={(e) => handleBingoGridChange(rowIndex, colIndex, e.target.value)}
-                                        placeholder={`${rowIndex + 1}-${colIndex + 1}`}
-                                        className="w-full h-24 p-2 rounded-lg bg-white/5 border border-white/20 text-white text-xs placeholder-white/30 focus:outline-none focus:border-[#4DC4FF] focus:ring-2 focus:ring-[#4DC4FF]/20 transition-all font-body resize-none"
-                                        style={{ 
-                                          fontSize: '0.75rem',
-                                          lineHeight: '1.2',
-                                        }}
-                                      />
-                                      <div className="absolute -top-2 -left-2 w-5 h-5 rounded-full bg-[#4DC4FF]/80 text-white text-xs flex items-center justify-center font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {rowIndex * 5 + colIndex + 1}
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
+                            <BingoTable
+                              grid={bingoGrid}
+                              onChange={(row, col, value) => {
+                                const newGrid = bingoGrid.map(r => [...r]);
+                                newGrid[row][col] = value;
+                                setBingoGrid(newGrid);
+                              }}
+                            />
                             </div>
 
                             <div className="bg-[#4DC4FF]/10 border border-[#4DC4FF]/30 rounded-lg p-4">
