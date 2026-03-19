@@ -1,30 +1,20 @@
+import { SocialLink, User } from "@/src/interfaces/User";
 import { userFetch } from "@/src/services/user.service";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import {
-	AuthDataStorage,
-	clearStoredAuth,
-	getStoredAuth,
-	saveStoredAuth,
-} from "../general/AsyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-//internal user for mobile
-export type AuthUser = {
-	user_id: string;
-	name?: string;
-	email?: string;
-	linkedin?: string;
-	github?: string;
-	isGuest?: boolean;
-};
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { AuthDataStorage, getStoredAuth, saveStoredAuth } from "./AsyncStorage";
 
 type AuthContextType = {
 	authStorage: AuthDataStorage;
-	user: AuthUser | undefined;
-	login: (user: AuthUser, accessToken: string) => Promise<void>;
-	continueAsGuest: (name: string, linkedin: string) => Promise<void>;
+	user: User | undefined;
+	authenticate: (
+		user: User,
+		accessToken: string,
+		isGuest: boolean,
+	) => Promise<void>;
+	continueAsGuest: (name: string, socialLink: SocialLink) => Promise<void>;
 	logout: () => Promise<void>;
-	updateUser: (updates: Partial<AuthUser>) => void;
+	updateUser: (updates: Partial<User>) => User | undefined;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,57 +24,83 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		userId: "",
 		accessToken: "",
 		isGuest: true,
+		guestInfo: { name: "", socialLinks: [] },
 	});
 
-	const [user, setUser] = useState<AuthUser | undefined>(undefined);
+	const [user, setUser] = useState<User | undefined>(undefined);
 
 	//load stored data on startup
 	useEffect(() => {
 		const load = async () => {
 			const stored = await getStoredAuth();
 			setAuthStorage(stored);
-			if (stored.userId && stored.accessToken) {
-				const importedUser = await userFetch(stored.userId, stored.accessToken);
-				if (importedUser) {
-					const mappedUser: AuthUser = {
-						user_id: importedUser.userId,
-						name: importedUser.name,
-						email: importedUser.email,
+			if (!stored.isGuest && stored.userId && stored.accessToken) {
+				//user is logged in, fetch most current data
+				const res = await userFetch(stored.userId, stored.accessToken);
+				if (res) {
+					const mappedUser: User = {
+						_id: res.user._id,
+						name: res.user.name,
+						email: res.user.email,
+						isGuest: res.user.isGuest,
+						socialLinks: res.user.socialLinks,
+						profilePhoto: res.user.profilePhoto,
+					};
+
+					setUser(mappedUser);
+				}
+			} else {
+				//user is guest, fetch last saved in local
+				const savedData = await getStoredAuth();
+				if (savedData) {
+					const mappedUser: User = {
+						_id: savedData.userId,
+						name: savedData.guestInfo.name,
+						email: "",
+						isGuest: savedData.isGuest,
+						socialLinks: savedData.guestInfo.socialLinks,
 					};
 					setUser(mappedUser);
 				}
 			}
-			
 		};
 
 		load();
 	}, []);
 
-	const login = async (user: AuthUser, accessToken: string) => {
+	//when user or guest joins an event, store for app refresh
+	const authenticate = async (
+		user: User,
+		accessToken: string,
+		isGuest: boolean,
+	) => {
 		setUser(user);
 		const storageData: AuthDataStorage = {
-			userId: user?.user_id,
+			userId: user?._id,
 			accessToken,
-			isGuest: false,
+			isGuest: isGuest,
+			guestInfo: { name: user.name, socialLinks: user.socialLinks },
 		};
 		setAuthStorage(storageData);
 		await saveStoredAuth(storageData);
 	};
 
-	const continueAsGuest = async (name: string, linkedin: string) => {
-		const guestUser: AuthUser = {
-			user_id: "guest-" + Date.now().toString(), //TODO: how to ID guests?
+	//when user initially creates a guest account
+	const continueAsGuest = async (name: string, socialLink: SocialLink) => {
+		const guestUser: User = {
+			_id: null,
 			name: name,
-			linkedin: linkedin,
+			socialLinks: [{ label: socialLink.label, url: socialLink.url }],
 			isGuest: true,
 		};
 
 		setUser(guestUser);
 
 		const storageData: AuthDataStorage = {
-			userId: guestUser.user_id,
+			userId: guestUser._id,
 			accessToken: "",
 			isGuest: true,
+			guestInfo: { name: guestUser.name, socialLinks: guestUser.socialLinks },
 		};
 
 		setAuthStorage(storageData);
@@ -93,15 +109,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 	const logout = async () => {
 		setUser(undefined);
-		setAuthStorage({ userId: "", accessToken: "", isGuest: true});
-		await AsyncStorage.removeItem("guestEvents"); //If guest logs out
-		await clearStoredAuth();
+		setAuthStorage({
+			userId: "",
+			accessToken: "",
+			isGuest: true,
+			guestInfo: { name: "", socialLinks: [] },
+		});
+		await AsyncStorage.clear();
 	};
 
 	//Update in-memory user
-	const updateUser = (updates: Partial<AuthUser>) => {
-		if (!user) return;
-		setUser({ ...user, ...updates });
+	const updateUser = (updates: Partial<User>): User | undefined => {
+		if (!user) return undefined;
+		const newUser = { ...user, ...updates };
+		setUser(newUser);
+		return newUser;
 	};
 
 	return (
@@ -109,7 +131,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			value={{
 				authStorage,
 				user,
-				login,
+				authenticate,
 				continueAsGuest,
 				logout,
 				updateUser,

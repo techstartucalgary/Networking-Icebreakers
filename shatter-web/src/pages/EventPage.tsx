@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import QRCard from "../components/QRCard";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import EventSpotlight from "../components/EventSpotlight";
+import { CalendarIcon, ClipboardCopyIcon } from "../components/icons";
 
 export default function EventPage() {
   const { joinCode } = useParams<{ joinCode: string }>();
@@ -15,7 +17,10 @@ export default function EventPage() {
     participants: initialParticipants,
     loading,
     error,
+    refetch,
   } = useEventData(joinCode);
+
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const { participants } = useEventParticipants(
     eventId,
@@ -111,6 +116,83 @@ export default function EventPage() {
   // TODO: In the future, we could encode a URL or more complex data here
   const qrPayload = joinCode || "";
 
+  function getUserIdFromToken(token: string): string | null {
+    try {
+      const parts = token.split(".");
+      if (parts.length < 2) return null;
+      const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+      const payload = JSON.parse(atob(padded));
+      return payload.userId || payload.id || payload.sub || null;
+    } catch {
+      return null;
+    }
+  }
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const userId = token ? getUserIdFromToken(token) : null;
+  const createdBy = eventDetails?.createdBy;
+  const createdByStr =
+    typeof createdBy === "string"
+      ? createdBy
+      : createdBy != null
+      ? String(createdBy)
+      : "";
+  const isHost = !!userId && !!createdByStr && userId === createdByStr;
+
+  const canStart = eventDetails?.currentState === "Upcoming" || eventDetails?.currentState === "upcoming";
+  const canEnd =
+    eventDetails?.currentState === "In Progress" ||
+    eventDetails?.currentState === "ongoing";
+
+  const handleStartEvent = async () => {
+    if (!eventId || !token) return;
+    setIsUpdatingStatus(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/events/${eventId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: "In Progress" }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Failed to start event (${res.status})`);
+      }
+      await refetch();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to start event");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleEndEvent = async () => {
+    if (!eventId || !token) return;
+    setIsUpdatingStatus(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/events/${eventId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: "Completed" }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Failed to end event (${res.status})`);
+      }
+      await refetch();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to end event");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   // Main render
   return (
     <div
@@ -128,34 +210,80 @@ export default function EventPage() {
             {eventDetails.name}
           </h1>
           
-          {/* Event Status Badge */}
-          <div className="flex items-center gap-3 mb-6">
+          {/* Event Status Badge and Host Actions */}
+          <div className="flex flex-wrap items-center gap-3 mb-6">
             <span
               className="px-4 py-1.5 rounded-full text-sm font-body font-semibold"
               style={{
                 backgroundColor:
-                  eventDetails.currentState === "ongoing"
+                  eventDetails.currentState === "ongoing" ||
+                  eventDetails.currentState === "In Progress"
                     ? "rgba(34, 197, 94, 0.2)"
-                    : eventDetails.currentState === "upcoming"
+                    : eventDetails.currentState === "Upcoming" ||
+                      eventDetails.currentState === "upcoming"
                     ? "rgba(59, 130, 246, 0.2)"
                     : "rgba(156, 163, 175, 0.2)",
                 color:
-                  eventDetails.currentState === "ongoing"
+                  eventDetails.currentState === "ongoing" ||
+                  eventDetails.currentState === "In Progress"
                     ? "#4ade80"
-                    : eventDetails.currentState === "upcoming"
+                    : eventDetails.currentState === "Upcoming" ||
+                      eventDetails.currentState === "upcoming"
                     ? "#60a5fa"
                     : "#9ca3af",
               }}
             >
-              {eventDetails.currentState.charAt(0).toUpperCase() +
-                eventDetails.currentState.slice(1)}
+              {eventDetails.currentState === "In Progress"
+                ? "In Progress"
+                : eventDetails.currentState === "ongoing"
+                ? "In Progress"
+                : eventDetails.currentState.charAt(0).toUpperCase() +
+                  eventDetails.currentState.slice(1)}
             </span>
-            
+
             {/* Join Code Display */}
             <span className="text-white/60 font-body text-sm">
               Join Code: <span className="font-mono font-semibold text-white">{joinCode}</span>
             </span>
+
+            {/* Start / End Event Buttons (host only) */}
+            {isHost && (
+              <div className="flex gap-2 ml-auto">
+                <button
+                  onClick={handleStartEvent}
+                  disabled={!canStart || isUpdatingStatus}
+                  className="px-4 py-2 rounded-full text-sm font-body font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: canStart ? "#22c55e" : "rgba(34, 197, 94, 0.3)",
+                    color: "#fff",
+                  }}
+                >
+                  {isUpdatingStatus ? "Updating..." : "Start Event"}
+                </button>
+                <button
+                  onClick={handleEndEvent}
+                  disabled={!canEnd || isUpdatingStatus}
+                  className="px-4 py-2 rounded-full text-sm font-body font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: canEnd ? "#ef4444" : "rgba(239, 68, 68, 0.3)",
+                    color: "#fff",
+                  }}
+                >
+                  {isUpdatingStatus ? "Updating..." : "End Event"}
+                </button>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Live Activity Spotlight */}
+        <div className="mb-12">
+          <EventSpotlight
+            participants={participants}
+            eventId={eventId}
+            useDemoConnections={false}
+            useDemoActivity={true}
+          />
         </div>
 
         {/* Main Content Grid */}
@@ -188,20 +316,7 @@ export default function EventPage() {
                 {/* Start Date */}
                 <div className="flex items-start gap-3">
                   <div className="mt-1">
-                    {/* Calendar Icon */}
-                    <svg
-                      className="w-5 h-5 text-[#4DC4FF]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
+                    <CalendarIcon className="w-5 h-5 text-[#4DC4FF]" />
                   </div>
                   <div>
                     <p className="font-body text-white/60 text-sm">Start</p>
@@ -217,20 +332,7 @@ export default function EventPage() {
                 {/* End Date */}
                 <div className="flex items-start gap-3">
                   <div className="mt-1">
-                    {/* Calendar Icon */}
-                    <svg
-                      className="w-5 h-5 text-[#4DC4FF]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
+                    <CalendarIcon className="w-5 h-5 text-[#4DC4FF]" />
                   </div>
                   <div>
                     <p className="font-body text-white/60 text-sm">End</p>
@@ -328,19 +430,7 @@ export default function EventPage() {
                   className="w-full px-4 py-2.5 rounded-full font-semibold text-white hover:opacity-90 transition-opacity shadow-lg font-body flex items-center justify-center gap-2"
                   style={{ backgroundColor: "#4DC4FF" }}
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
-                  </svg>
+                  <ClipboardCopyIcon className="w-4 h-4" />
                   Copy Join Code
                 </button>
               </div>

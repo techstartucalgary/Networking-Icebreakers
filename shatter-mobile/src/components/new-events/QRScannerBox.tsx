@@ -28,19 +28,6 @@ export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 		}
 	};
 
-	if (!permission) return <View />;
-
-	if (!permission.granted) {
-		return (
-			<View style={styles.centered}>
-				<Text style={{ marginBottom: 10 }}>Camera access is required.</Text>
-				<Text onPress={requestPermission} style={styles.link}>
-					Grant Camera Permission
-				</Text>
-			</View>
-		);
-	}
-
 	const handleScan = async (data: string) => {
 		if (scanLock.current) return;
 		scanLock.current = true; //lock scanner
@@ -54,37 +41,32 @@ export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 
 		try {
 			const result = await joinEvent(joinCode);
-
-			switch (result) {
-				case "no-user":
-					Alert.alert(
-						"No User Found",
-						"Please create an account to join the event",
-					);
-					router.push("/Profile");
-					break;
-
-				case "event-not-found":
-					Alert.alert("No Event Found");
-					break;
-
-				case "join-error":
-					Alert.alert("An error occurred. Please try again later.");
-					break;
-
-				case "success":
-					router.push("/Events");
-					break;
-			}
+			
+			router.push({
+				pathname: "/EventPages/EventLobby",
+				params: { eventId: result },
+			});
 
 			setScanned(true);
 			onClose();
-			router.push({ pathname: "/Events" }); //navigate to event page after scanning
 		} catch (err: any) {
-			Alert.alert("Error", err.message);
+			Alert.alert(err);
 			onClose();
 		}
 	};
+
+	if (!permission) return <View />;
+
+	if (!permission.granted) {
+		return (
+			<View style={styles.centered}>
+				<Text style={{ marginBottom: 10 }}>Camera access is required.</Text>
+				<Text onPress={requestPermission} style={styles.link}>
+					Grant Camera Permission
+				</Text>
+			</View>
+		);
+	}
 
 	return (
 		<View style={styles.boxContainer}>

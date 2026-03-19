@@ -10,7 +10,25 @@ export default function JoinEventPage() {
 	const [showScanner, setShowScanner] = useState(false);
 	const [eventCode, setEventCode] = useState("");
 	const { joinEvent } = useJoinEvent();
+	const [loading, setLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+	//for manual code entry
+	const handleJoinEvent = async () => {
+		setLoading(true);
+		try {
+			const eventId = await joinEvent(eventCode);
+			setErrorMessage("");
+			router.push({
+				pathname: "/EventPages/EventLobby",
+				params: { eventId },
+			});
+		} catch (err) {
+			setErrorMessage((err as Error).message);
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	return (
 		<View style={styles.container}>
@@ -34,7 +52,7 @@ export default function JoinEventPage() {
 					value={eventCode}
 					onChangeText={(text) => {
 						setEventCode(text);
-						setErrorMessage(null);
+						setErrorMessage("");
 					}}
 					autoCapitalize="characters"
 					autoCorrect={false}
@@ -42,30 +60,10 @@ export default function JoinEventPage() {
 
 				<Button
 					title="Join Event"
-					onPress={async () => {
-						const status = await joinEvent(eventCode);
-
-						switch (status) {
-							case "event-not-found":
-								setErrorMessage("We couldn’t find an event with that code.");
-								break;
-							case "no-user":
-								setErrorMessage("Your profile is missing a name.");
-								break;
-							case "no-user-id":
-								setErrorMessage("Please sign in again and retry.");
-								break;
-							case "join-error":
-								setErrorMessage("Something went wrong joining the event.");
-								break;
-							case "success":
-								setErrorMessage(null);
-								router.push({ pathname: "/Events" });
-								break;
-						}
-					}}
+					onPress={() => handleJoinEvent()}
 					disabled={!eventCode.trim()}
 				/>
+
 				{errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 			</View>
 		</View>
@@ -98,6 +96,7 @@ const styles = StyleSheet.create({
 	},
 	errorText: {
 		color: "#d32f2f",
+		textAlign: "center",
 		marginTop: 8,
 		fontSize: 14,
 		justifyContent: "center",
