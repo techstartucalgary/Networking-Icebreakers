@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Participant } from "../types/participant";
 
 interface EventDetails {
@@ -11,6 +11,7 @@ interface EventDetails {
   maxParticipant: number;
   currentState: string;
   participantIds: Participant[];
+  createdBy?: string;
 }
 
 interface EventResponse {
@@ -25,17 +26,16 @@ export function useEventData(joinCode: string | undefined) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchEvent = useCallback((signal?: AbortSignal) => {
     if (!joinCode) {
       setLoading(false);
       return;
     }
-
     setLoading(true);
     setError("");
-    
     fetch(`${import.meta.env.VITE_API_URL}/events/event/${joinCode}`, {
       cache: "no-store",
+      signal,
     })
       .then((res) => {
         if (!res.ok) {
@@ -45,9 +45,10 @@ export function useEventData(joinCode: string | undefined) {
       })
       .then((data: EventResponse) => {
         if (data.success && data.event) {
-          setEventId(data.event._id);
-          setEventDetails(data.event);
-          setParticipants(data.event.participantIds);
+          const ev = data.event;
+          setEventId(ev._id);
+          setEventDetails(ev);
+          setParticipants(ev.participantIds || []);
         } else {
           setEventId(null);
           setEventDetails(null);
@@ -55,6 +56,7 @@ export function useEventData(joinCode: string | undefined) {
         }
       })
       .catch((err) => {
+        if (err?.name === "AbortError") return;
         console.error("Error fetching event:", err);
         setEventId(null);
         setEventDetails(null);
@@ -63,5 +65,14 @@ export function useEventData(joinCode: string | undefined) {
       .finally(() => setLoading(false));
   }, [joinCode]);
 
-  return { eventId, eventDetails, participants, loading, error };
+  useEffect(() => {
+    if (!joinCode) return;
+    const controller = new AbortController();
+    fetchEvent(controller.signal);
+    return () => controller.abort();
+  }, [joinCode, fetchEvent]);
+
+  const refetch = () => fetchEvent();
+
+  return { eventId, eventDetails, participants, loading, error, refetch };
 }
