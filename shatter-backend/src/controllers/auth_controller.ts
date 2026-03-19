@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { User } from '../models/user_model';
+import { AuthCode } from '../models/auth_code_model';
 import { hashPassword, comparePassword } from '../utils/password_hash';
 import { generateToken } from '../utils/jwt_utils';
 import { getLinkedInAuthUrl, getLinkedInAccessToken, getLinkedInProfile } from '../utils/linkedin_oauth';
@@ -281,9 +282,10 @@ export const linkedinCallback = async (req: Request, res: Response) => {
 	    await user.save();
 	}
 
-	// Generate JWT token and redirect to frontend
-	const token = generateToken(user._id.toString());
-	return res.redirect(`${frontendUrl}/auth/callback?token=${token}&userId=${user._id}`);
+	// Generate single-use auth code and redirect to frontend
+	const authCode = crypto.randomBytes(32).toString('hex');
+	await AuthCode.create({ code: authCode, userId: user._id });
+	return res.redirect(`${frontendUrl}/auth/callback?code=${authCode}`);
 
     } catch (error: any) {
 	console.error('LinkedIn callback error:', error);
@@ -294,6 +296,44 @@ export const linkedinCallback = async (req: Request, res: Response) => {
 	}
 
 	res.status(500).json({ error: 'Authentication failed. Please try again.' });
+    }
+};
+
+
+/**
+ * POST /api/auth/exchange
+ * Exchange a single-use auth code for a JWT token
+ *
+ * @param req.body.code - The auth code from the OAuth callback redirect
+ * @returns 200 with userId and JWT token on success
+ */
+export const exchangeAuthCode = async (req: Request, res: Response) => {
+    try {
+	const { code } = req.body as { code?: string };
+
+	if (!code) {
+	    return res.status(400).json({ error: 'Auth code is required' });
+	}
+
+	// Find and delete the auth code in one atomic operation (single-use)
+	const authCodeDoc = await AuthCode.findOneAndDelete({ code });
+
+	if (!authCodeDoc) {
+	    return res.status(401).json({ error: 'Invalid or expired auth code' });
+	}
+
+	// Generate JWT token
+	const token = generateToken(authCodeDoc.userId.toString());
+
+	res.status(200).json({
+	    message: 'Authentication successful',
+	    userId: authCodeDoc.userId,
+	    token,
+	});
+
+    } catch (err: any) {
+	console.error('POST /api/auth/exchange error:', err);
+	res.status(500).json({ error: 'Failed to exchange auth code' });
     }
 };
 
