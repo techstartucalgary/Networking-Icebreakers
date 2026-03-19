@@ -198,8 +198,6 @@ export async function updateBingo(req: Request, res: Response) {
 
 function makeEmptyGrid(rows: number, cols: number): Record<string, string[]> {
 
-  console.log(`Creating fallback grid ${rows}x${cols}`);
-
   const grid: Record<string, string[]> = {};
 
   for (let r = 1; r <= rows; r++) {
@@ -226,7 +224,6 @@ function buildSchema(rows: number, cols: number): z.ZodObject<Record<string, z.Z
 
 function buildShapeExample(rows: number, cols: number): string {
 
-  console.log("Building JSON example for prompt");
 
   const obj: Record<string, string[]> = {};
 
@@ -244,7 +241,6 @@ function buildShapeExample(rows: number, cols: number): string {
  * Calls Gemini to generate a bingo grid
  */
 async function generateBingoGrid(n_rows: number, n_cols: number, context: string): Promise<Record<string, string[]>> {
-  
 
   const schema = buildSchema(n_rows, n_cols);
   const schemaJson = z.toJSONSchema(schema); 
@@ -267,9 +263,6 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
   const aiPrompt =  new Prompt([basePrompt_structure, userContext, aiInstruction])
   aiPrompt.generatePrompt();
   const prompt = aiPrompt.getPrompt();
-  console.log("----------- Final Prompt -----------");
-  console.log(prompt);
-  console.log("------------------------------------");
 
   try {
 
@@ -283,8 +276,52 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
     },
   });
 
-  console.log("RAW RESPONSE:");
-  console.log(response.text);
+  const parsed = JSON.parse(response.text!);
+  const validated: Record<string, string[]> = schema.parse(parsed);
+  return validated;
+
+  } catch (error) {
+    console.error("Generation failed:", error);  
+    return makeEmptyGrid(n_rows, n_cols)    
+  }
+}
+
+async function generateBingoGrid_shortVersions(n_rows: number, n_cols: number, original_bingo_questions: string): Promise<Record<string, string[]>> {
+
+  const schema = buildSchema(n_rows, n_cols);
+  const schemaJson = z.toJSONSchema(schema); 
+  const example = buildShapeExample(n_rows, n_cols);
+
+  const basePrompt_structure = `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
+    ${example}
+    Rules:
+    - Keys must be row1, row2, row3, etc.
+    - Each row must contain ${n_cols} strings.
+    Return ONLY valid JSON.
+
+    You will be provided with additional information about what to put inside the bingo squares.
+  `.trim();
+  const original_bingo_questions_context = `These are the original bingo questions:\n${original_bingo_questions}`;
+
+  const promptPath = path.resolve(__dirname, "../ai/prompts/bingo_short_questions.txt");
+  const aiInstruction = fs.readFileSync(promptPath, "utf-8");
+
+  const aiPrompt =  new Prompt([basePrompt_structure, original_bingo_questions_context, aiInstruction])
+  aiPrompt.generatePrompt();
+  const prompt = aiPrompt.getPrompt();
+
+
+  try {
+
+    const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseJsonSchema: schemaJson,
+      temperature: 0.7,
+    },
+  });
 
   const parsed = JSON.parse(response.text!);
   const validated: Record<string, string[]> = schema.parse(parsed);
@@ -313,6 +350,15 @@ function process_ai_result(ai_result: Record<string, string[]>) {
   }
 
   return grid;
+}
+
+function combine2DArrays(arr1: string[][], arr2: string[][]): { question: string; shortQuestion: string }[][] {
+  return arr1.map((row, i) =>
+    row.map((val, j) => ({
+      question: val,
+      shortQuestion: arr2[i][j]
+    }))
+  );
 }
 
 /**
@@ -352,8 +398,11 @@ export async function generateBingo(req: Request, res: Response) {
       });
     }
 
-    const aiResult = await generateBingoGrid(n_rows, n_cols, context);
-    const bingo_grid: string[][] = process_ai_result(aiResult);
+    const bingo_questions = await generateBingoGrid(n_rows, n_cols, context);
+    const bingo_short_versions = await generateBingoGrid_shortVersions(n_rows, n_cols, JSON.stringify(bingo_questions));
+    const bingo_grid_questions: string[][] = process_ai_result(bingo_questions);
+    const bingo_grid_short_versions: string[][] = process_ai_result(bingo_short_versions);
+    const bingo_grid = combine2DArrays(bingo_grid_questions, bingo_grid_short_versions);
 
     return res.status(200).json({
       status: true,
