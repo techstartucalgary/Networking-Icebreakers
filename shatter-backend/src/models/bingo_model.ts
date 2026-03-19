@@ -1,14 +1,15 @@
-import { Schema, model, Types, Document } from "mongoose";
+import { Schema, model, Types, HydratedDocument } from "mongoose";
 
-
-export interface BingoDocument extends Document {
+export interface IBingo {
   _id: string;
   _eventId: Types.ObjectId;
   description?: string;
   grid?: string[][];
 }
 
-const bingoSchema = new Schema<BingoDocument>(
+export type BingoDocument = HydratedDocument<IBingo>;
+
+const bingoSchema = new Schema<IBingo>(
   {
     _id: { type: String },
     _eventId: {
@@ -31,4 +32,4 @@ bingoSchema.pre("save", function (next) {
   next();
 });
 
-export const Bingo = model<BingoDocument>("Bingo", bingoSchema);
+export const Bingo = model<IBingo>("Bingo", bingoSchema);

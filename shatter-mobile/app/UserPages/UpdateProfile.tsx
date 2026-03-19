@@ -55,13 +55,13 @@ export default function UpdateProfile() {
 		}
 
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!emailRegex.test(email)) {
+		if (email && !emailRegex.test(email)) {
 			console.log("Error: Invalid email format");
 			alert("Please enter a valid email.");
 			return;
 		}
 
-		if (password.length < 8 && password.length > 0) {
+		if (password && password.length < 8 && password.length > 0) {
 			console.log("Error: Password must be at least 8 characters");
 			alert("Password must be at least 8 characters.");
 			return;
@@ -137,24 +137,28 @@ export default function UpdateProfile() {
 				Password must be at least 8 characters long
 			</Text>
 
-			<Text style={styles.label}>Bio</Text>
-			<TextInput
-				style={[styles.input, { height: 100 }]}
-				value={bio}
-				onChangeText={setBio}
-				placeholder="Short bio"
-				placeholderTextColor="#666"
-				multiline
-			/>
+			{!user?.isGuest && (
+				<>
+					<Text style={styles.label}>Bio</Text>
+					<TextInput
+						style={[styles.input, { height: 100 }]}
+						value={bio}
+						onChangeText={setBio}
+						placeholder="Short bio"
+						placeholderTextColor="#666"
+						multiline
+					/>
 
-			<Text style={styles.label}>Profile Photo URL</Text>
-			<TextInput
-				style={styles.input}
-				value={profilePhoto}
-				onChangeText={setProfilePhoto}
-				placeholder="Profile Photo URL"
-				placeholderTextColor="#666"
-			/>
+					<Text style={styles.label}>Profile Photo URL</Text>
+					<TextInput
+						style={styles.input}
+						value={profilePhoto}
+						onChangeText={setProfilePhoto}
+						placeholder="Profile Photo URL"
+						placeholderTextColor="#666"
+					/>
+				</>
+			)}
 
 			{/* Social Links Section */}
 			<Text style={[styles.label, { marginTop: 20 }]}>Social Links</Text>
