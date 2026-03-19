@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BingoTable from "../components/BingoTable";
-
+import { getBingo } from "../service/BingoGame";
 import {
     CalendarIcon,
     ClipboardIcon,
@@ -82,6 +82,14 @@ function DashboardPage() {
     }
   }, [events, selectedEvent]);
 
+  // Load bingo data whenever selected event changes (incl. auto-select)
+  useEffect(() => {
+    if (selectedEvent) {
+      loadBingoData(selectedEvent._id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEvent?._id]);
+
   const fetchUserEvents = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
@@ -144,29 +152,17 @@ function DashboardPage() {
 
   const loadBingoData = async (eventId: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/bingo/getBingo`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: eventId }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.bingo) {
-          setBingoGrid(data.bingo.grid || createEmptyGrid(3));
-          setBingoDescription(data.bingo.description || "");
-        }
+      const bingo = await getBingo(eventId);
+      if (bingo) {
+        setBingoGrid(bingo.grid);
+        setBingoDescription(bingo.description ?? "");
       } else {
-        // No bingo exists yet, reset to empty
-        setBingoGrid(createEmptyGrid(3));
+        setBingoGrid(createEmptyGrid(GRID_SIZE));
         setBingoDescription("");
       }
     } catch (err) {
       console.error("Error loading bingo data:", err);
-      // Reset to empty on error
-      setBingoGrid(createEmptyGrid(3));
+      setBingoGrid(createEmptyGrid(GRID_SIZE));
       setBingoDescription("");
     }
   };
@@ -631,8 +627,11 @@ function DashboardPage() {
                         
                         {!selectedIcebreaker && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <button 
-                              onClick={() => setSelectedIcebreaker('bingo')}
+                            <button
+                              onClick={() => {
+                                setSelectedIcebreaker('bingo');
+                                if (selectedEvent) loadBingoData(selectedEvent._id);
+                              }}
                               className="p-4 rounded-xl border-2 border-white/20 hover:border-[#4DC4FF] bg-white/5 hover:bg-white/10 transition-all duration-200 text-left group"
                             >
                               <div className="flex items-center gap-3 mb-2">
@@ -696,11 +695,6 @@ function DashboardPage() {
                             </div>
 
                             <div>
-                              <label className="block text-sm text-white font-body mb-3">
-                                Bingo Grid (5x5)
-                                <span className="text-white/60 text-xs ml-2">Fill in each box with a question or trait</span>
-                              </label>
-                              
                             <BingoTable
                               grid={bingoGrid}
                               onChange={(row, col, value) => {
