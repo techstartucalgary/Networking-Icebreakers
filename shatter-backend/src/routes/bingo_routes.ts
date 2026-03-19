@@ -13,7 +13,7 @@ router.get('/getBingo/:eventId', getBingo);
 router.put("/updateBingo", authMiddleware, updateBingo);
 
 // POST /api/bingo/generateBingo - generate bingo using AI for an event
-router.post("/generateBingo", generateBingo);
+router.post("/generateBingo", authMiddleware, generateBingo);
 
 
 export default router;

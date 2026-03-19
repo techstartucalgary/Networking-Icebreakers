@@ -1,7 +1,7 @@
 import { Schema, model, Types, Document } from "mongoose";
 
 export interface ParticipantConnection {
-  _id: string;
+  _id: Types.ObjectId;
   _eventId: Types.ObjectId;
   primaryParticipantId: Types.ObjectId;
   secondaryParticipantId: Types.ObjectId;
@@ -10,7 +10,7 @@ export interface ParticipantConnection {
 
 const participantConnectionSchema = new Schema<ParticipantConnection>(
   {
-    _id: { type: String },
+    _id: { type: Schema.Types.ObjectId },
     _eventId: {
       type: Schema.Types.ObjectId,
       ref: "Event",
@@ -35,7 +35,7 @@ const participantConnectionSchema = new Schema<ParticipantConnection>(
 
 participantConnectionSchema.pre("save", function (next) {
   if (!this._id) {
-    this._id = `participantConnection_${Math.random().toString(36).slice(2, 10)}`;
+    this._id = new Types.ObjectId();
   }
   next();
 });
