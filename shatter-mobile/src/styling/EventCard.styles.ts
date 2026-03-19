@@ -8,7 +8,7 @@ const vh = (percent: number) => (height * percent) / 100;
 
 export const EventCardStyling = StyleSheet.create({
 	card: {
-		backgroundColor: colors.white,
+		backgroundColor: colors.black,
 		padding: 15,
 		borderRadius: 8,
 		marginBottom: 10,
