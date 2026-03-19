@@ -4,6 +4,17 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BingoTable from "../components/BingoTable";
 
+import {
+    CalendarIcon,
+    ClipboardIcon,
+    ClockIcon,
+    InformationCircleIcon,
+    KeyIcon,
+    PlusIcon,
+    SearchIcon,
+    UsersIcon,
+    XIcon,
+} from "../components/icons";
 interface Event {
   _id: string;
   name: string;
