@@ -63,6 +63,8 @@
 | `passwordHash`     | String            | No       | —          | `select: false` — excluded from queries by default |
 | `linkedinId`       | String            | No       | —          | Unique (sparse) |
 | `linkedinUrl`      | String            | No       | —          | Unique (sparse) |
+| `organization`     | String            | No       | —          | Trimmed |
+| `title`            | String            | No       | —          | Trimmed |
 | `bio`              | String            | No       | —          | Trimmed |
 | `profilePhoto`     | String            | No       | —          | |
 | `socialLinks`      | Object            | No       | —          | `{ linkedin?: String, github?: String, other?: String }` |

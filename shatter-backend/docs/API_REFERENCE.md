@@ -463,6 +463,8 @@ Update a user's profile. Users can only update their own profile.
 | `bio`          | string | |
 | `profilePhoto` | string | URL |
 | `socialLinks`  | object | `{ linkedin?, github?, other? }` |
+| `organization` | string | Where the user works/studies |
+| `title`        | string | Job title or role |
 
 **Success Response (200):**
 
@@ -755,8 +757,10 @@ Join an event as a guest (no account required).
 | `socialLinks.linkedin` | string | No | LinkedIn URL |
 | `socialLinks.github` | string | No | GitHub URL |
 | `socialLinks.other` | string | No | Other URL |
+| `organization` | string | No* | Where the guest works/studies |
+| `title` | string | No | Job title or role |
 
-\* At least one contact method is required: either `email` or at least one non-empty field in `socialLinks`.
+\* At least one of the following is required: `email`, a non-empty field in `socialLinks`, or `organization`.
 
 **Success Response (200):**
 
@@ -779,14 +783,14 @@ Join an event as a guest (no account required).
 | Status | Error |
 |--------|-------|
 | 400    | `"Missing fields: guest name and eventId are required"` |
-| 400    | `"At least one contact method is required (email or a social link)"` |
+| 400    | `"At least one contact method (email or social link) or organization is required"` |
 | 400    | `"Invalid email format"` |
 | 400    | `"Event is full"` |
 | 404    | `"Event not found"` |
 | 409    | `"A user with this email already exists"` |
 
 **Special Behavior:**
-- Creates a guest User (`authProvider: 'guest'`) with the provided contact info (email and/or social links)
+- Creates a guest User (`authProvider: 'guest'`) with the provided contact info (email, social links, and/or organization)
 - If the display name is already taken in the event, a `#XXX` suffix is automatically appended (e.g., `John` becomes `John#472`). The response `participant.name` reflects the final display name, and the guest User's name is updated to match.
 - Returns a JWT so the guest can make authenticated requests
 - Guest can later upgrade to a full account via `PUT /api/users/:userId`
@@ -1259,7 +1263,8 @@ curl -X POST http://localhost:4000/api/events/<eventId>/join/user \
 curl -X POST http://localhost:4000/api/events/<eventId>/join/guest \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Guest User"
+    "name": "Guest User",
+    "email": "guest@example.com"
   }'
 ```
 
