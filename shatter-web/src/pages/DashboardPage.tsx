@@ -328,6 +328,7 @@ function DashboardPage() {
   const getStatusColor = (state: string) => {
     switch (state) {
       case "ongoing":
+      case "In Progress":
         return { bg: "rgba(34, 197, 94, 0.2)", text: "#4ade80", border: "rgba(34, 197, 94, 0.3)" };
       case "Upcoming":
         return { bg: "rgba(59, 130, 246, 0.2)", text: "#60a5fa", border: "rgba(59, 130, 246, 0.3)" };
