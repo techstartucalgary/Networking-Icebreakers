@@ -454,16 +454,23 @@ export default function EventPage() {
               Bingo game associated with this event.
             </p>
 
-            <div className="grid grid-cols-5 gap-3 max-w-md">
+            <div
+              className="w-fit mx-auto gap-3 max-w-xs"
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${bingoGame.grid.length}, minmax(0, 1fr))`,
+                aspectRatio: "1",
+              }}
+            >
               {bingoGame.grid.flat().map((cell, index) => (
                 <div
                   key={index}
                   className="aspect-square flex items-center justify-center
                              border border-white/20 rounded-lg
-                             font-body font-semibold text-sm text-white"
+                             font-body font-semibold text-sm text-white p-2"
                   style={{ backgroundColor: "rgba(27, 37, 58, 0.6)" }}
                 >
-                  {cell}
+                  <span className="truncate text-center">{cell}</span>
                 </div>
               ))}
             </div>
