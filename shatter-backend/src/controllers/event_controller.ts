@@ -170,7 +170,8 @@ export async function getEventByJoinCode(req: Request, res: Response) {
 export async function joinEventAsUser(req: Request, res: Response) {
   try {
     const { name, userId } = req.body;
-    const { eventId } = req.params;
+    const rawEventId = req.params.eventId;
+    const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
 
     if (!userId || !name || !eventId)
       return res.status(400).json({
@@ -279,7 +280,8 @@ export async function joinEventAsGuest(req: Request, res: Response) {
       organization?: string;
       title?: string;
     };
-    const { eventId } = req.params;
+    const rawEventId = req.params.eventId;
+    const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
 
     if (!name || !eventId) {
       return res.status(400).json({
