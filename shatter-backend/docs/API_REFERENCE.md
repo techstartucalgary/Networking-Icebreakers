@@ -7,42 +7,55 @@
 
 ## Table of Contents
 
-- [General Information](#general-information)
-- [Endpoint Summary](#endpoint-summary)
-- [Authentication (`/api/auth`)](#authentication-apiauth)
-  - [POST /api/auth/signup](#post-apiauthsignup)
-  - [POST /api/auth/login](#post-apiauthlogin)
-  - [GET /api/auth/linkedin](#get-apiauthlinkedin)
-  - [GET /api/auth/linkedin/callback](#get-apiauthlinkedincallback)
-  - [POST /api/auth/exchange](#post-apiauthexchange)
-- [Users (`/api/users`)](#users-apiusers)
-  - [GET /api/users](#get-apiusers)
-  - [POST /api/users](#post-apiusers)
-  - [GET /api/users/me](#get-apiusersme)
-  - [GET /api/users/:userId](#get-apiusersuserid)
-  - [GET /api/users/:userId/events](#get-apiusersuseриdevents)
-  - [PUT /api/users/:userId](#put-apiusersuserid)
-- [Events (`/api/events`)](#events-apievents)
-  - [POST /api/events/createEvent](#post-apieventscreateevent)
-  - [GET /api/events/event/:joinCode](#get-apieventseventjoincode)
-  - [GET /api/events/:eventId](#get-apieventseventid)
-  - [PUT /api/events/:eventId/status](#put-apieventseventidstatus)
-  - [POST /api/events/:eventId/join/user](#post-apieventseventиdjoinuser)
-  - [POST /api/events/:eventId/join/guest](#post-apieventseventиdjoinguest)
-  - [GET /api/events/createdEvents/user/:userId](#get-apieventscreatedeventsuseriduserid)
-- [Bingo (`/api/bingo`)](#bingo-apibingo)
-  - [POST /api/bingo/createBingo](#post-apibingocreatebingo)
-  - [GET /api/bingo/getBingo/:eventId](#get-apibingogetbingoeventid)
-  - [PUT /api/bingo/updateBingo](#put-apibingoupdatebingo)
-- [Participant Connections (`/api/participantConnections`)](#participant-connections-apiparticipantconnections)
-  - [POST /api/participantConnections/](#post-apiparticipantconnections)
-  - [POST /api/participantConnections/by-emails](#post-apiparticipantconnectionsby-emails)
-  - [DELETE /api/participantConnections/delete](#delete-apiparticipantconnectionsdelete)
-  - [GET /api/participantConnections/getByParticipantAndEvent](#get-apiparticipantconnectionsgetbyparticipantandevent)
-  - [GET /api/participantConnections/getByUserEmailAndEvent](#get-apiparticipantconnectionsgetbyuseremailandevent)
-  - [GET /api/participantConnections/connected-users](#get-apiparticipantconnectionsconnected-users)
-- [Planned Endpoints](#planned-endpoints-)
-- [Quick Start Examples](#quick-start-examples)
+- [Shatter Backend — API Reference](#shatter-backend--api-reference)
+  - [Table of Contents](#table-of-contents)
+  - [Endpoint Summary](#endpoint-summary)
+  - [General Information](#general-information)
+    - [Authentication](#authentication)
+    - [Response Format](#response-format)
+    - [Common Status Codes](#common-status-codes)
+  - [Authentication (`/api/auth`)](#authentication-apiauth)
+    - [POST `/api/auth/signup`](#post-apiauthsignup)
+    - [POST `/api/auth/login`](#post-apiauthlogin)
+    - [GET `/api/auth/linkedin`](#get-apiauthlinkedin)
+    - [GET `/api/auth/linkedin/callback`](#get-apiauthlinkedincallback)
+    - [POST `/api/auth/exchange`](#post-apiauthexchange)
+  - [Users (`/api/users`)](#users-apiusers)
+    - [GET `/api/users`](#get-apiusers)
+    - [POST `/api/users`](#post-apiusers)
+    - [GET `/api/users/me`](#get-apiusersme)
+    - [GET `/api/users/:userId`](#get-apiusersuserid)
+    - [GET `/api/users/:userId/events`](#get-apiusersuseridevents)
+    - [PUT `/api/users/:userId`](#put-apiusersuserid)
+  - [Events (`/api/events`)](#events-apievents)
+    - [POST `/api/events/createEvent`](#post-apieventscreateevent)
+    - [GET `/api/events/event/:joinCode`](#get-apieventseventjoincode)
+    - [GET `/api/events/:eventId`](#get-apieventseventid)
+    - [PUT `/api/events/:eventId/status`](#put-apieventseventidstatus)
+    - [POST `/api/events/:eventId/join/user`](#post-apieventseventidjoinuser)
+    - [POST `/api/events/:eventId/join/guest`](#post-apieventseventidjoinguest)
+    - [GET `/api/events/createdEvents/user/:userId`](#get-apieventscreatedeventsuseruserid)
+  - [Bingo (`/api/bingo`)](#bingo-apibingo)
+    - [POST `/api/bingo/createBingo`](#post-apibingocreatebingo)
+    - [GET `/api/bingo/getBingo/:eventId`](#get-apibingogetbingoeventid)
+    - [PUT `/api/bingo/updateBingo`](#put-apibingoupdatebingo)
+    - [POST `/api/bingo/generate`](#post-apibingogenerate)
+  - [Participant Connections (`/api/participantConnections`)](#participant-connections-apiparticipantconnections)
+    - [POST `/api/participantConnections/`](#post-apiparticipantconnections)
+    - [POST `/api/participantConnections/by-emails`](#post-apiparticipantconnectionsby-emails)
+    - [DELETE `/api/participantConnections/delete`](#delete-apiparticipantconnectionsdelete)
+    - [GET `/api/participantConnections/getByParticipantAndEvent`](#get-apiparticipantconnectionsgetbyparticipantandevent)
+    - [GET `/api/participantConnections/getByUserEmailAndEvent`](#get-apiparticipantconnectionsgetbyuseremailandevent)
+    - [GET `/api/participantConnections/connected-users`](#get-apiparticipantconnectionsconnected-users)
+  - [Planned Endpoints ⏳](#planned-endpoints-)
+  - [Quick Start Examples](#quick-start-examples)
+    - [1. Sign up](#1-sign-up)
+    - [2. Log in](#2-log-in)
+    - [3. Create an event](#3-create-an-event)
+    - [4. Join the event (as authenticated user)](#4-join-the-event-as-authenticated-user)
+    - [5. Join the event (as guest)](#5-join-the-event-as-guest)
+    - [6. Create a bingo game for the event](#6-create-a-bingo-game-for-the-event)
+    - [7. Get the bingo game](#7-get-the-bingo-game)
 
 ---
 
@@ -952,6 +965,59 @@ Update a bingo game.
 **Special Behavior:** Tries to find by `_id` first, then falls back to `_eventId`.
 
 ---
+
+### POST `/api/bingo/generate`
+
+Generate an AI-powered bingo grid based on a given context.
+
+- **Auth:** Not specified (assumed Public unless otherwise enforced)
+
+**Request Body:**
+
+| Field     | Type   | Required | Notes |
+|-----------|--------|----------|-------|
+| `context` | string | Yes      | Context used to generate bingo content |
+| `n_rows`  | number | Yes      | Number of rows (1–5) |
+| `n_cols`  | number | Yes      | Number of columns (1–5) |
+
+**Example Request:**
+
+```json
+{
+  "context": "Software engineer networking event where developers meet, discuss tech stacks, exchange ideas, talk about startups, open source, AI, and career opportunities",
+  "n_rows": 2,
+  "n_cols": 2
+}
+```
+
+**Example Response:**
+```
+{
+  "status": true,
+  "bingo_grid": [
+    [
+      {
+        "question": "Sketches architecture on a napkin",
+        "shortQuestion": "Napkin architecture"
+      },
+      {
+        "question": "Shows a product demo on phone",
+        "shortQuestion": "Phone product demo"
+      }
+    ],
+    [
+      {
+        "question": "Explains their open-source contribution",
+        "shortQuestion": "Open-source contribution"
+      },
+      {
+        "question": "Asks 'What's your current stack?'",
+        "shortQuestion": "Current stack question"
+      }
+    ]
+  ]
+}
+```
 
 ## Participant Connections (`/api/participantConnections`)
 
