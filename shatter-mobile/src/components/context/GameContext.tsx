@@ -90,6 +90,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 			progress: eventProgress,
 		});
 
+		setGameType(GameType.NAME_BINGO); //TODO: Remove Hard Coded Game Type / change return of getEventById to include gameType
+
 		//Load persisted state if exists
 		try {
 			const saved = await AsyncStorage.getItem(storageKey(eventId, gameType));
@@ -142,6 +144,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 	const setGameProgress = async (progress: EventState) => {
 		if (!gameState) return;
 		const newState = { ...gameState, progress };
+		setGameState(newState);
+
+		try {
+			await AsyncStorage.setItem(
+				storageKey(gameState.eventId, gameState.gameType),
+				JSON.stringify(newState),
+			);
+		} catch (err) {
+			console.log("Failed to save game progress:", err);
+		}
+	};
+
+	const setGameType = async (type: GameType) => {
+		if (!gameState) return;
+		const newState = { ...gameState, type };
 		setGameState(newState);
 
 		try {

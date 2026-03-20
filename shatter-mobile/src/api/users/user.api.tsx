@@ -93,7 +93,6 @@ export async function UserFetchApi(
 		);
 
 		//TODO: Remove profile photo assigning here
-		//assign default photo if none stored (handled in signup as well)
 		if (!response.data.user.profilePhoto) {
 			const encodedName = encodeURIComponent(
 				response.data.user.name ?? "Unknown",

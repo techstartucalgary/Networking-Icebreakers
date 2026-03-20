@@ -1,5 +1,5 @@
 import { useGame } from "@/src/components/context/GameContext";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { ImageBackground, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,14 +9,12 @@ import { getEventById } from "../../src/services/event.service";
 import { GamePageStyling as styles } from "../../src/styling/GamePage.styles";
 
 const GamePage = () => {
-	const router = useRouter();
 	const { gameState } = useGame();
 	const [event, setEvent] = useState<any>(null);
 	const [loading, setLoading] = useState(true);
 
 	const loadEvent = useCallback(async () => {
 		if (!gameState?.eventId) {
-			router.replace("/(tabs)/EventsPage");
 			return;
 		}
 

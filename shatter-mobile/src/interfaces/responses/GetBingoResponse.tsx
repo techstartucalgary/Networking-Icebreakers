@@ -5,3 +5,4 @@ export default interface BingoDataResponse {
     success: boolean,
     bingo: BingoGame,
 }
+

@@ -1,13 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-	Image,
-	LayoutAnimation,
-	Pressable,
-	Text,
-	View
-} from "react-native";
-import EventIB, { EventState, GameType } from "../../interfaces/Event";
+import { Image, LayoutAnimation, Pressable, Text, View } from "react-native";
+import EventIB, { EventState } from "../../interfaces/Event";
 import { EventCardStyling as styles } from "../../styling/EventCard.styles";
 import { useGame } from "../context/GameContext";
 import ConnectionsModal from "./ConnectionsModal";
@@ -86,11 +80,6 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					{upcoming && (
 						<Pressable
 							onPress={() => {
-								if (event.currentState !== EventState.UPCOMING) {
-									//TODO: REMOVE hard-coded event data
-									event.currentState = EventState.UPCOMING;
-									event.gameType = GameType.NAME_BINGO;
-								}
 								initializeGame(event.gameType, event._id, event.currentState);
 								router.push(`/EventPages/EventLobby`);
 							}}
@@ -103,11 +92,6 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					{live && (
 						<Pressable
 							onPress={() => {
-								if (event.currentState !== EventState.IN_PROGRESS) {
-									//TODO: REMOVE hard-coded event data
-									event.currentState = EventState.IN_PROGRESS;
-									event.gameType = GameType.NAME_BINGO;
-								}
 								initializeGame(event.gameType, event._id, event.currentState);
 								router.push(`/GamePages/Game`);
 							}}
@@ -120,11 +104,6 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					{completed && (
 						<Pressable
 							onPress={() => {
-								if (event.currentState !== EventState.COMPLETED) {
-									//TODO: REMOVE hard-coded event data
-									event.currentState = EventState.COMPLETED;
-									event.gameType = GameType.NAME_BINGO;
-								}
 								initializeGame(event.gameType, event._id, event.currentState);
 								router.push(`/GamePages/Game`);
 							}}
