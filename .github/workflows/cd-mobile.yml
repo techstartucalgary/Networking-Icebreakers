@@ -45,4 +45,4 @@ jobs:
         run: |
           cd dist
           vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-          vercel deploy --prod --yes --token=$VERCEL_TOKEN
+          vercel deploy --prod --prebuilt --yes --token=$VERCEL_TOKEN
