@@ -66,6 +66,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		loadParticipant();
 	}, []);
 
+	useEffect(() => {
+		console.log("GameState updated:", gameState);
+	}, [gameState]);
+
 	const setCurrentParticipantId = async (id: string) => {
 		_setCurrentParticipantId(id);
 		try {
@@ -80,7 +84,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		eventId: string,
 		eventProgress: EventState,
 		initialData: any = {},
-	) => {
+	): Promise<void> => {
 		setGameState({
 			gameType,
 			eventId,
@@ -156,9 +160,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		}
 	};
 
-	const setGameType = async (type: GameType) => {
+	const setGameType = async (gameType: GameType) => {
 		if (!gameState) return;
-		const newState = { ...gameState, type };
+		const newState = { ...gameState, gameType };
 		setGameState(newState);
 
 		try {

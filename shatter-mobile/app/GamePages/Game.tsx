@@ -19,6 +19,7 @@ const GamePage = () => {
 		}
 
 		try {
+			console.log("Event ID: ", gameState.eventId);
 			const data = await getEventById(gameState.eventId);
 			setEvent(data?.event || null);
 		} catch (err) {
