@@ -1,5 +1,9 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
-  "buildCommand": null,
-  "outputDirectory": "dist"
+  "buildCommand": "npx expo export -p web",
+  "outputDirectory": "dist",
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://techstart-shatter-backend.vercel.app/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
