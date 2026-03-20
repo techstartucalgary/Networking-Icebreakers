@@ -1,18 +1,38 @@
 name: Deploy Mobile to Vercel
 on:
-  push:
-    branches: [main]
-    paths:
-      - "shatter-mobile/**"
-      - ".github/workflows/deploy-mobile.yml"
+  workflow_dispatch:
   pull_request:
     paths:
       - "shatter-mobile/**"
 
 jobs:
-  deploy:
+  build-check:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: shatter-mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: shatter-mobile
+        run: npm ci
+
+      - name: Build check only (no deploy)
+        working-directory: shatter-mobile
+        env:
+          EXPO_PUBLIC_API_URL: https://techstart-shatter-backend.vercel.app
+        run: npx expo export --platform web
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
