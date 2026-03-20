@@ -43,4 +43,4 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_MOBILE }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_MOBILE }}
         run: |   
-          vercel deploy dist --prod --prebuilt --yes --token=$VERCEL_TOKEN
+          vercel deploy dist --prod --yes --token=$VERCEL_TOKEN

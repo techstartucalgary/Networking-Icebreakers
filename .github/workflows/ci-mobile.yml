@@ -40,6 +40,24 @@ jobs:
       - name: Build Expo static export
         run: npx expo export
 
+      - name: Add vercel.json for static deploy
+        run: |
+          cat <<EOF > dist/vercel.json
+          {
+            "rewrites": [
+              { "source": "/(.*)", "destination": "/index.html" }
+            ],
+            "buildCommand": null
+          }
+          EOF
+
+      - name: Verify build output
+        run: |
+          echo "=== DIST CONTENT ==="
+          ls -la dist
+          echo "=== VERCEL CONFIG ==="
+          cat dist/vercel.json
+
       - name: Compress build artifact
         run: |
           tar -czf mobile-dist-${{ github.run_id }}.tar.gz dist
