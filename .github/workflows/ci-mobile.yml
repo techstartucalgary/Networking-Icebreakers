@@ -42,10 +42,10 @@ jobs:
 
       - name: Compress build artifact
         run: |
-          tar -czf mobile-dist-${{ github.run_number }}.tar.gz dist
+          tar -czf mobile-dist-${{ github.run_id }}.tar.gz dist
 
       - name: Upload mobile artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mobile-dist-${{ github.run_number }}
-          path: shatter-mobile/mobile-dist-${{ github.run_number }}.tar.gz
+          name: mobile-dist-${{ github.run_id }}
+          path: shatter-mobile/mobile-dist-${{ github.run_id }}.tar.gz
