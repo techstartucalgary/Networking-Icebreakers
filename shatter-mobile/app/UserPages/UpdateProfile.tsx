@@ -98,10 +98,6 @@ export default function UpdateProfile() {
 		}
 	};
 
-	const handleCancel = () => {
-		router.push("/(tabs)/ProfilePage");
-	};
-
 	return (
 		<ImageBackground
 			source={require("../../src/images/getStartedImage.png")}

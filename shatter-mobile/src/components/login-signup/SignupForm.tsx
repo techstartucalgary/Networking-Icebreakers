@@ -1,7 +1,7 @@
 //called by Profile.tsx for signing up
 import { User } from "@/src/interfaces/User";
 import { userSignup, userUpdate } from "@/src/services/user.service";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useState } from "react";
 import {
 	ActivityIndicator,
@@ -94,86 +94,92 @@ export default function SignUpForm() {
 	};
 
 	return (
-		<ImageBackground
-			source={require("../../images/getStartedImage.png")}
-			style={styles.background}
-			resizeMode="cover"
-		>
-			<SafeAreaView style={styles.safe}>
-				<View style={styles.header}>
-					<Text style={styles.logoTitle}>SHATTER</Text>
-					<Text style={styles.brandSubtitle}>Break The Ice</Text>
-				</View>
-				<KeyboardAvoidingView
-					style={{ flex: 1, justifyContent: "flex-end" }}
-					behavior={Platform.OS === "ios" ? "padding" : "height"}
-					keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-				>
-					<View style={styles.formWrap}>
-						<ScrollView
-							showsVerticalScrollIndicator={false}
-							keyboardShouldPersistTaps="handled"
-							contentContainerStyle={{ flexGrow: 1 }}
-						>
-							<Text style={styles.title}>Sign Up</Text>
-							<TextInput
-								style={styles.input}
-								placeholder="Name"
-								value={name}
-								onChangeText={setName}
-								placeholderTextColor="#888"
-							/>
-							<TextInput
-								style={styles.input}
-								placeholder="Email"
-								value={email}
-								onChangeText={setEmail}
-								placeholderTextColor="#888"
-							/>
-							<TextInput
-								style={styles.input}
-								placeholder="Password"
-								secureTextEntry
-								value={password}
-								onChangeText={setPassword}
-								placeholderTextColor="#888"
-							/>
-
-							<TouchableOpacity
-								style={[styles.button, loading && { backgroundColor: "#ccc" }]}
-								onPress={handleSignup}
-								disabled={loading}
-							>
-								{loading ? (
-									<ActivityIndicator color="#fff" />
-								) : (
-									<Text style={styles.buttonText}>Sign Up</Text>
-								)}
-							</TouchableOpacity>
-
-							{err && <Text style={styles.err}>{err}</Text>}
-
-							<TouchableOpacity
-								onPress={() => router.push("/UserPages/Login")}
-								style={{ marginTop: 16 }}
-							>
-								<Text style={{ textAlign: "center", color: "#1B2A4A" }}>
-									Already have an account? Log In
-								</Text>
-							</TouchableOpacity>
-							<Text style={{ textAlign: "center", color: "#afafaf" }}>
-								Password must be at least 8 characters long
-							</Text>
-							<Button
-								title="Continue as Guest"
-								onPress={() => router.push("/UserPages/Guest")}
-								color="#4A90B8"
-							/>
-						</ScrollView>
+		<>
+			<Stack.Screen options={{ animation: "slide_from_left" }} />
+			<ImageBackground
+				source={require("../../images/getStartedImage.png")}
+				style={styles.background}
+				resizeMode="cover"
+			>
+				<SafeAreaView style={styles.safe}>
+					<View style={styles.header}>
+						<Text style={styles.logoTitle}>SHATTER</Text>
+						<Text style={styles.brandSubtitle}>Break The Ice</Text>
 					</View>
-				</KeyboardAvoidingView>
-			</SafeAreaView>
-		</ImageBackground>
+					<KeyboardAvoidingView
+						style={{ flex: 1, justifyContent: "flex-end" }}
+						behavior={Platform.OS === "ios" ? "padding" : "height"}
+						keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+					>
+						<View style={styles.formWrap}>
+							<ScrollView
+								showsVerticalScrollIndicator={false}
+								keyboardShouldPersistTaps="handled"
+								contentContainerStyle={{ flexGrow: 1 }}
+							>
+								<Text style={styles.title}>Sign Up</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="Name"
+									value={name}
+									onChangeText={setName}
+									placeholderTextColor="#888"
+								/>
+								<TextInput
+									style={styles.input}
+									placeholder="Email"
+									value={email}
+									onChangeText={setEmail}
+									placeholderTextColor="#888"
+								/>
+								<TextInput
+									style={styles.input}
+									placeholder="Password"
+									secureTextEntry
+									value={password}
+									onChangeText={setPassword}
+									placeholderTextColor="#888"
+								/>
+
+								<TouchableOpacity
+									style={[
+										styles.button,
+										loading && { backgroundColor: "#ccc" },
+									]}
+									onPress={handleSignup}
+									disabled={loading}
+								>
+									{loading ? (
+										<ActivityIndicator color="#fff" />
+									) : (
+										<Text style={styles.buttonText}>Sign Up</Text>
+									)}
+								</TouchableOpacity>
+
+								{err && <Text style={styles.err}>{err}</Text>}
+
+								<TouchableOpacity
+									onPress={() => router.push("/UserPages/Login")}
+									style={{ marginTop: 16 }}
+								>
+									<Text style={{ textAlign: "center", color: "#1B2A4A" }}>
+										Already have an account? Log In
+									</Text>
+								</TouchableOpacity>
+								<Text style={{ textAlign: "center", color: "#afafaf" }}>
+									Password must be at least 8 characters long
+								</Text>
+								<Button
+									title="Continue as Guest"
+									onPress={() => router.push("/UserPages/Guest")}
+									color="#4A90B8"
+								/>
+							</ScrollView>
+						</View>
+					</KeyboardAvoidingView>
+				</SafeAreaView>
+			</ImageBackground>
+		</>
 	);
 }
 
