@@ -1,16 +1,26 @@
 import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 import { userUpdate } from "@/src/services/user.service";
+import { colors } from "@/src/styling/constants";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+	Image,
+	ImageBackground,
 	ScrollView,
-	StyleSheet,
 	Text,
 	TextInput,
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/components/context/AuthContext";
+import { UpdateProfileStyling as styles } from "../../src/styling/UpdateProfile.styles";
+
+const AVATAR_OPTIONS = [
+	"https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg",
+	"https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg",
+	"https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg",
+];
 
 export default function UpdateProfile() {
 	const { user, updateUser } = useAuth();
@@ -93,168 +103,162 @@ export default function UpdateProfile() {
 	};
 
 	return (
-		<ScrollView
-			style={styles.container}
-			contentContainerStyle={{ paddingBottom: 30 }}
+		<ImageBackground
+			source={require("../../src/images/getStartedImage.png")}
+			style={styles.background}
+			resizeMode="cover"
 		>
-			<Text style={styles.title}>Update Profile</Text>
-
-			<Text style={styles.label}>Name</Text>
-			<TextInput
-				style={styles.input}
-				value={name}
-				onChangeText={setName}
-				placeholder="Your Name"
-				placeholderTextColor="#666"
-			/>
-
-			<Text style={styles.label}>Email</Text>
-			<TextInput
-				style={styles.input}
-				value={email}
-				onChangeText={setEmail}
-				placeholder="Your Email"
-				placeholderTextColor="#666"
-				keyboardType="email-address"
-			/>
-			{user?.isGuest && (
-				<Text style={styles.inputInfo}>
-					By entering in your email and password, Shatter will create an account
-					for you with that info!
-				</Text>
-			)}
-
-			<Text style={styles.label}>Update Password</Text>
-			<TextInput
-				style={styles.input}
-				value={password}
-				onChangeText={setPassword}
-				placeholder="Update your Password"
-				placeholderTextColor="#666"
-				keyboardType="visible-password"
-			/>
-			<Text style={styles.inputInfo}>
-				Password must be at least 8 characters long
-			</Text>
-
-			{!user?.isGuest && (
-				<>
-					<Text style={styles.label}>Bio</Text>
-					<TextInput
-						style={[styles.input, { height: 100 }]}
-						value={bio}
-						onChangeText={setBio}
-						placeholder="Short bio"
-						placeholderTextColor="#666"
-						multiline
-					/>
-
-					<Text style={styles.label}>Profile Photo URL</Text>
-					<TextInput
-						style={styles.input}
-						value={profilePhoto}
-						onChangeText={setProfilePhoto}
-						placeholder="Profile Photo URL"
-						placeholderTextColor="#666"
-					/>
-				</>
-			)}
-
-			{/* Social Links Section */}
-			<Text style={[styles.label, { marginTop: 20 }]}>Social Links</Text>
-			{socialLinks.map((link, index) => (
-				<View key={index} style={styles.linkContainer}>
-					<TextInput
-						style={styles.input}
-						placeholder="Label (e.g. LinkedIn)"
-						placeholderTextColor="#666"
-						value={link.label}
-						onChangeText={(text) => handleLinkChange(index, "label", text)}
-					/>
-					<TextInput
-						style={styles.input}
-						placeholder="URL"
-						placeholderTextColor="#666"
-						value={link.url}
-						onChangeText={(text) => handleLinkChange(index, "url", text)}
-					/>
-					<TouchableOpacity
-						style={styles.removeButton}
-						onPress={() => removeLink(index)}
-					>
-						<Text style={styles.buttonText}>Remove</Text>
-					</TouchableOpacity>
+			<SafeAreaView style={styles.safe}>
+				<View style={styles.header}>
+					<Text style={styles.pageTitle}>Update Profile</Text>
+					<Text style={styles.subtitle}>Edit your details below</Text>
 				</View>
-			))}
 
-			<TouchableOpacity style={styles.addButton} onPress={addNewLink}>
-				<Text style={styles.buttonText}>+ Add Social Link</Text>
-			</TouchableOpacity>
+				<View style={styles.container}>
+					<ScrollView
+						showsVerticalScrollIndicator={false}
+						contentContainerStyle={{ paddingBottom: 40 }}
+					>
+						{/* Name */}
+						<Text style={styles.label}>Name</Text>
+						<TextInput
+							style={styles.input}
+							value={name}
+							onChangeText={setName}
+							placeholder="Your Name"
+							placeholderTextColor={colors.lightGrey2}
+						/>
 
-			<TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-				<Text style={styles.buttonText}>Save</Text>
-			</TouchableOpacity>
+						{/* Email */}
+						<Text style={styles.label}>Email</Text>
+						<TextInput
+							style={styles.input}
+							value={email}
+							onChangeText={setEmail}
+							placeholder="Your Email"
+							placeholderTextColor={colors.lightGrey2}
+							keyboardType="email-address"
+						/>
+						{user?.isGuest && (
+							<Text style={styles.inputInfo}>
+								By entering your email and password, Shatter will create an
+								account for you!
+							</Text>
+						)}
 
-			<TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-				<Text style={styles.buttonText}>Cancel</Text>
-			</TouchableOpacity>
-		</ScrollView>
+						{/* Password */}
+						<Text style={styles.label}>Update Password</Text>
+						<TextInput
+							style={styles.input}
+							value={password}
+							onChangeText={setPassword}
+							placeholder="Update your Password"
+							placeholderTextColor={colors.lightGrey2}
+							secureTextEntry
+						/>
+						<Text style={styles.inputInfo}>
+							Password must be at least 8 characters
+						</Text>
+
+						{/* Non-guest only */}
+						{!user?.isGuest && (
+							<>
+								<Text style={styles.label}>Bio</Text>
+								<TextInput
+									style={[
+										styles.input,
+										{ height: 100, textAlignVertical: "top" },
+									]}
+									value={bio}
+									onChangeText={setBio}
+									placeholder="Short bio"
+									placeholderTextColor={colors.lightGrey2}
+									multiline
+								/>
+
+								<Text style={styles.label}>Profile Photo</Text>
+
+								{/* Current selection preview */}
+								{profilePhoto && profilePhoto.length > 0 ? (
+									<Image
+										source={{ uri: profilePhoto }}
+										style={styles.avatarPreview}
+									/>
+								) : (
+									<View style={styles.avatarPlaceholder}>
+										<Text style={styles.avatarPlaceholderText}>
+											No photo selected
+										</Text>
+									</View>
+								)}
+
+								{/* Avatar grid */}
+								<View style={styles.avatarGrid}>
+									{AVATAR_OPTIONS.filter(Boolean).map((url) => (
+										<TouchableOpacity
+											key={url}
+											onPress={() => setProfilePhoto(url)}
+											style={[
+												styles.avatarOption,
+												profilePhoto === url && styles.avatarOptionSelected,
+											]}
+										>
+											<Image
+												source={{ uri: url }}
+												style={{ width: "100%", height: "100%" }}
+											/>
+										</TouchableOpacity>
+									))}
+								</View>
+							</>
+						)}
+
+						{/* Social Links */}
+						<Text style={[styles.label, { marginTop: 20 }]}>Social Links</Text>
+						{socialLinks.map((link, index) => (
+							<View key={index} style={styles.linkContainer}>
+								<TextInput
+									style={styles.input}
+									placeholder="Label (e.g. LinkedIn)"
+									placeholderTextColor={colors.lightGrey2}
+									value={link.label}
+									onChangeText={(text) =>
+										handleLinkChange(index, "label", text)
+									}
+								/>
+								<TextInput
+									style={styles.input}
+									placeholder="URL"
+									placeholderTextColor={colors.lightGrey2}
+									value={link.url}
+									onChangeText={(text) => handleLinkChange(index, "url", text)}
+								/>
+								<TouchableOpacity
+									style={styles.removeButton}
+									onPress={() => removeLink(index)}
+								>
+									<Text style={styles.buttonText}>Remove</Text>
+								</TouchableOpacity>
+							</View>
+						))}
+
+						<TouchableOpacity style={styles.addButton} onPress={addNewLink}>
+							<Text style={styles.buttonText}>+ Add Social Link</Text>
+						</TouchableOpacity>
+
+						<TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+							<Text style={styles.buttonText}>Save Changes</Text>
+						</TouchableOpacity>
+
+						<TouchableOpacity
+							style={styles.cancelButton}
+							onPress={() => router.push("/(tabs)/ProfilePage")}
+						>
+							<Text style={styles.buttonText}>Cancel</Text>
+						</TouchableOpacity>
+					</ScrollView>
+				</View>
+			</SafeAreaView>
+		</ImageBackground>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: { flex: 1, backgroundColor: "#A1C9F6", padding: 24 },
-	title: {
-		fontSize: 28,
-		fontWeight: "600",
-		textAlign: "center",
-		color: "#1B253A",
-		marginBottom: 16,
-	},
-	label: { fontWeight: "600", marginTop: 12 },
-	input: {
-		borderWidth: 1,
-		borderColor: "#1B253A",
-		color: "#000",
-		backgroundColor: "#fff",
-		borderRadius: 8,
-		padding: 10,
-		marginTop: 5,
-	},
-	inputInfo: { textAlign: "center", color: "#909090", fontStyle: "italic" },
-	saveButton: {
-		backgroundColor: "#4CAF50",
-		padding: 14,
-		borderRadius: 8,
-		alignItems: "center",
-		marginTop: 15,
-	},
-	cancelButton: {
-		backgroundColor: "#727272",
-		padding: 14,
-		borderRadius: 8,
-		alignItems: "center",
-		marginTop: 15,
-	},
-	addButton: {
-		backgroundColor: "#1eb4f0",
-		padding: 12,
-		borderRadius: 8,
-		alignItems: "center",
-		marginTop: 10,
-	},
-	removeButton: {
-		backgroundColor: "#F44336",
-		padding: 10,
-		borderRadius: 6,
-		alignItems: "center",
-		marginTop: 5,
-	},
-	buttonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-	linkContainer: {
-		marginBottom: 10,
-		backgroundColor: "#E6F0FF",
-		padding: 10,
-		borderRadius: 8,
-	},
-});
