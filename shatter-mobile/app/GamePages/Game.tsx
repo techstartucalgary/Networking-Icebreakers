@@ -19,7 +19,6 @@ const GamePage = () => {
 		}
 
 		try {
-			console.log("Event ID: ", gameState.eventId);
 			const data = await getEventById(gameState.eventId);
 			setEvent(data?.event || null);
 		} catch (err) {
@@ -48,8 +47,16 @@ const GamePage = () => {
 			<SafeAreaView style={styles.safe}>
 				<View style={styles.page}>
 					<View style={styles.eventCard}>
-						<Text style={styles.title}>{event.name}</Text>
-						<Text style={styles.description}>{event.description}</Text>
+						<Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+							{event.name}
+						</Text>
+						<Text
+							style={styles.description}
+							numberOfLines={2}
+							ellipsizeMode="tail"
+						>
+							{event.description}
+						</Text>
 					</View>
 
 					<View style={styles.gameContainer}>

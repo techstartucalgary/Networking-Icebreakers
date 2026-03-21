@@ -252,14 +252,12 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 			isValidParticipant(p._id),
 	);
 
-	const flatCategories = getInitialCards(categories);
-
 	const selectedCard = cards.find((c) => c.cardId === selectedCardId);
 
 	if (loading) return <FullPageLoader message="Loading bingo..." />;
 
 	return (
-		<View style={styles.container}>
+		<ScrollView style={styles.container}>
 			{/* Selected card */}
 			{selectedCard && (
 				<View style={styles.selectedCardInfo}>
@@ -336,7 +334,7 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 
 				{/* Roller */}
 				<ScrollView style={styles.rollerVertical}>
-					{flatCategories.map((item) => (
+					{cards.map((item) => (
 						<TouchableOpacity
 							key={item.cardId}
 							style={[
@@ -348,14 +346,12 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 								setSelectedCardId(item.cardId);
 							}}
 						>
-							<Text style={styles.rollerText}>
-								{item.tile?.question || "?"}
-							</Text>
+							<Text style={styles.rollerText}>{item.tile.question || "?"}</Text>
 						</TouchableOpacity>
 					))}
 				</ScrollView>
 			</View>
-		</View>
+		</ScrollView>
 	);
 };
 

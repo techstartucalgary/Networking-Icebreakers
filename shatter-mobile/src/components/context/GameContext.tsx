@@ -66,10 +66,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		loadParticipant();
 	}, []);
 
-	useEffect(() => {
-		console.log("GameState updated:", gameState);
-	}, [gameState]);
-
 	const setCurrentParticipantId = async (id: string) => {
 		_setCurrentParticipantId(id);
 		try {
