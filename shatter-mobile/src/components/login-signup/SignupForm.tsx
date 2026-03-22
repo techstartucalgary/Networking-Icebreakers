@@ -167,21 +167,23 @@ export default function SignUpForm() {
 								onPress={() => router.push("/UserPages/Login")}
 								style={{ marginTop: 16 }}
 							>
-								
 								<Text style={{ textAlign: "center", color: "#1B2A4A" }}>
 									Already have an account? Log In
 								</Text>
-								<Button
-									title="Continue as Guest"
-									onPress={() => router.push("/UserPages/Guest")}
-									color="#4A90B8"
-								/>
-							</ScrollView>
-						</View>
-					</KeyboardAvoidingView>
-				</SafeAreaView>
-			</ImageBackground>
-		</>
+							</TouchableOpacity>
+							<Text style={{ textAlign: "center", color: "#afafaf" }}>
+								Password must be at least 8 characters long
+							</Text>
+							<Button
+								title="Continue as Guest"
+								onPress={() => router.push("/UserPages/Guest")}
+								color="#4A90B8"
+							/>
+						</ScrollView>
+					</View>
+				</KeyboardAvoidingView>
+			</SafeAreaView>
+		</ImageBackground>
 	);
 }
 
