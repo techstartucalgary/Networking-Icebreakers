@@ -1,21 +1,10 @@
-import { User } from "@/src/interfaces/User";
-import { participantFetch, userFetch } from "@/src/services/user.service";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import {
-	FlatList,
-	Image,
-	LayoutAnimation,
-	Platform,
-	Pressable,
-	Text,
-	UIManager,
-	View,
-} from "react-native";
+import { useState } from "react";
+import { Image, LayoutAnimation, Pressable, Text, View } from "react-native";
 import EventIB, { EventState, GameType } from "../../interfaces/Event";
 import { EventCardStyling as styles } from "../../styling/EventCard.styles";
-import { useAuth } from "../context/AuthContext";
 import { useGame } from "../context/GameContext";
+import ConnectionsModal from "./ConnectionsModal";
 
 type EventCardProps = {
 	event: EventIB;
@@ -25,75 +14,13 @@ type EventCardProps = {
 
 const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	const router = useRouter();
-	const { user, authStorage } = useAuth();
-	const { initializeGame, currentParticipantId } = useGame();
-	const [connections, setConnections] = useState<User[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [err, setError] = useState("");
+	const { initializeGame } = useGame();
+	const [imageLoaded, setImageLoaded] = useState(false);
+	const [modalVisible, setModalVisible] = useState(false);
 
 	const upcoming = event.currentState === EventState.UPCOMING;
 	const live = event.currentState === EventState.IN_PROGRESS;
 	const completed = event.currentState === EventState.COMPLETED;
-
-	useEffect(() => {
-		if (expanded) {
-			loadConnections(event._id);
-		}
-
-		if (Platform.OS === "android") {
-			UIManager.setLayoutAnimationEnabledExperimental?.(true);
-		}
-	}, [expanded]);
-
-	const loadConnections = async (eventId: string) => {
-		try {
-			setLoading(true);
-
-			const userId = user?._id;
-			const accessToken = authStorage.accessToken;
-			const participantId = currentParticipantId;
-
-			if (!userId) {
-				throw new Error("No user logged in.");
-			}
-
-			if (!participantId) {
-				throw new Error("No participant set.");
-			}
-
-			//fetch the connection  info
-			const participantConnections = await participantFetch(
-				participantId,
-				eventId,
-				accessToken,
-			);
-
-			if (participantConnections.length === 0) {
-				setConnections([]);
-				setError("");
-				return;
-			}
-
-			const userPromises = participantConnections.map(async (conn) => {
-				if (!conn.user?._id) {
-					throw new Error(
-						`Missing userId for connection: ${conn.participantName}`,
-					);
-				}
-
-				const res = await userFetch(conn.user?._id, accessToken);
-				return res.user;
-			});
-
-			const detailedUsers = await Promise.all(userPromises);
-			setConnections(detailedUsers);
-		} catch (err) {
-			console.log("Load connections error:", err);
-			setError((err as Error).message);
-		} finally {
-			setLoading(false);
-		}
-	};
 
 	return (
 		<Pressable
@@ -101,10 +28,19 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 				LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 				onPress();
 			}}
-			style={styles.card}
+			style={[styles.card, { opacity: imageLoaded ? 1 : 0 }]}
 		>
+			{/* TODO: Swap to dynamic event image */}
 			<View style={styles.imageWrapper}>
-				<Image source={{ uri: event.eventImg }} style={styles.image} />
+				<Image
+					source={
+						event.eventImg
+							? { uri: event.eventImg }
+							: require("../../images/EventDrinksDark.png")
+					}
+					style={styles.image}
+					onLoad={() => setImageLoaded(true)}
+				/>
 
 				{/* Badges */}
 				{upcoming && (
@@ -121,8 +57,19 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 			</View>
 			<Text style={styles.title}>{event.name}</Text>
 
+			{/* Date + Time */}
 			<Text style={styles.date}>
-				{new Date(event.startDate).toLocaleString()}
+				{new Date(event.startDate).toLocaleDateString(undefined, {
+					weekday: "short",
+					year: "numeric",
+					month: "short",
+					day: "numeric",
+				})}
+				{" • "}
+				{new Date(event.startDate).toLocaleTimeString(undefined, {
+					hour: "2-digit",
+					minute: "2-digit",
+				})}
 			</Text>
 
 			{expanded && (
@@ -133,26 +80,27 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					{upcoming && (
 						<Pressable
 							onPress={() => {
-								if (event.currentState !== EventState.UPCOMING) {
-									//TODO: REMOVE hard-coded event data
-									event.currentState = EventState.UPCOMING;
+								//TODO: Remove hard-coded game type
+								if (!event.gameType) {
 									event.gameType = GameType.NAME_BINGO;
 								}
 								initializeGame(event.gameType, event._id, event.currentState);
-								router.push(`/EventPages/EventLobby`);
+								router.push({
+									pathname: "/EventPages/EventLobby",
+									params: { eventId: event._id },
+								});
 							}}
 							style={styles.upcomingButton}
 						>
-							<Text style={styles.upcomingButtonText}>Wait to Start</Text>
+							<Text style={styles.upcomingButtonText}>Wait to Start...</Text>
 						</Pressable>
 					)}
 
 					{live && (
 						<Pressable
 							onPress={() => {
-								if (event.currentState !== EventState.IN_PROGRESS) {
-									//TODO: REMOVE hard-coded event data
-									event.currentState = EventState.IN_PROGRESS;
+								//TODO: Remove hard-coded game type
+								if (!event.gameType) {
 									event.gameType = GameType.NAME_BINGO;
 								}
 								initializeGame(event.gameType, event._id, event.currentState);
@@ -167,9 +115,8 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					{completed && (
 						<Pressable
 							onPress={() => {
-								if (event.currentState !== EventState.COMPLETED) {
-									//TODO: REMOVE hard-coded event data
-									event.currentState = EventState.COMPLETED;
+								//TODO: Remove hard-coded game type
+								if (!event.gameType) {
 									event.gameType = GameType.NAME_BINGO;
 								}
 								initializeGame(event.gameType, event._id, event.currentState);
@@ -181,38 +128,23 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 						</Pressable>
 					)}
 
-					{loading && <Text>Loading connections...</Text>}
+					{/* Connections Button */}
+					<Pressable
+						onPress={() => setModalVisible(true)}
+						style={styles.connectionsButton}
+					>
+						<Text style={styles.connectionsButtonText}>
+							See Your Connections
+						</Text>
+					</Pressable>
 
-					{/* Connection List */}
-					{!loading && (
-						<>
-							<Text style={styles.connectionsTitle}>Connections:</Text>
-							{connections.length === 0 ? (
-								<Text style={styles.noConnectionsText}>
-									No connections yet! Go make some!
-								</Text>
-							) : (
-								<FlatList
-									data={connections}
-									keyExtractor={(item) => item._id ?? ""}
-									renderItem={({ item }) => (
-										<View style={styles.itemWrapper}>
-											{item.profilePhoto && (
-												<Image
-													source={{ uri: item.profilePhoto }}
-													style={styles.avatar}
-												/>
-											)}
-
-											<Text style={styles.item}>{item.name}</Text>
-										</View>
-									)}
-								/>
-							)}
-						</>
+					{/* Connections Modal */}
+					{modalVisible && (
+						<ConnectionsModal
+							onRequestClose={() => setModalVisible(false)}
+							event={event}
+						></ConnectionsModal>
 					)}
-
-					<Text style={styles.err}>{err}</Text>
 				</View>
 			)}
 		</Pressable>

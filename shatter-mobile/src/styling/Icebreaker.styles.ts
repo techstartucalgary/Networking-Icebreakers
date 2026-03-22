@@ -12,11 +12,10 @@ export const IcebreakerStyling = StyleSheet.create({
 		width: "100%",
 	},
 	gameCard: {
-		width: vw(90),
-		height: vh(70),
+		flex: 1,
 		backgroundColor: colors.white,
 		borderRadius: 14,
-		padding: 16,
+		padding: 7,
 		justifyContent: "space-between",
 
 		shadowColor: "#000",
@@ -32,7 +31,7 @@ export const IcebreakerStyling = StyleSheet.create({
 	},
 	leaveButton: {
 		backgroundColor: colors.darkNavy,
-		paddingVertical: 12,
+		paddingVertical: 14,
 		borderRadius: 10,
 		alignItems: "center",
 		marginTop: 20,
@@ -42,29 +41,5 @@ export const IcebreakerStyling = StyleSheet.create({
 		fontFamily: fonts.body,
 		fontSize: 16,
 		fontWeight: "600",
-	},
-	timer: {
-		fontSize: 16,
-		fontFamily: fonts.body,
-		fontWeight: "600",
-		color: colors.darkNavy,
-		marginBottom: 12,
-		textAlign: "center",
-	},
-	overlay: {
-		position: "absolute",
-		top: 0,
-		left: 0,
-		right: 0,
-		bottom: 0,
-		backgroundColor: "rgba(0,0,0,0.55)",
-		justifyContent: "center",
-		alignItems: "center",
-		borderRadius: 14,
-	},
-	overlayText: {
-		fontSize: 26,
-		fontFamily: fonts.title,
-		color: colors.white,
 	},
 });

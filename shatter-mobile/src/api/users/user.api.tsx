@@ -93,12 +93,11 @@ export async function UserFetchApi(
 		);
 
 		//TODO: Remove profile photo assigning here
-		//assign default photo if none stored (handled in signup as well)
 		if (!response.data.user.profilePhoto) {
 			const encodedName = encodeURIComponent(
 				response.data.user.name ?? "Unknown",
 			);
-			response.data.user.profilePhoto = `https://ui-avatars.com/api/?name=${encodedName}&background=random&format=png`;
+			response.data.user.profilePhoto = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedName}`;
 		}
 
 		return response.data;

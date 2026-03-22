@@ -1,19 +1,19 @@
 //called by Profile.tsx for signing up
 import { User } from "@/src/interfaces/User";
 import { userSignup, userUpdate } from "@/src/services/user.service";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  Button,
-  ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+	ActivityIndicator,
+	Button,
+	ImageBackground,
+	KeyboardAvoidingView,
+	Platform,
+	ScrollView,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SignUpFormStyling as styles } from "../../styling/SignUpFormStyling.styles";
@@ -64,7 +64,7 @@ export default function SignUpForm() {
 
 			//create default photo for profile and update user account
 			const encodedName = encodeURIComponent(name ?? "Unknown");
-			const profilePhoto = `https://ui-avatars.com/api/?name=${encodedName}&background=random&format=png`;
+			const profilePhoto = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedName}`;
 
 			const res = await userUpdate(
 				userResponse.userId,
@@ -171,20 +171,17 @@ export default function SignUpForm() {
 								<Text style={{ textAlign: "center", color: "#1B2A4A" }}>
 									Already have an account? Log In
 								</Text>
-							</TouchableOpacity>
-							<Text style={{ textAlign: "center", color: "#afafaf" }}>
-								Password must be at least 8 characters long
-							</Text>
-							<Button
-								title="Continue as Guest"
-								onPress={() => router.push("/UserPages/Guest")}
-								color="#4A90B8"
-							/>
-						</ScrollView>
-					</View>
-				</KeyboardAvoidingView>
-			</SafeAreaView>
-		</ImageBackground>
+								<Button
+									title="Continue as Guest"
+									onPress={() => router.push("/UserPages/Guest")}
+									color="#4A90B8"
+								/>
+							</ScrollView>
+						</View>
+					</KeyboardAvoidingView>
+				</SafeAreaView>
+			</ImageBackground>
+		</>
 	);
 }
 

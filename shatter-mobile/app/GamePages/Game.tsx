@@ -1,5 +1,5 @@
 import { useGame } from "@/src/components/context/GameContext";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { ImageBackground, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,14 +9,12 @@ import { getEventById } from "../../src/services/event.service";
 import { GamePageStyling as styles } from "../../src/styling/GamePage.styles";
 
 const GamePage = () => {
-	const router = useRouter();
 	const { gameState } = useGame();
 	const [event, setEvent] = useState<any>(null);
 	const [loading, setLoading] = useState(true);
 
 	const loadEvent = useCallback(async () => {
 		if (!gameState?.eventId) {
-			router.replace("/(tabs)/EventsPage");
 			return;
 		}
 
@@ -49,8 +47,16 @@ const GamePage = () => {
 			<SafeAreaView style={styles.safe}>
 				<View style={styles.page}>
 					<View style={styles.eventCard}>
-						<Text style={styles.title}>{event.name}</Text>
-						<Text style={styles.description}>{event.description}</Text>
+						<Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+							{event.name}
+						</Text>
+						<Text
+							style={styles.description}
+							numberOfLines={2}
+							ellipsizeMode="tail"
+						>
+							{event.description}
+						</Text>
 					</View>
 
 					<View style={styles.gameContainer}>
