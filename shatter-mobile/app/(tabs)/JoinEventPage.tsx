@@ -3,10 +3,10 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
 	ActivityIndicator,
-	Button,
 	ImageBackground,
 	Text,
 	TextInput,
+	TouchableOpacity,
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -66,35 +66,57 @@ export default function JoinEventPage() {
 
 						{!loading && (
 							<>
-								{!showScanner && (
-									<Button
-										title="Scan QR Code"
-										onPress={() => setShowScanner(true)}
-									/>
-								)}
+								{/* QR Section */}
+								<View style={styles.section}>
+									<Text style={styles.label}>Scan QR Code</Text>
 
-								{showScanner && (
-									<QRScannerBox onClose={() => setShowScanner(false)} />
-								)}
+									{!showScanner ? (
+										<TouchableOpacity
+											style={styles.buttonSecondary}
+											onPress={() => setShowScanner(true)}
+										>
+											<Text style={styles.buttonText}>Open Scanner</Text>
+										</TouchableOpacity>
+									) : (
+										<>
+											<QRScannerBox onClose={() => setShowScanner(false)} />
+											<TouchableOpacity
+												style={styles.buttonSecondary}
+												onPress={() => setShowScanner(false)}
+											>
+												<Text style={styles.buttonText}>Close Scanner</Text>
+											</TouchableOpacity>
+										</>
+									)}
+								</View>
 
-								<View style={styles.codeContainer}>
+								{/* Divider */}
+								<View style={styles.divider}>
+									<Text style={styles.dividerText}>OR</Text>
+								</View>
+
+								{/* Code Entry */}
+								<View>
+									<Text style={styles.label}>Enter Event Code</Text>
+
 									<TextInput
 										style={styles.input}
-										placeholder="Enter event code"
+										placeholder="ABC123"
 										value={eventCode}
 										onChangeText={(text) => {
 											setEventCode(text);
 											setErrorMessage("");
 										}}
 										autoCapitalize="characters"
-										autoCorrect={false}
 									/>
 
-									<Button
-										title="Join Event"
+									<TouchableOpacity
+										style={styles.button}
 										onPress={handleJoinEvent}
 										disabled={!eventCode.trim()}
-									/>
+									>
+										<Text style={styles.buttonText}>Join Event</Text>
+									</TouchableOpacity>
 
 									{errorMessage && (
 										<Text style={styles.errorText}>{errorMessage}</Text>
