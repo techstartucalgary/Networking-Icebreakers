@@ -6,6 +6,7 @@ import {
 	UserLoginApi,
 	UserSignupApi,
 	UserUpdateApi,
+	ExchangeLinkedInCodeApi
 } from "../api/users/user.api";
 import CreateUserConnectionResponse from "../interfaces/responses/CreateUserConnectionResponse";
 import { ConnectedUser } from "../interfaces/responses/GetParticipantInfoResponse";
@@ -15,6 +16,7 @@ import UserInfoUpdateResponse from "../interfaces/responses/UpdateUserInfoRespon
 import UserLoginResponse from "../interfaces/responses/UserLoginResponse";
 import UserSignupResponse from "../interfaces/responses/UserSignupResponse";
 import { User } from "../interfaces/User";
+
 
 export async function userLogin(
 	email: string,
@@ -76,4 +78,7 @@ export async function userUpdate(
 	token: string,
 ): Promise<UserInfoUpdateResponse> {
 	return await UserUpdateApi(userId, updates, token);
+}
+export async function exchangeLinkedInCode(code: string): Promise<UserLoginResponse> {
+    return await ExchangeLinkedInCodeApi(code);
 }

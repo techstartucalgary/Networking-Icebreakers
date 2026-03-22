@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SignUpFormStyling as styles } from "../../styling/SignUpFormStyling.styles";
 import { useAuth } from "../context/AuthContext";
+import * as WebBrowser from "expo-web-browser";
 
 export default function SignUpForm() {
 	const { authenticate } = useAuth();
@@ -26,6 +27,11 @@ export default function SignUpForm() {
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
+	const handleLinkedIn = async () => {
+    await WebBrowser.openBrowserAsync(
+			`${process.env.EXPO_PUBLIC_API_BASE}/api/auth/linkedin`
+		);
+	};
 
 	const handleSignup = async () => {
 		setError("");
@@ -152,11 +158,16 @@ export default function SignUpForm() {
 							</TouchableOpacity>
 
 							{err && <Text style={styles.err}>{err}</Text>}
+							<TouchableOpacity style={styles.socialButton} onPress={handleLinkedIn}>
+								<Text style={{ fontSize: 18, fontWeight: "900", color: "#0A66C2" }}>in</Text>
+								<Text style={styles.socialButtonText}>Sign up with LinkedIn</Text>
+							</TouchableOpacity>
 
 							<TouchableOpacity
 								onPress={() => router.push("/UserPages/Login")}
 								style={{ marginTop: 16 }}
 							>
+								
 								<Text style={{ textAlign: "center", color: "#1B2A4A" }}>
 									Already have an account? Log In
 								</Text>

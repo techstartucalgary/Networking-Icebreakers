@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LoginFormStyling as styles } from "../../styling/LoginFormstyling.styles";
 import { useAuth } from "../context/AuthContext";
+import * as WebBrowser from "expo-web-browser";
 
 export default function LoginForm() {
 	const { authenticate } = useAuth();
@@ -25,9 +26,10 @@ export default function LoginForm() {
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
 
-	const handleLinkedIn = () => {
-		// wire linkedin from backend
-		console.log("LinkedIn login pressed");
+	const handleLinkedIn = async () => {
+		await WebBrowser.openBrowserAsync(
+			`${process.env.EXPO_PUBLIC_API_BASE}/api/auth/linkedin`
+		);
 	};
 
 	const handleLogin = async () => {
