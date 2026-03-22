@@ -861,9 +861,9 @@ Create a bingo game for an event.
 
 | Field         | Type       | Required | Notes |
 |---------------|------------|----------|-------|
-| `_eventId`    | ObjectId   | Yes      | Must reference an existing event |
-| `description` | string     | No       | |
-| `grid`        | string[][] | No       | 2D array of strings |
+| `_eventId`    | ObjectId       | Yes      | Must reference an existing event |
+| `description` | string         | No       | |
+| `grid`        | BingoTile\[\]\[\] | No       | 2D array of `{ question: string, shortQuestion: string }` |
 
 **Success Response (201):**
 
@@ -876,9 +876,16 @@ Create a bingo game for an event.
     "_eventId": "665a...",
     "description": "Networking Bingo",
     "grid": [
-      ["Has a pet", "Speaks 3 languages", "Loves hiking"],
-      ["Works remotely", "Free space", "Plays guitar"],
-      ["From another country", "Has a blog", "Codes in Rust"]
+      [
+        { "question": "Has a pet", "shortQuestion": "Has pet" },
+        { "question": "Speaks 3 languages", "shortQuestion": "Speaks languages" },
+        { "question": "Loves hiking outdoors", "shortQuestion": "Loves hiking" }
+      ],
+      [
+        { "question": "Works remotely full-time", "shortQuestion": "Works remotely" },
+        { "question": "Free space", "shortQuestion": "Free space" },
+        { "question": "Plays guitar regularly", "shortQuestion": "Plays guitar" }
+      ]
     ]
   }
 }
@@ -890,7 +897,7 @@ Create a bingo game for an event.
 |--------|-------|
 | 400    | `"_eventId is required"` |
 | 400    | `"_eventId must be a valid ObjectId"` |
-| 400    | `"grid must be a 2D array of strings"` |
+| 400    | `"grid must be a 2D array of { question: string, shortQuestion: string }"` |
 | 404    | `"Event not found"` |
 
 ---
@@ -916,7 +923,12 @@ Get bingo by event ID (or bingo ID).
     "_id": "bingo_a1b2c3d4",
     "_eventId": "665a...",
     "description": "Networking Bingo",
-    "grid": [["Has a pet", "Speaks 3 languages", ...], ...]
+    "grid": [
+      [
+        { "question": "Has a pet", "shortQuestion": "Has pet" },
+        { "question": "Speaks 3 languages", "shortQuestion": "Speaks languages" }
+      ]
+    ]
   }
 }
 ```
@@ -939,9 +951,9 @@ Update a bingo game.
 
 | Field         | Type       | Required | Notes |
 |---------------|------------|----------|-------|
-| `id`          | string     | Yes      | Bingo `_id` or event `_eventId` |
-| `description` | string     | No       | |
-| `grid`        | string[][] | No       | 2D array of strings |
+| `id`          | string         | Yes      | Bingo `_id` or event `_eventId` |
+| `description` | string         | No       | |
+| `grid`        | BingoTile\[\]\[\] | No       | 2D array of `{ question: string, shortQuestion: string }` |
 
 **Success Response (200):**
 
@@ -958,7 +970,7 @@ Update a bingo game.
 |--------|-------|
 | 400    | `"id is required"` |
 | 400    | `"description must be a string"` |
-| 400    | `"grid must be a 2D array of strings"` |
+| 400    | `"grid must be a 2D array of { question: string, shortQuestion: string }"` |
 | 400    | `"Nothing to update: provide description and/or grid"` |
 | 404    | `"Bingo not found"` |
 
@@ -970,7 +982,7 @@ Update a bingo game.
 
 Generate an AI-powered bingo grid based on a given context.
 
-- **Auth:** Not specified (assumed Public unless otherwise enforced)
+- **Auth:** Protected
 
 **Request Body:**
 
