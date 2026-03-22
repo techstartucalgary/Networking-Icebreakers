@@ -13,7 +13,6 @@ import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Console } from "node:console";
 
 /**
  * POST /api/bingo
@@ -46,18 +45,24 @@ export async function createBingo(req: Request, res: Response) {
     }
 
     if (grid !== undefined) {
-      const is2DStringArray =
+      const isValidGrid =
         Array.isArray(grid) &&
         grid.every(
           (row: any) =>
             Array.isArray(row) &&
-            row.every((cell: any) => typeof cell === "string")
+            row.every(
+              (cell: any) =>
+                cell &&
+                typeof cell === "object" &&
+                typeof cell.question === "string" &&
+                typeof cell.shortQuestion === "string"
+            )
         );
 
-      if (!is2DStringArray) {
+      if (!isValidGrid) {
         return res.status(400).json({
           success: false,
-          msg: "grid must be a 2D array of strings",
+          msg: "grid must be a 2D array of { question: string, shortQuestion: string }",
         });
       }
     }
@@ -149,18 +154,24 @@ export async function updateBingo(req: Request, res: Response) {
     }
 
     if (grid !== undefined) {
-      const is2DStringArray =
+      const isValidGrid =
         Array.isArray(grid) &&
         grid.every(
           (row: any) =>
             Array.isArray(row) &&
-            row.every((cell: any) => typeof cell === "string")
+            row.every(
+              (cell: any) =>
+                cell &&
+                typeof cell === "object" &&
+                typeof cell.question === "string" &&
+                typeof cell.shortQuestion === "string"
+            )
         );
 
-      if (!is2DStringArray) {
+      if (!isValidGrid) {
         return res.status(400).json({
           success: false,
-          msg: "grid must be a 2D array of strings",
+          msg: "grid must be a 2D array of { question: string, shortQuestion: string }",
         });
       }
 
@@ -276,13 +287,17 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
     },
   });
 
-  const parsed = JSON.parse(response.text!);
+  if (!response.text) {
+    throw new Error("Gemini returned empty response");
+  }
+
+  const parsed = JSON.parse(response.text);
   const validated: Record<string, string[]> = schema.parse(parsed);
   return validated;
 
   } catch (error) {
-    console.error("Generation failed:", error);  
-    return makeEmptyGrid(n_rows, n_cols)    
+    console.error("Generation failed:", error);
+    return makeEmptyGrid(n_rows, n_cols)
   }
 }
 
@@ -323,13 +338,17 @@ async function generateBingoGrid_shortVersions(n_rows: number, n_cols: number, o
     },
   });
 
-  const parsed = JSON.parse(response.text!);
+  if (!response.text) {
+    throw new Error("Gemini returned empty response");
+  }
+
+  const parsed = JSON.parse(response.text);
   const validated: Record<string, string[]> = schema.parse(parsed);
   return validated;
 
   } catch (error) {
-    console.error("Generation failed:", error);  
-    return makeEmptyGrid(n_rows, n_cols)    
+    console.error("Short version generation failed:", error);
+    return makeEmptyGrid(n_rows, n_cols)
   }
 }
 
@@ -356,7 +375,7 @@ function combine2DArrays(arr1: string[][], arr2: string[][]): { question: string
   return arr1.map((row, i) =>
     row.map((val, j) => ({
       question: val,
-      shortQuestion: arr2[i][j]
+      shortQuestion: arr2[i]?.[j] || val,
     }))
   );
 }

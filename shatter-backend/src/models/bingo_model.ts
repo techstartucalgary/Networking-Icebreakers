@@ -1,10 +1,15 @@
 import { Schema, model, Types, HydratedDocument } from "mongoose";
 
+export interface BingoTile {
+  question: string;
+  shortQuestion: string;
+}
+
 export interface IBingo {
   _id: string;
   _eventId: Types.ObjectId;
   description?: string;
-  grid?: string[][];
+  grid?: BingoTile[][];
 }
 
 export type BingoDocument = HydratedDocument<IBingo>;
@@ -18,7 +23,12 @@ const bingoSchema = new Schema<IBingo>(
       required: true,
     },
     description: { type: String },
-    grid: { type: [[String]] },
+    grid: {
+      type: [[{
+        question: { type: String, required: true },
+        shortQuestion: { type: String, required: true },
+      }]],
+    },
   },
   {
     versionKey: false,
