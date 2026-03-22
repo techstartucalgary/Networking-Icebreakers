@@ -101,12 +101,12 @@ export const UpdateProfileStyling = StyleSheet.create({
 	avatarGrid: {
 		flexDirection: "row",
 		flexWrap: "wrap",
-		justifyContent: "space-between",
+		justifyContent: "flex-start",
 		marginTop: 8,
-		gap: 8,
+		gap: 4,
 	},
 	avatarOption: {
-		width: "30%",
+		width: "32%",
 		aspectRatio: 1,
 		borderRadius: 2,
 		borderWidth: 2,
@@ -114,7 +114,7 @@ export const UpdateProfileStyling = StyleSheet.create({
 	},
 	avatarOptionSelected: {
 		borderColor: colors.darkNavy,
-		transform: [{ scale: 1.05 }],
+		borderRadius: 25,
 	},
 	avatarOptionImage: {
 		width: "100%",

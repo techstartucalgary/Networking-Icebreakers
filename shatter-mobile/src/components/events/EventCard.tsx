@@ -104,7 +104,10 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 									event.gameType = GameType.NAME_BINGO;
 								}
 								initializeGame(event.gameType, event._id, event.currentState);
-								router.push(`/GamePages/Game`);
+								router.push({
+									pathname: "/GamePages/Game",
+									params: { eventId: event._id },
+								});
 							}}
 							style={styles.joinButton}
 						>
@@ -120,7 +123,10 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 									event.gameType = GameType.NAME_BINGO;
 								}
 								initializeGame(event.gameType, event._id, event.currentState);
-								router.push(`/GamePages/Game`);
+								router.push({
+									pathname: "/GamePages/Game",
+									params: { eventId: event._id },
+								});
 							}}
 							style={styles.viewButton}
 						>

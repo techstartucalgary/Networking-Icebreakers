@@ -16,10 +16,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/components/context/AuthContext";
 import { UpdateProfileStyling as styles } from "../../src/styling/UpdateProfile.styles";
 
+const AVATAR_URL = process.env.AVATAR_URL;
+
 const AVATAR_OPTIONS = [
-	"https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg",
-	"https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg",
-	"https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg",
+	`${AVATAR_URL}/avatar1.png`,
+	`${AVATAR_URL}/avatar2.png`,
+	`${AVATAR_URL}/avatar3.png`,
+	`${AVATAR_URL}/avatar4.png`,
+	`${AVATAR_URL}/avatar5.png`,
 ];
 
 export default function UpdateProfile() {
@@ -201,7 +205,7 @@ export default function UpdateProfile() {
 										>
 											<Image
 												source={{ uri: url }}
-												style={{ width: "100%", height: "100%" }}
+												style={styles.avatarOptionImage}
 											/>
 										</TouchableOpacity>
 									))}

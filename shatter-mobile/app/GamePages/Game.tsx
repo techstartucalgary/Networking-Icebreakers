@@ -1,5 +1,4 @@
-import { useGame } from "@/src/components/context/GameContext";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ImageBackground, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,17 +8,18 @@ import { getEventById } from "../../src/services/event.service";
 import { GamePageStyling as styles } from "../../src/styling/GamePage.styles";
 
 const GamePage = () => {
-	const { gameState } = useGame();
+	const { eventId } = useLocalSearchParams<{ eventId: string }>(); //avoid race conditions with initializeGame
 	const [event, setEvent] = useState<any>(null);
 	const [loading, setLoading] = useState(true);
 
 	const loadEvent = useCallback(async () => {
-		if (!gameState?.eventId) {
+		if (!eventId) {
+			setLoading(false);
 			return;
 		}
 
 		try {
-			const data = await getEventById(gameState.eventId);
+			const data = await getEventById(eventId);
 			setEvent(data?.event || null);
 		} catch (err) {
 			console.log("Failed to load event:", err);
@@ -27,7 +27,7 @@ const GamePage = () => {
 		} finally {
 			setLoading(false); //wait for children to load
 		}
-	}, [gameState?.eventId]);
+	}, [eventId]);
 
 	useFocusEffect(
 		useCallback(() => {
