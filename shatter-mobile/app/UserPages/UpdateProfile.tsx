@@ -25,7 +25,8 @@ const AVATAR_OPTIONS = [
 export default function UpdateProfile() {
 	const { user, updateUser } = useAuth();
 	const router = useRouter();
-
+	// for toggling avatar
+	const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 	const [name, setName] = useState(user?.name || "");
 	const [email, setEmail] = useState(user?.email || "");
 	const [password, setPassword] = useState("");
@@ -115,6 +116,76 @@ export default function UpdateProfile() {
 						showsVerticalScrollIndicator={false}
 						contentContainerStyle={{ paddingBottom: 40 }}
 					>
+						{!user?.isGuest && (
+							<>
+								<Text style={styles.label}>Profile Photo</Text>
+								{/* avatar picker */}
+								<TouchableOpacity
+									onPress={() => setShowAvatarPicker((prev) => !prev)}
+									activeOpacity={0.85}
+								>
+									{profilePhoto && profilePhoto.length > 0 ? (
+										<View style={styles.avatarPreviewWrapper}>
+											<Image
+												source={{ uri: profilePhoto }}
+												style={styles.avatarPreview}
+											/>
+											<View style={styles.avatarEditBadge}>
+												<Text style={styles.avatarEditBadgeText}>✎</Text>
+											</View>
+										</View>
+									) : (
+										<View style={styles.avatarPreviewWrapper}>
+											<View style={styles.avatarPlaceholder}>
+												<Text style={styles.avatarPlaceholderText}>
+													Tap to choose
+												</Text>
+											</View>
+											<View style={styles.avatarEditBadge}>
+												<Text style={styles.avatarEditBadgeText}>✎</Text>
+											</View>
+										</View>
+									)}
+								</TouchableOpacity>
+
+								{/* Avatar grid:only open when picker is clicked */}
+								{showAvatarPicker && (
+									<View style={styles.avatarPickerContainer}>
+										<Text style={styles.avatarPickerLabel}>Choose an avatar</Text>
+										<View style={styles.avatarGrid}>
+											{AVATAR_OPTIONS.filter(Boolean).map((url, idx) => (
+												<TouchableOpacity
+													key={idx}
+													onPress={() => {
+														setProfilePhoto(url);
+														setShowAvatarPicker(false);
+													}}
+													style={[
+														styles.avatarOption,
+														profilePhoto === url && styles.avatarOptionSelected,
+													]}
+												>
+													<Image
+														source={{ uri: url }}
+														style={{ width: "100%", height: "100%" }}
+													/>
+												</TouchableOpacity>
+											))}
+										</View>
+									</View>
+								)}
+								<Text style={styles.label}>Bio</Text>
+								<TextInput
+									style={[styles.input, { height: 100, textAlignVertical: "top" }]}
+									value={bio}
+									onChangeText={setBio}
+									placeholder="Short bio"
+									placeholderTextColor= "#7A95AD"
+									multiline
+								/>
+							</>
+							
+						)}
 						{/* Name */}
 						<Text style={styles.label}>Name</Text>
 						<TextInput
@@ -157,57 +228,7 @@ export default function UpdateProfile() {
 						</Text>
 
 						{/* Non-guest only */}
-						{!user?.isGuest && (
-							<>
-								<Text style={styles.label}>Bio</Text>
-								<TextInput
-									style={[
-										styles.input,
-										{ height: 100, textAlignVertical: "top" },
-									]}
-									value={bio}
-									onChangeText={setBio}
-									placeholder="Short bio"
-									placeholderTextColor={colors.lightGrey2}
-									multiline
-								/>
 
-								<Text style={styles.label}>Profile Photo</Text>
-
-								{/* Current selection preview */}
-								{profilePhoto && profilePhoto.length > 0 ? (
-									<Image
-										source={{ uri: profilePhoto }}
-										style={styles.avatarPreview}
-									/>
-								) : (
-									<View style={styles.avatarPlaceholder}>
-										<Text style={styles.avatarPlaceholderText}>
-											No photo selected
-										</Text>
-									</View>
-								)}
-
-								{/* Avatar grid */}
-								<View style={styles.avatarGrid}>
-									{AVATAR_OPTIONS.filter(Boolean).map((url) => (
-										<TouchableOpacity
-											key={url}
-											onPress={() => setProfilePhoto(url)}
-											style={[
-												styles.avatarOption,
-												profilePhoto === url && styles.avatarOptionSelected,
-											]}
-										>
-											<Image
-												source={{ uri: url }}
-												style={{ width: "100%", height: "100%" }}
-											/>
-										</TouchableOpacity>
-									))}
-								</View>
-							</>
-						)}
 
 						{/* Social Links */}
 						<Text style={[styles.label, { marginTop: 20 }]}>Social Links</Text>
