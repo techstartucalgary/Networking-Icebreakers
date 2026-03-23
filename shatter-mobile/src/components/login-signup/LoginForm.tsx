@@ -2,6 +2,7 @@
 import { User } from "@/src/interfaces/User";
 import { userFetch, userLogin } from "@/src/services/user.service";
 import { router, Stack } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import {
 	ActivityIndicator,
@@ -17,7 +18,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LoginFormStyling as styles } from "../../styling/LoginFormstyling.styles";
 import { useAuth } from "../context/AuthContext";
-import * as WebBrowser from "expo-web-browser";
 
 export default function LoginForm() {
 	const { authenticate } = useAuth();
@@ -28,7 +28,7 @@ export default function LoginForm() {
 
 	const handleLinkedIn = async () => {
 		await WebBrowser.openBrowserAsync(
-			`${process.env.EXPO_PUBLIC_API_BASE}/api/auth/linkedin`
+			`${process.env.EXPO_PUBLIC_API_BASE}/api/auth/linkedin`,
 		);
 	};
 
@@ -175,9 +175,9 @@ export default function LoginForm() {
 								<TouchableOpacity
 									onPress={() => router.push("/UserPages/Signup")}
 								>
-									<Text style={styles.signupLinkText}>
+									<Text style={styles.loginLinkText}>
 										Don&apos;t have an account?{" "}
-										<Text style={styles.signupLinkBold}>Sign Up</Text>
+										<Text style={styles.loginLinkBold}>Sign Up</Text>
 									</Text>
 								</TouchableOpacity>
 							</ScrollView>

@@ -153,13 +153,13 @@ export const LoginFormStyling = StyleSheet.create({
     fontWeight: "600",
     color: "#1B253A",
   },
-  signupLinkText: {
+  loginLinkText: {
     textAlign: "center",
     fontSize: vw(3.5),
     color: "#888",
     marginTop: vh(1),
   },
-  signupLinkBold: {
+  loginLinkBold: {
     fontWeight: "700",
     color: "#1B2A4A",
   },

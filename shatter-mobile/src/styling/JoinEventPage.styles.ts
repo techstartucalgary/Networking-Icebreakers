@@ -92,6 +92,12 @@ export const JoinEventStyling = StyleSheet.create({
 		marginTop: 10,
 	},
 
+	scannerButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 5,
+	},
+
 	buttonText: {
 		color: colors.white,
 		fontWeight: "700",

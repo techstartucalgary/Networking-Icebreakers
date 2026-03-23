@@ -1,4 +1,6 @@
 import { useJoinEvent } from "@/src/components/new-events/JoinEvent";
+import { colors } from "@/src/styling/constants";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -75,7 +77,10 @@ export default function JoinEventPage() {
 											style={styles.buttonSecondary}
 											onPress={() => setShowScanner(true)}
 										>
-											<Text style={styles.buttonText}>Open Scanner</Text>
+											<View style={styles.scannerButton}>
+												<Ionicons name="scan-outline" color={colors.white} />
+												<Text style={styles.buttonText}>Open Scanner</Text>
+											</View>
 										</TouchableOpacity>
 									) : (
 										<>
@@ -84,7 +89,9 @@ export default function JoinEventPage() {
 												style={styles.buttonSecondary}
 												onPress={() => setShowScanner(false)}
 											>
-												<Text style={styles.buttonText}>Close Scanner</Text>
+												<View style={styles.scannerButton}>
+													<Text style={styles.buttonText}>Close Scanner</Text>
+												</View>
 											</TouchableOpacity>
 										</>
 									)}
@@ -115,7 +122,10 @@ export default function JoinEventPage() {
 										onPress={handleJoinEvent}
 										disabled={!eventCode.trim()}
 									>
-										<Text style={styles.buttonText}>Join Event</Text>
+										<View style={styles.scannerButton}>
+											<Ionicons name="search-outline" color={colors.white} />
+											<Text style={styles.buttonText}>Join Event</Text>
+										</View>
 									</TouchableOpacity>
 
 									{errorMessage && (

@@ -113,6 +113,16 @@ export const SignUpFormStyling = StyleSheet.create({
 		color: "#0A66C2",
 		letterSpacing: 0.5,
 	},
+	signupLinkText: {
+		textAlign: "center",
+		fontSize: vw(3.5),
+		color: "#888",
+		marginTop: vh(1),
+	},
+	signupLinkBold: {
+		fontWeight: "700",
+		color: "#1B2A4A",
+	},
 
 	// need to implement linkedin user
 	//   dividerRow: {

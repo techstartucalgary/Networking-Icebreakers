@@ -1,7 +1,7 @@
 //called by Profile.tsx for signing up
 import { User } from "@/src/interfaces/User";
 import { userSignup, userUpdate } from "@/src/services/user.service";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import {
@@ -102,6 +102,7 @@ export default function SignUpForm() {
 
 	return (
 		<>
+			<Stack.Screen options={{ animation: "slide_from_left" }} />
 			<ImageBackground
 				source={require("../../images/getStartedImage.png")}
 				style={styles.background}
@@ -185,13 +186,14 @@ export default function SignUpForm() {
 									onPress={() => router.push("/UserPages/Login")}
 									style={{ marginTop: 16 }}
 								>
-									<Text style={{ textAlign: "center", color: "#1B2A4A" }}>
-										Already have an account? Log In
+									<Text style={styles.signupLinkText}>
+										Already have an Account?{" "}
+										<Text style={styles.signupLinkBold}>Log In</Text>
 									</Text>
 									<Button
 										title="Continue as Guest"
 										onPress={() => router.push("/UserPages/Guest")}
-										color="#4A90B8"
+										color="#407c9e"
 									/>
 								</TouchableOpacity>
 							</ScrollView>
