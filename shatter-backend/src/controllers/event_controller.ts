@@ -170,7 +170,7 @@ export async function getEventByJoinCode(req: Request, res: Response) {
 export async function joinEventAsUser(req: Request, res: Response) {
   try {
     const { name, userId } = req.body;
-    const eventId = req.params.eventId as string;
+    const { eventId } = req.params;
 
     if (!userId || !name || !eventId)
       return res.status(400).json({
@@ -279,7 +279,7 @@ export async function joinEventAsGuest(req: Request, res: Response) {
       organization?: string;
       title?: string;
     };
-    const eventId = req.params.eventId as string;
+    const { eventId } = req.params;
 
     if (!name || !eventId) {
       return res.status(400).json({
@@ -404,7 +404,7 @@ export async function joinEventAsGuest(req: Request, res: Response) {
  */
 export async function getEventById(req: Request, res: Response) {
   try {
-    const eventId = req.params.eventId as string;
+    const { eventId } = req.params;
 
     if (!eventId) {
       return res
@@ -455,7 +455,7 @@ export async function getEventById(req: Request, res: Response) {
  */
 export async function updateEventStatus(req: Request, res: Response) {
   try {
-    const eventId = req.params.eventId as string;
+    const { eventId } = req.params;
     const { status } = req.body;
 
     const validStatuses = ['In Progress', 'Completed'];

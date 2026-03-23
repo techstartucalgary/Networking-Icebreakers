@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 
-import { ensureConnection } from "./utils/db";
 import userRoutes from './routes/user_route';
 import authRoutes from './routes/auth_routes';
 import eventRoutes from './routes/event_routes';
@@ -40,9 +39,6 @@ app.use(
 app.get("/", (_req, res) => {
   res.send("Hello");
 });
-
-// Ensure DB connection is alive before handling any API request
-app.use("/api", ensureConnection);
 
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
