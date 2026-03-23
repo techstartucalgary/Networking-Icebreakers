@@ -3,9 +3,13 @@ name: CD - Deploy Backend
 on:
   workflow_dispatch:
     inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'main'
       build_number:
         description: 'CI Build Number'
-        required: true
+        required: false
         type: string
 
 jobs:
@@ -15,6 +19,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
 
       - name: Download build artifact from CI workflow
         env:
