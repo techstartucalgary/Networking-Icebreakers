@@ -3,13 +3,9 @@ name: CD - Deploy Backend
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'Branch to deploy'
-        required: true
-        default: 'main'
       build_number:
         description: 'CI Build Number'
-        required: false
+        required: true
         type: string
 
 jobs:
@@ -19,8 +15,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
 
       - name: Download build artifact from CI workflow
         env:
@@ -58,6 +52,6 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_BACKEND }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
         run: |
-          cd shatter-backend
+          cd output
           vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-          vercel deploy --prod --force --token=$VERCEL_TOKEN
+          vercel deploy --prod --token=$VERCEL_TOKEN
