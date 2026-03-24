@@ -103,11 +103,7 @@ export async function getBingo(req: Request, res: Response) {
       });
     }
 
-    let bingo = await Bingo.findById(eventId);
-
-    if (!bingo && Types.ObjectId.isValid(eventId)) {
-      bingo = await Bingo.findOne({ _eventId: eventId });
-    }
+    let bingo = await Bingo.findOne({ _eventId: eventId });
 
     if (!bingo) {
       return res.status(404).json({
