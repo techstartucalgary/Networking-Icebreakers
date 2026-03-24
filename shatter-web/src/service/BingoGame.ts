@@ -1,7 +1,6 @@
 // services/BingoGame.ts
 
-const CREATE_BINGO_URL =
-  "https://techstart-shatter-backend.vercel.app/api/bingo/createBingo";
+const BASE_URL = import.meta.env.VITE_API_URL ?? "https://techstart-shatter-backend.vercel.app/api";
 
 export interface BingoGame {
   _id: string;
@@ -10,11 +9,18 @@ export interface BingoGame {
   grid: string[][];
 }
 
+export async function getBingo(eventId: string): Promise<BingoGame | null> {
+  const res = await fetch(`${BASE_URL}/bingo/getBingo/${eventId}`);
+  const data = await res.json();
+  if (!res.ok || !data?.bingo) return null;
+  return data.bingo;
+}
+
 export async function createBingoGame(
   eventId: string,
   token: string
 ): Promise<BingoGame> {
-  const res = await fetch(CREATE_BINGO_URL, {
+  const res = await fetch(`${BASE_URL}/bingo/createBingo`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -24,11 +30,9 @@ export async function createBingoGame(
       _eventId: eventId, // ✅ THIS IS REQUIRED
       description: "Name Bingo",
       grid: [
-        ["A1", "B1", "C1", "D1", "E1"],
-        ["A2", "B2", "C2", "D2", "E2"],
-        ["A3", "B3", "C3", "D3", "E3"],
-        ["A4", "B4", "C4", "D4", "E4"],
-        ["A5", "B5", "C5", "D5", "E5"],
+        ["A1", "B1", "C1"],
+        ["A2", "B2", "C2"],
+        ["A3", "B3", "C3"]
       ],
     }),
   });
