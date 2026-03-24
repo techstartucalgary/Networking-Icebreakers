@@ -177,7 +177,7 @@
 | `_id`         | String     | Auto     | Auto    | Custom: `bingo_<8 random chars>` |
 | `_eventId`    | ObjectId   | Yes      | —       | Refs `Event` |
 | `description` | String     | No       | —       | |
-| `grid`        | [[String]] | No       | —       | 2D array of strings |
+| `grid`        | [[{ question: String, shortQuestion: String }]] | No | — | 2D array of BingoTile objects |
 
 ### Pre-Save Hooks
 
