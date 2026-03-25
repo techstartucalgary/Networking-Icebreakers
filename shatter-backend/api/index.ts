@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import app from '../src/app';
+import app from '../src/app.js';
 
 const MONGODB_URI = process.env.MONGO_URI;
 
@@ -56,7 +56,7 @@ async function connectDB() {
 
 connectDB().catch(console.error);
 
-app.use(async (req, res, next) => {
+app.use(async (req: any, res: any, next: any) => {
   try {
     await connectDB();
     next();

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { User } from "../models/user_model";
-import "../models/participant_model";
-import { hashPassword } from "../utils/password_hash";
+import { User } from "../models/user_model.js";
+import "../models/participant_model.js";
+import { hashPassword } from "../utils/password_hash.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 

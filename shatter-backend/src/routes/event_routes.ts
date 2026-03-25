@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { createEvent, getEventByJoinCode, getEventById, joinEventAsUser, joinEventAsGuest, getEventsByUserId, updateEventStatus } from '../controllers/event_controller';
-import { authMiddleware } from '../middleware/auth_middleware';
+import { createEvent, getEventByJoinCode, getEventById, joinEventAsUser, joinEventAsGuest, getEventsByUserId, updateEventStatus } from '../controllers/event_controller.js';
+import { authMiddleware } from '../middleware/auth_middleware.js';
 
 const router = Router();
 

@@ -1,4 +1,4 @@
-// routes/participant_connections_routes.ts
+// routes/participant_connections_routes.js
 
 import { Router } from "express";
 import {
@@ -8,8 +8,8 @@ import {
   getConnectedUsersInfo,
   getConnectionsByParticipantAndEvent,
   getConnectionsByUserEmailAndEvent,
-} from "../controllers/participant_connections_controller";
-import { authMiddleware } from "../middleware/auth_middleware";
+} from "../controllers/participant_connections_controller.js";
+import { authMiddleware } from "../middleware/auth_middleware.js";
 
 const router = Router();
 

@@ -1,9 +1,9 @@
-// controllers/bingo_controller.ts
+// controllers/bingo_controller.js
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-import { Bingo } from "../models/bingo_model";
-import { Event } from "../models/event_model";
-import { Prompt } from "../ai/prompt_builder";
+import { Bingo } from "../models/bingo_model.js";
+import { Event } from "../models/event_model.js";
+import { Prompt } from "../ai/prompt_builder.js";
 
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";

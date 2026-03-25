@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { createBingo, getBingo, updateBingo, generateBingo} from '../controllers/bingo_controller';
-import { authMiddleware } from '../middleware/auth_middleware';
+import { createBingo, getBingo, updateBingo, generateBingo} from '../controllers/bingo_controller.js';
+import { authMiddleware } from '../middleware/auth_middleware.js';
 
 const router = Router();
 
