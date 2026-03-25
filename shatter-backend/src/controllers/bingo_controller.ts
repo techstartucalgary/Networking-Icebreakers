@@ -253,6 +253,8 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
   const schemaJson = z.toJSONSchema(schema); 
   const example = buildShapeExample(n_rows, n_cols);
 
+  const { GoogleGenAI } = await import("@google/genai");
+
   const basePrompt_structure = `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
     ${example}
     Rules:
