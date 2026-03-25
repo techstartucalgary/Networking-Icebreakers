@@ -266,7 +266,7 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
   `.trim();
   const userContext = `Additional context for bingo content:\n${context}`;
 
-  const promptPath = path.resolve(__dirname, "../ai/prompts/bingo.txt");
+  const promptPath = new URL("../ai/prompts/bingo_short_questions.txt", import.meta.url);
   const aiInstruction = fs.readFileSync(promptPath, "utf-8");
 
   const aiPrompt =  new Prompt([basePrompt_structure, userContext, aiInstruction])
@@ -316,7 +316,7 @@ async function generateBingoGrid_shortVersions(n_rows: number, n_cols: number, o
   `.trim();
   const original_bingo_questions_context = `These are the original bingo questions:\n${original_bingo_questions}`;
 
-  const promptPath = path.resolve(__dirname, "../ai/prompts/bingo_short_questions.txt");
+  const promptPath = new URL("../ai/prompts/bingo.txt", import.meta.url);
   const aiInstruction = fs.readFileSync(promptPath, "utf-8");
 
   const aiPrompt =  new Prompt([basePrompt_structure, original_bingo_questions_context, aiInstruction])
