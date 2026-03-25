@@ -1,48 +1,61 @@
 # Shatter Backend — API Reference
 
-**Last updated:** 2026-03-01
+**Last updated:** 2026-03-08
 **Base URL:** `http://localhost:4000/api`
 
 ---
 
 ## Table of Contents
 
-- [General Information](#general-information)
-- [Endpoint Summary](#endpoint-summary)
-- [Authentication (`/api/auth`)](#authentication-apiauth)
-  - [POST /api/auth/signup](#post-apiauthsignup)
-  - [POST /api/auth/login](#post-apiauthlogin)
-  - [GET /api/auth/linkedin](#get-apiauthlinkedin)
-  - [GET /api/auth/linkedin/callback](#get-apiauthlinkedincallback)
-  - [POST /api/auth/exchange](#post-apiauthexchange)
-- [Users (`/api/users`)](#users-apiusers)
-  - [GET /api/users](#get-apiusers)
-  - [POST /api/users](#post-apiusers)
-  - [GET /api/users/me](#get-apiusersme)
-  - [GET /api/users/:userId](#get-apiusersuserid)
-  - [GET /api/users/:userId/events](#get-apiusersuseриdevents)
-  - [PUT /api/users/:userId](#put-apiusersuserid)
-- [Events (`/api/events`)](#events-apievents)
-  - [POST /api/events/createEvent](#post-apieventscreateevent)
-  - [GET /api/events/event/:joinCode](#get-apieventseventjoincode)
-  - [GET /api/events/:eventId](#get-apieventseventid)
-  - [PUT /api/events/:eventId/status](#put-apieventseventidstatus)
-  - [POST /api/events/:eventId/join/user](#post-apieventseventиdjoinuser)
-  - [POST /api/events/:eventId/join/guest](#post-apieventseventиdjoinguest)
-  - [GET /api/events/createdEvents/user/:userId](#get-apieventscreatedeventsuseriduserid)
-- [Bingo (`/api/bingo`)](#bingo-apibingo)
-  - [POST /api/bingo/createBingo](#post-apibingocreatebingo)
-  - [GET /api/bingo/getBingo/:eventId](#get-apibingogetbingoeventid)
-  - [PUT /api/bingo/updateBingo](#put-apibingoupdatebingo)
-- [Participant Connections (`/api/participantConnections`)](#participant-connections-apiparticipantconnections)
-  - [POST /api/participantConnections/](#post-apiparticipantconnections)
-  - [POST /api/participantConnections/by-emails](#post-apiparticipantconnectionsby-emails)
-  - [DELETE /api/participantConnections/delete](#delete-apiparticipantconnectionsdelete)
-  - [GET /api/participantConnections/getByParticipantAndEvent](#get-apiparticipantconnectionsgetbyparticipantandevent)
-  - [GET /api/participantConnections/getByUserEmailAndEvent](#get-apiparticipantconnectionsgetbyuseremailandevent)
-  - [GET /api/participantConnections/connected-users](#get-apiparticipantconnectionsconnected-users)
-- [Planned Endpoints](#planned-endpoints-)
-- [Quick Start Examples](#quick-start-examples)
+- [Shatter Backend — API Reference](#shatter-backend--api-reference)
+  - [Table of Contents](#table-of-contents)
+  - [Endpoint Summary](#endpoint-summary)
+  - [General Information](#general-information)
+    - [Authentication](#authentication)
+    - [Response Format](#response-format)
+    - [Common Status Codes](#common-status-codes)
+  - [Authentication (`/api/auth`)](#authentication-apiauth)
+    - [POST `/api/auth/signup`](#post-apiauthsignup)
+    - [POST `/api/auth/login`](#post-apiauthlogin)
+    - [GET `/api/auth/linkedin`](#get-apiauthlinkedin)
+    - [GET `/api/auth/linkedin/callback`](#get-apiauthlinkedincallback)
+    - [POST `/api/auth/exchange`](#post-apiauthexchange)
+  - [Users (`/api/users`)](#users-apiusers)
+    - [GET `/api/users`](#get-apiusers)
+    - [POST `/api/users`](#post-apiusers)
+    - [GET `/api/users/me`](#get-apiusersme)
+    - [GET `/api/users/:userId`](#get-apiusersuserid)
+    - [GET `/api/users/:userId/events`](#get-apiusersuseridevents)
+    - [PUT `/api/users/:userId`](#put-apiusersuserid)
+  - [Events (`/api/events`)](#events-apievents)
+    - [POST `/api/events/createEvent`](#post-apieventscreateevent)
+    - [GET `/api/events/event/:joinCode`](#get-apieventseventjoincode)
+    - [GET `/api/events/:eventId`](#get-apieventseventid)
+    - [PUT `/api/events/:eventId/status`](#put-apieventseventidstatus)
+    - [POST `/api/events/:eventId/join/user`](#post-apieventseventidjoinuser)
+    - [POST `/api/events/:eventId/join/guest`](#post-apieventseventidjoinguest)
+    - [GET `/api/events/createdEvents/user/:userId`](#get-apieventscreatedeventsuseruserid)
+  - [Bingo (`/api/bingo`)](#bingo-apibingo)
+    - [POST `/api/bingo/createBingo`](#post-apibingocreatebingo)
+    - [GET `/api/bingo/getBingo/:eventId`](#get-apibingogetbingoeventid)
+    - [PUT `/api/bingo/updateBingo`](#put-apibingoupdatebingo)
+    - [POST `/api/bingo/generate`](#post-apibingogenerate)
+  - [Participant Connections (`/api/participantConnections`)](#participant-connections-apiparticipantconnections)
+    - [POST `/api/participantConnections/`](#post-apiparticipantconnections)
+    - [POST `/api/participantConnections/by-emails`](#post-apiparticipantconnectionsby-emails)
+    - [DELETE `/api/participantConnections/delete`](#delete-apiparticipantconnectionsdelete)
+    - [GET `/api/participantConnections/getByParticipantAndEvent`](#get-apiparticipantconnectionsgetbyparticipantandevent)
+    - [GET `/api/participantConnections/getByUserEmailAndEvent`](#get-apiparticipantconnectionsgetbyuseremailandevent)
+    - [GET `/api/participantConnections/connected-users`](#get-apiparticipantconnectionsconnected-users)
+  - [Planned Endpoints ⏳](#planned-endpoints-)
+  - [Quick Start Examples](#quick-start-examples)
+    - [1. Sign up](#1-sign-up)
+    - [2. Log in](#2-log-in)
+    - [3. Create an event](#3-create-an-event)
+    - [4. Join the event (as authenticated user)](#4-join-the-event-as-authenticated-user)
+    - [5. Join the event (as guest)](#5-join-the-event-as-guest)
+    - [6. Create a bingo game for the event](#6-create-a-bingo-game-for-the-event)
+    - [7. Get the bingo game](#7-get-the-bingo-game)
 
 ---
 
@@ -169,7 +182,8 @@ Create a new user account.
 | 400    | `"name, email and password are required"` |
 | 400    | `"Invalid email format"` |
 | 400    | `"Password must be at least 8 characters long"` |
-| 409    | `"Email already exists"` |
+| 409    | `"Email already exists"` (local account) |
+| 409    | `"This email is associated with a LinkedIn account. Please log in with LinkedIn."` (LinkedIn account) |
 
 ---
 
@@ -420,11 +434,17 @@ Get all events a user has joined (populates event details).
       "joinCode": "12345678",
       "startDate": "2025-02-01T18:00:00.000Z",
       "endDate": "2025-02-01T21:00:00.000Z",
-      "currentState": "In Progress"
+      "currentState": "In Progress",
+      "participantIds": [
+        { "_id": "666b...", "name": "John Doe", "userId": "664f..." },
+        { "_id": "666c...", "name": "Jane Smith", "userId": "664e..." }
+      ]
     }
   ]
 }
 ```
+
+**Note:** Each event's `participantIds` is populated with participant `name` and `userId` fields, enabling the frontend to load participant connections.
 
 **Error Responses:**
 
@@ -456,6 +476,8 @@ Update a user's profile. Users can only update their own profile.
 | `bio`          | string | |
 | `profilePhoto` | string | URL |
 | `socialLinks`  | object | `{ linkedin?, github?, other? }` |
+| `organization` | string | Where the user works/studies |
+| `title`        | string | Job title or role |
 
 **Success Response (200):**
 
@@ -716,13 +738,13 @@ Join an event as a registered (authenticated) user.
 | 404    | `"User not found"` |
 | 404    | `"Event not found"` |
 | 409    | `"User already joined"` |
-| 409    | `"This name is already taken in this event"` |
 
 **Special Behavior:**
 - Creates a Participant record linking user to event
+- If the display name is already taken in the event, a `#XXX` suffix is automatically appended (e.g., `John` becomes `John#472`). The response `participant.name` reflects the final display name.
 - Adds participant to event's `participantIds` array
 - Adds event to user's `eventHistoryIds` array
-- Triggers Pusher event `participant-joined` on channel `event-{eventId}` with payload `{ participantId, name }`
+- Triggers Pusher event `participant-joined` on channel `event-{eventId}` with payload `{ participantId, name }` (using the final display name)
 
 ---
 
@@ -740,9 +762,18 @@ Join an event as a guest (no account required).
 
 **Request Body:**
 
-| Field  | Type   | Required |
-|--------|--------|----------|
-| `name` | string | Yes      |
+| Field  | Type   | Required | Description |
+|--------|--------|----------|-------------|
+| `name` | string | Yes | Display name |
+| `email` | string | No* | Email address |
+| `socialLinks` | object | No* | Social links |
+| `socialLinks.linkedin` | string | No | LinkedIn URL |
+| `socialLinks.github` | string | No | GitHub URL |
+| `socialLinks.other` | string | No | Other URL |
+| `organization` | string | No* | Where the guest works/studies |
+| `title` | string | No | Job title or role |
+
+\* At least one of the following is required: `email`, a non-empty field in `socialLinks`, or `organization`.
 
 **Success Response (200):**
 
@@ -765,15 +796,18 @@ Join an event as a guest (no account required).
 | Status | Error |
 |--------|-------|
 | 400    | `"Missing fields: guest name and eventId are required"` |
+| 400    | `"At least one contact method (email or social link) or organization is required"` |
+| 400    | `"Invalid email format"` |
 | 400    | `"Event is full"` |
 | 404    | `"Event not found"` |
-| 409    | `"This name is already taken in this event"` |
+| 409    | `"A user with this email already exists"` |
 
 **Special Behavior:**
-- Creates a guest User (`authProvider: 'guest'`, no email/password)
+- Creates a guest User (`authProvider: 'guest'`) with the provided contact info (email, social links, and/or organization)
+- If the display name is already taken in the event, a `#XXX` suffix is automatically appended (e.g., `John` becomes `John#472`). The response `participant.name` reflects the final display name, and the guest User's name is updated to match.
 - Returns a JWT so the guest can make authenticated requests
 - Guest can later upgrade to a full account via `PUT /api/users/:userId`
-- Triggers Pusher event `participant-joined` on channel `event-{eventId}` with payload `{ participantId, name }`
+- Triggers Pusher event `participant-joined` on channel `event-{eventId}` with payload `{ participantId, name }` (using the final display name)
 
 ---
 
@@ -827,9 +861,9 @@ Create a bingo game for an event.
 
 | Field         | Type       | Required | Notes |
 |---------------|------------|----------|-------|
-| `_eventId`    | ObjectId   | Yes      | Must reference an existing event |
-| `description` | string     | No       | |
-| `grid`        | string[][] | No       | 2D array of strings |
+| `_eventId`    | ObjectId       | Yes      | Must reference an existing event |
+| `description` | string         | No       | |
+| `grid`        | BingoTile\[\]\[\] | No       | 2D array of `{ question: string, shortQuestion: string }` |
 
 **Success Response (201):**
 
@@ -842,9 +876,16 @@ Create a bingo game for an event.
     "_eventId": "665a...",
     "description": "Networking Bingo",
     "grid": [
-      ["Has a pet", "Speaks 3 languages", "Loves hiking"],
-      ["Works remotely", "Free space", "Plays guitar"],
-      ["From another country", "Has a blog", "Codes in Rust"]
+      [
+        { "question": "Has a pet", "shortQuestion": "Has pet" },
+        { "question": "Speaks 3 languages", "shortQuestion": "Speaks languages" },
+        { "question": "Loves hiking outdoors", "shortQuestion": "Loves hiking" }
+      ],
+      [
+        { "question": "Works remotely full-time", "shortQuestion": "Works remotely" },
+        { "question": "Free space", "shortQuestion": "Free space" },
+        { "question": "Plays guitar regularly", "shortQuestion": "Plays guitar" }
+      ]
     ]
   }
 }
@@ -856,7 +897,7 @@ Create a bingo game for an event.
 |--------|-------|
 | 400    | `"_eventId is required"` |
 | 400    | `"_eventId must be a valid ObjectId"` |
-| 400    | `"grid must be a 2D array of strings"` |
+| 400    | `"grid must be a 2D array of { question: string, shortQuestion: string }"` |
 | 404    | `"Event not found"` |
 
 ---
@@ -882,7 +923,12 @@ Get bingo by event ID (or bingo ID).
     "_id": "bingo_a1b2c3d4",
     "_eventId": "665a...",
     "description": "Networking Bingo",
-    "grid": [["Has a pet", "Speaks 3 languages", ...], ...]
+    "grid": [
+      [
+        { "question": "Has a pet", "shortQuestion": "Has pet" },
+        { "question": "Speaks 3 languages", "shortQuestion": "Speaks languages" }
+      ]
+    ]
   }
 }
 ```
@@ -905,9 +951,9 @@ Update a bingo game.
 
 | Field         | Type       | Required | Notes |
 |---------------|------------|----------|-------|
-| `id`          | string     | Yes      | Bingo `_id` or event `_eventId` |
-| `description` | string     | No       | |
-| `grid`        | string[][] | No       | 2D array of strings |
+| `id`          | string         | Yes      | Bingo `_id` or event `_eventId` |
+| `description` | string         | No       | |
+| `grid`        | BingoTile\[\]\[\] | No       | 2D array of `{ question: string, shortQuestion: string }` |
 
 **Success Response (200):**
 
@@ -924,13 +970,66 @@ Update a bingo game.
 |--------|-------|
 | 400    | `"id is required"` |
 | 400    | `"description must be a string"` |
-| 400    | `"grid must be a 2D array of strings"` |
+| 400    | `"grid must be a 2D array of { question: string, shortQuestion: string }"` |
 | 400    | `"Nothing to update: provide description and/or grid"` |
 | 404    | `"Bingo not found"` |
 
 **Special Behavior:** Tries to find by `_id` first, then falls back to `_eventId`.
 
 ---
+
+### POST `/api/bingo/generate`
+
+Generate an AI-powered bingo grid based on a given context.
+
+- **Auth:** Protected
+
+**Request Body:**
+
+| Field     | Type   | Required | Notes |
+|-----------|--------|----------|-------|
+| `context` | string | Yes      | Context used to generate bingo content |
+| `n_rows`  | number | Yes      | Number of rows (1–5) |
+| `n_cols`  | number | Yes      | Number of columns (1–5) |
+
+**Example Request:**
+
+```json
+{
+  "context": "Software engineer networking event where developers meet, discuss tech stacks, exchange ideas, talk about startups, open source, AI, and career opportunities",
+  "n_rows": 2,
+  "n_cols": 2
+}
+```
+
+**Example Response:**
+```
+{
+  "status": true,
+  "bingo_grid": [
+    [
+      {
+        "question": "Sketches architecture on a napkin",
+        "shortQuestion": "Napkin architecture"
+      },
+      {
+        "question": "Shows a product demo on phone",
+        "shortQuestion": "Phone product demo"
+      }
+    ],
+    [
+      {
+        "question": "Explains their open-source contribution",
+        "shortQuestion": "Open-source contribution"
+      },
+      {
+        "question": "Asks 'What's your current stack?'",
+        "shortQuestion": "Current stack question"
+      }
+    ]
+  ]
+}
+```
 
 ## Participant Connections (`/api/participantConnections`)
 
@@ -1242,7 +1341,8 @@ curl -X POST http://localhost:4000/api/events/<eventId>/join/user \
 curl -X POST http://localhost:4000/api/events/<eventId>/join/guest \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Guest User"
+    "name": "Guest User",
+    "email": "guest@example.com"
   }'
 ```
 

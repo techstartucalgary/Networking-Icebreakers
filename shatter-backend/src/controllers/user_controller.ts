@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import { User } from "../models/user_model";
-import { hashPassword } from "../utils/password_hash";
+import { User } from "../models/user_model.js";
+import "../models/participant_model.js";
+import { hashPassword } from "../utils/password_hash.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -76,7 +77,14 @@ export const getUserEvents = async (req: Request, res: Response) => {
     }
 
     const user = await User.findById(userId)
-      .populate("eventHistoryIds", "name description joinCode startDate endDate currentState")
+      .populate({
+        path: "eventHistoryIds",
+        select: "name description joinCode startDate endDate currentState participantIds",
+        populate: {
+          path: "participantIds",
+          select: "name userId",
+        },
+      })
       .select("eventHistoryIds");
 
     if (!user) {
@@ -106,13 +114,15 @@ export const updateUser = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, error: "You can only update your own profile" });
     }
 
-    const { name, email, password, bio, profilePhoto, socialLinks } = req.body as {
+    const { name, email, password, bio, profilePhoto, socialLinks, organization, title } = req.body as {
       name?: string;
       email?: string;
       password?: string;
       bio?: string;
       profilePhoto?: string;
       socialLinks?: { linkedin?: string; github?: string; other?: string };
+      organization?: string;
+      title?: string;
     };
 
     const updateFields: Record<string, any> = {};
@@ -153,6 +163,8 @@ export const updateUser = async (req: Request, res: Response) => {
     if (bio !== undefined) updateFields.bio = bio;
     if (profilePhoto !== undefined) updateFields.profilePhoto = profilePhoto;
     if (socialLinks !== undefined) updateFields.socialLinks = socialLinks;
+    if (organization !== undefined) updateFields.organization = organization;
+    if (title !== undefined) updateFields.title = title;
 
     if (Object.keys(updateFields).length === 0) {
       return res.status(400).json({ success: false, error: "No fields to update" });

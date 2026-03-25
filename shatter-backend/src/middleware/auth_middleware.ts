@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/jwt_utils';
+import { verifyToken } from '../utils/jwt_utils.js';
 
 /**
  * Extend Express Request type to include user property

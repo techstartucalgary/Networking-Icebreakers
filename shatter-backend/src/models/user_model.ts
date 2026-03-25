@@ -12,6 +12,8 @@ export interface IUser {
   passwordHash?: string;
   linkedinId?: string;
   linkedinUrl?: string;
+  organization?: string;
+  title?: string;
   bio?: string;
   profilePhoto?: string;
   socialLinks?: {
@@ -64,6 +66,14 @@ const UserSchema = new Schema<IUser>(
       type: String,
       unique: true,
       sparse: true,
+    },
+    organization: {
+      type: String,
+      trim: true,
+    },
+    title: {
+      type: String,
+      trim: true,
     },
     bio: {
       type: String,

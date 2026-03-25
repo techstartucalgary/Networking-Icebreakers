@@ -1,17 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "strict": true,
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["node"],
-    "typeRoots": ["./src/types", "./node_modules/@types"],
-    "skipLibCheck": true
+    "lib": ["ES2020", "DOM"],
+    "skipLibCheck": true,
+    "typeRoots": ["./src/types", "./node_modules/@types"]
   },
   "include": ["src/**/*", "api/**/*"],
   "exclude": ["node_modules", "dist"]

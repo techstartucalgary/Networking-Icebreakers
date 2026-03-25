@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { getUsers, createUser, getUserById, getUserEvents, updateUser } from '../controllers/user_controller';
-import { authMiddleware } from '../middleware/auth_middleware';
-import { User } from '../models/user_model';
+import { getUsers, createUser, getUserById, getUserEvents, updateUser } from '../controllers/user_controller.js';
+import { authMiddleware } from '../middleware/auth_middleware.js';
+import { User } from '../models/user_model.js';
 
 const router = Router();
 

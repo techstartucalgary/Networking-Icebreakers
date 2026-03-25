@@ -1,9 +1,9 @@
-// controllers/bingo_controller.ts
+// controllers/bingo_controller.js
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-import { Bingo } from "../models/bingo_model";
-import { Event } from "../models/event_model";
-import { Prompt } from "../ai/prompt_builder";
+import { Bingo } from "../models/bingo_model.js";
+import { Event } from "../models/event_model.js";
+import { Prompt } from "../ai/prompt_builder.js";
 
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
@@ -13,7 +13,6 @@ import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Console } from "node:console";
 
 /**
  * POST /api/bingo
@@ -46,18 +45,24 @@ export async function createBingo(req: Request, res: Response) {
     }
 
     if (grid !== undefined) {
-      const is2DStringArray =
+      const isValidGrid =
         Array.isArray(grid) &&
         grid.every(
           (row: any) =>
             Array.isArray(row) &&
-            row.every((cell: any) => typeof cell === "string")
+            row.every(
+              (cell: any) =>
+                cell &&
+                typeof cell === "object" &&
+                typeof cell.question === "string" &&
+                typeof cell.shortQuestion === "string"
+            )
         );
 
-      if (!is2DStringArray) {
+      if (!isValidGrid) {
         return res.status(400).json({
           success: false,
-          msg: "grid must be a 2D array of strings",
+          msg: "grid must be a 2D array of { question: string, shortQuestion: string }",
         });
       }
     }
@@ -98,11 +103,7 @@ export async function getBingo(req: Request, res: Response) {
       });
     }
 
-    let bingo = await Bingo.findById(eventId);
-
-    if (!bingo && Types.ObjectId.isValid(eventId)) {
-      bingo = await Bingo.findOne({ _eventId: eventId });
-    }
+    let bingo = await Bingo.findOne({ _eventId: eventId });
 
     if (!bingo) {
       return res.status(404).json({
@@ -149,18 +150,24 @@ export async function updateBingo(req: Request, res: Response) {
     }
 
     if (grid !== undefined) {
-      const is2DStringArray =
+      const isValidGrid =
         Array.isArray(grid) &&
         grid.every(
           (row: any) =>
             Array.isArray(row) &&
-            row.every((cell: any) => typeof cell === "string")
+            row.every(
+              (cell: any) =>
+                cell &&
+                typeof cell === "object" &&
+                typeof cell.question === "string" &&
+                typeof cell.shortQuestion === "string"
+            )
         );
 
-      if (!is2DStringArray) {
+      if (!isValidGrid) {
         return res.status(400).json({
           success: false,
-          msg: "grid must be a 2D array of strings",
+          msg: "grid must be a 2D array of { question: string, shortQuestion: string }",
         });
       }
 
@@ -198,8 +205,6 @@ export async function updateBingo(req: Request, res: Response) {
 
 function makeEmptyGrid(rows: number, cols: number): Record<string, string[]> {
 
-  console.log(`Creating fallback grid ${rows}x${cols}`);
-
   const grid: Record<string, string[]> = {};
 
   for (let r = 1; r <= rows; r++) {
@@ -226,7 +231,6 @@ function buildSchema(rows: number, cols: number): z.ZodObject<Record<string, z.Z
 
 function buildShapeExample(rows: number, cols: number): string {
 
-  console.log("Building JSON example for prompt");
 
   const obj: Record<string, string[]> = {};
 
@@ -244,11 +248,12 @@ function buildShapeExample(rows: number, cols: number): string {
  * Calls Gemini to generate a bingo grid
  */
 async function generateBingoGrid(n_rows: number, n_cols: number, context: string): Promise<Record<string, string[]>> {
-  
 
   const schema = buildSchema(n_rows, n_cols);
   const schemaJson = z.toJSONSchema(schema); 
   const example = buildShapeExample(n_rows, n_cols);
+
+  const { GoogleGenAI } = await import("@google/genai");
 
   const basePrompt_structure = `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
     ${example}
@@ -267,9 +272,6 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
   const aiPrompt =  new Prompt([basePrompt_structure, userContext, aiInstruction])
   aiPrompt.generatePrompt();
   const prompt = aiPrompt.getPrompt();
-  console.log("----------- Final Prompt -----------");
-  console.log(prompt);
-  console.log("------------------------------------");
 
   try {
 
@@ -283,16 +285,68 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
     },
   });
 
-  console.log("RAW RESPONSE:");
-  console.log(response.text);
+  if (!response.text) {
+    throw new Error("Gemini returned empty response");
+  }
 
-  const parsed = JSON.parse(response.text!);
+  const parsed = JSON.parse(response.text);
   const validated: Record<string, string[]> = schema.parse(parsed);
   return validated;
 
   } catch (error) {
-    console.error("Generation failed:", error);  
-    return makeEmptyGrid(n_rows, n_cols)    
+    console.error("Generation failed:", error);
+    return makeEmptyGrid(n_rows, n_cols)
+  }
+}
+
+async function generateBingoGrid_shortVersions(n_rows: number, n_cols: number, original_bingo_questions: string): Promise<Record<string, string[]>> {
+
+  const schema = buildSchema(n_rows, n_cols);
+  const schemaJson = z.toJSONSchema(schema); 
+  const example = buildShapeExample(n_rows, n_cols);
+
+  const basePrompt_structure = `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
+    ${example}
+    Rules:
+    - Keys must be row1, row2, row3, etc.
+    - Each row must contain ${n_cols} strings.
+    Return ONLY valid JSON.
+
+    You will be provided with additional information about what to put inside the bingo squares.
+  `.trim();
+  const original_bingo_questions_context = `These are the original bingo questions:\n${original_bingo_questions}`;
+
+  const promptPath = path.resolve(__dirname, "../ai/prompts/bingo_short_questions.txt");
+  const aiInstruction = fs.readFileSync(promptPath, "utf-8");
+
+  const aiPrompt =  new Prompt([basePrompt_structure, original_bingo_questions_context, aiInstruction])
+  aiPrompt.generatePrompt();
+  const prompt = aiPrompt.getPrompt();
+
+
+  try {
+
+    const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseJsonSchema: schemaJson,
+      temperature: 0.7,
+    },
+  });
+
+  if (!response.text) {
+    throw new Error("Gemini returned empty response");
+  }
+
+  const parsed = JSON.parse(response.text);
+  const validated: Record<string, string[]> = schema.parse(parsed);
+  return validated;
+
+  } catch (error) {
+    console.error("Short version generation failed:", error);
+    return makeEmptyGrid(n_rows, n_cols)
   }
 }
 
@@ -313,6 +367,15 @@ function process_ai_result(ai_result: Record<string, string[]>) {
   }
 
   return grid;
+}
+
+function combine2DArrays(arr1: string[][], arr2: string[][]): { question: string; shortQuestion: string }[][] {
+  return arr1.map((row, i) =>
+    row.map((val, j) => ({
+      question: val,
+      shortQuestion: arr2[i]?.[j] || val,
+    }))
+  );
 }
 
 /**
@@ -352,8 +415,11 @@ export async function generateBingo(req: Request, res: Response) {
       });
     }
 
-    const aiResult = await generateBingoGrid(n_rows, n_cols, context);
-    const bingo_grid: string[][] = process_ai_result(aiResult);
+    const bingo_questions = await generateBingoGrid(n_rows, n_cols, context);
+    const bingo_short_versions = await generateBingoGrid_shortVersions(n_rows, n_cols, JSON.stringify(bingo_questions));
+    const bingo_grid_questions: string[][] = process_ai_result(bingo_questions);
+    const bingo_grid_short_versions: string[][] = process_ai_result(bingo_short_versions);
+    const bingo_grid = combine2DArrays(bingo_grid_questions, bingo_grid_short_versions);
 
     return res.status(200).json({
       status: true,
