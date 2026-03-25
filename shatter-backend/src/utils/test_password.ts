@@ -1,4 +1,4 @@
-import { hashPassword, comparePassword } from './password_hash';
+import { hashPassword, comparePassword } from './password_hash.js';
 
 async function testPasswordHashing() {
   console.log('🧪 Testing Password Hashing...\n');

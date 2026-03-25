@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import { Event } from "../models/event_model";
-import { pusher } from "../utils/pusher_websocket";
+import { Event } from "../models/event_model.js";
+import { pusher } from "../utils/pusher_websocket.js";
 
-import "../models/participant_model";
+import "../models/participant_model.js";
 
-import { generateJoinCode } from "../utils/event_utils";
-import { generateToken } from "../utils/jwt_utils";
-import { Participant, IParticipant } from "../models/participant_model";
-import { User } from "../models/user_model";
+import { generateJoinCode } from "../utils/event_utils.js";
+import { generateToken } from "../utils/jwt_utils.js";
+import { Participant, IParticipant } from "../models/participant_model.js";
+import { User } from "../models/user_model.js";
 import { Types } from "mongoose";
 
 /**

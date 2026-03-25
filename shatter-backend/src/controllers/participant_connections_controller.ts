@@ -1,12 +1,12 @@
-// controllers/participant_connections_controller.ts
+// controllers/participant_connections_controller.js
 
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 
-import { check_req_fields } from "../utils/requests_utils";
-import { User } from "../models/user_model";
-import { Participant } from "../models/participant_model";
-import { ParticipantConnection } from "../models/participant_connection_model";
+import { check_req_fields } from "../utils/requests_utils.js";
+import { User } from "../models/user_model.js";
+import { Participant } from "../models/participant_model.js";
+import { ParticipantConnection } from "../models/participant_connection_model.js";
 
 /**
  * POST /api/participantConnections
