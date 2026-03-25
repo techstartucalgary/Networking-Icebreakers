@@ -1,6 +1,6 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import app from "./app";
+import app from "./app.js";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 const MONGODB_URI = process.env.MONGO_URI;

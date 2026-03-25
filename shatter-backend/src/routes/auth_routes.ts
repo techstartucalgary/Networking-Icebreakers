@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login, linkedinAuth, linkedinCallback, exchangeAuthCode } from '../controllers/auth_controller';
+import { signup, login, linkedinAuth, linkedinCallback, exchangeAuthCode } from '../controllers/auth_controller.js';
 
 const router = Router();
 

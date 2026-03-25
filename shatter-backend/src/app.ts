@@ -1,11 +1,11 @@
 import express from "express";
 import cors from "cors";
 
-import userRoutes from './routes/user_route';
-import authRoutes from './routes/auth_routes';
-import eventRoutes from './routes/event_routes';
-import bingoRoutes from './routes/bingo_routes';
-import participantConnectionRoutes from "./routes/participant_connections_routes";
+import userRoutes from './routes/user_route.js';
+import authRoutes from './routes/auth_routes.js';
+import eventRoutes from './routes/event_routes.js';
+import bingoRoutes from './routes/bingo_routes.js';
+import participantConnectionRoutes from "./routes/participant_connections_routes.js";
 
 
 const app = express();
