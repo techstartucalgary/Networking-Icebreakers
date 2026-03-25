@@ -14,6 +14,93 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+const aiConstruction =
+  "You will generate the bingo grid with shortened version of the questions while maintaining the same structure. Each entry should be turned into a max 3 word version of the question that describes what the question is about.";
+
+const aiShortVersionInstruction = `Generate creative bingo entries based on the provided event context.
+
+Goal
+Create short bingo squares that describe recognizable moments, traits, or behaviors of professionals at the event.
+
+Length
+- 3–8 words per entry.
+- Keep entries concise and punchy.
+
+Key Rule: Be Specific
+Entries must describe a concrete behavior, situation, or trait someone could realistically notice at the event.
+
+Avoid vague descriptions of conversation.
+
+Avoid phrases like:
+- "talking about"
+- "discusses"
+- "mentions"
+- "asks"
+- "conversation about"
+- "debates"
+- "connects on"
+- "networking with"
+
+These are too generic and do not describe an observable bingo moment.
+
+Instead prefer:
+
+Observable behaviors  
+Work-related habits  
+Professional traits  
+Real situations that happen during networking  
+Work artifacts or tools someone references or shows  
+
+Good structural patterns
+
+Action
+Shows photos of a recent project  
+Sketches an idea on a napkin  
+Explains how their team works  
+
+Situation
+Runs into a former coworker  
+Recognizes someone from online  
+Arrives straight from work  
+
+Work artifact
+Laptop covered in stickers  
+Shows a product demo  
+Pulls up slides on their phone  
+
+Professional trait
+Always “too busy lately”  
+Recently started a new role  
+Proud of their latest project  
+
+Quote
+Has said: "It's been a crazy week"
+Has said: "We're hiring right now"
+
+Context usage
+Use the provided event context to inspire industry-relevant references when appropriate.
+
+Examples
+Shows photos of a recent project
+Sketches an idea while talking
+Proud of their latest work
+Runs into someone they know
+Recently changed jobs
+Laptop covered in company stickers
+Shows a demo on their phone
+Explains a project they built
+Has said: "It's been a long week"
+
+Avoid
+- Generic phrases describing conversation
+- Things that always happen at networking events (ex: exchanging LinkedIn)
+- Overly abstract statements
+- Repeating the same structure across many entries
+
+Diversity rule
+Ensure entries vary in structure, wording, and situation.
+No more than two entries may begin with the same first word.`;
+
 /**
  * POST /api/bingo
  * Create a new bingo game (server generates bingo _id)
@@ -55,8 +142,8 @@ export async function createBingo(req: Request, res: Response) {
                 cell &&
                 typeof cell === "object" &&
                 typeof cell.question === "string" &&
-                typeof cell.shortQuestion === "string"
-            )
+                typeof cell.shortQuestion === "string",
+            ),
         );
 
       if (!isValidGrid) {
@@ -94,7 +181,9 @@ export async function createBingo(req: Request, res: Response) {
 export async function getBingo(req: Request, res: Response) {
   try {
     const rawEventId = req.params.eventId;
-    const eventId : string  = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
+    const eventId: string = Array.isArray(rawEventId)
+      ? rawEventId[0]
+      : rawEventId;
 
     if (!eventId) {
       return res.status(400).json({
@@ -123,7 +212,6 @@ export async function getBingo(req: Request, res: Response) {
     });
   }
 }
-
 
 /**
  * @param req.body.id - Bingo _id (string) OR Event _id (ObjectId string) (required)
@@ -160,8 +248,8 @@ export async function updateBingo(req: Request, res: Response) {
                 cell &&
                 typeof cell === "object" &&
                 typeof cell.question === "string" &&
-                typeof cell.shortQuestion === "string"
-            )
+                typeof cell.shortQuestion === "string",
+            ),
         );
 
       if (!isValidGrid) {
@@ -181,13 +269,17 @@ export async function updateBingo(req: Request, res: Response) {
       });
     }
 
-    let bingo = await Bingo.findByIdAndUpdate(id, { $set: update }, { new: true });
+    let bingo = await Bingo.findByIdAndUpdate(
+      id,
+      { $set: update },
+      { new: true },
+    );
 
     if (!bingo && Types.ObjectId.isValid(id)) {
       bingo = await Bingo.findOneAndUpdate(
         { _eventId: id },
         { $set: update },
-        { new: true }
+        { new: true },
       );
     }
 
@@ -201,10 +293,7 @@ export async function updateBingo(req: Request, res: Response) {
   }
 }
 
-
-
 function makeEmptyGrid(rows: number, cols: number): Record<string, string[]> {
-
   const grid: Record<string, string[]> = {};
 
   for (let r = 1; r <= rows; r++) {
@@ -214,13 +303,18 @@ function makeEmptyGrid(rows: number, cols: number): Record<string, string[]> {
   return grid;
 }
 
-function buildSchema(rows: number, cols: number): z.ZodObject<Record<string, z.ZodArray<z.ZodString>>> {
+function buildSchema(
+  rows: number,
+  cols: number,
+): z.ZodObject<Record<string, z.ZodArray<z.ZodString>>> {
   const shape: Record<string, z.ZodArray<z.ZodString>> = {};
 
   for (let r = 1; r <= rows; r++) {
     shape[`row${r}`] = z
       .array(
-        z.string().describe("A humorous bingo square phrase related to tech culture")
+        z
+          .string()
+          .describe("A humorous bingo square phrase related to tech culture"),
       )
       .length(cols)
       .describe(`Row ${r} of the bingo board`);
@@ -230,14 +324,12 @@ function buildSchema(rows: number, cols: number): z.ZodObject<Record<string, z.Z
 }
 
 function buildShapeExample(rows: number, cols: number): string {
-
-
   const obj: Record<string, string[]> = {};
 
   for (let r = 1; r <= rows; r++) {
     obj[`row${r}`] = Array.from(
       { length: cols },
-      (_, c) => `Row ${r} Col ${c + 1}`
+      (_, c) => `Row ${r} Col ${c + 1}`,
     );
   }
 
@@ -247,15 +339,19 @@ function buildShapeExample(rows: number, cols: number): string {
 /**
  * Calls Gemini to generate a bingo grid
  */
-async function generateBingoGrid(n_rows: number, n_cols: number, context: string): Promise<Record<string, string[]>> {
-
+async function generateBingoGrid(
+  n_rows: number,
+  n_cols: number,
+  context: string,
+): Promise<Record<string, string[]>> {
   const schema = buildSchema(n_rows, n_cols);
-  const schemaJson = z.toJSONSchema(schema); 
+  const schemaJson = z.toJSONSchema(schema);
   const example = buildShapeExample(n_rows, n_cols);
 
   const { GoogleGenAI } = await import("@google/genai");
 
-  const basePrompt_structure = `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
+  const basePrompt_structure =
+    `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
     ${example}
     Rules:
     - Keys must be row1, row2, row3, etc.
@@ -266,46 +362,55 @@ async function generateBingoGrid(n_rows: number, n_cols: number, context: string
   `.trim();
   const userContext = `Additional context for bingo content:\n${context}`;
 
-  const promptPath = new URL("../ai/prompts/bingo_short_questions.txt", import.meta.url);
-  const aiInstruction = fs.readFileSync(promptPath, "utf-8");
+  // const promptPath = new URL(
+  //   "../ai/prompts/bingo_short_questions.txt",
+  //   import.meta.url,
+  // );
+  // const aiInstruction = fs.readFileSync(promptPath, "utf-8");
 
-  const aiPrompt =  new Prompt([basePrompt_structure, userContext, aiInstruction])
+  const aiPrompt = new Prompt([
+    basePrompt_structure,
+    userContext,
+    aiShortVersionInstruction,
+  ]);
   aiPrompt.generatePrompt();
   const prompt = aiPrompt.getPrompt();
 
   try {
-
     const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseJsonSchema: schemaJson,
-      temperature: 0.7,
-    },
-  });
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseJsonSchema: schemaJson,
+        temperature: 0.7,
+      },
+    });
 
-  if (!response.text) {
-    throw new Error("Gemini returned empty response");
-  }
+    if (!response.text) {
+      throw new Error("Gemini returned empty response");
+    }
 
-  const parsed = JSON.parse(response.text);
-  const validated: Record<string, string[]> = schema.parse(parsed);
-  return validated;
-
+    const parsed = JSON.parse(response.text);
+    const validated: Record<string, string[]> = schema.parse(parsed);
+    return validated;
   } catch (error) {
     console.error("Generation failed:", error);
-    return makeEmptyGrid(n_rows, n_cols)
+    return makeEmptyGrid(n_rows, n_cols);
   }
 }
 
-async function generateBingoGrid_shortVersions(n_rows: number, n_cols: number, original_bingo_questions: string): Promise<Record<string, string[]>> {
-
+async function generateBingoGrid_shortVersions(
+  n_rows: number,
+  n_cols: number,
+  original_bingo_questions: string,
+): Promise<Record<string, string[]>> {
   const schema = buildSchema(n_rows, n_cols);
-  const schemaJson = z.toJSONSchema(schema); 
+  const schemaJson = z.toJSONSchema(schema);
   const example = buildShapeExample(n_rows, n_cols);
 
-  const basePrompt_structure = `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
+  const basePrompt_structure =
+    `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
     ${example}
     Rules:
     - Keys must be row1, row2, row3, etc.
@@ -316,37 +421,38 @@ async function generateBingoGrid_shortVersions(n_rows: number, n_cols: number, o
   `.trim();
   const original_bingo_questions_context = `These are the original bingo questions:\n${original_bingo_questions}`;
 
-  const promptPath = new URL("../ai/prompts/bingo.txt", import.meta.url);
-  const aiInstruction = fs.readFileSync(promptPath, "utf-8");
+  // const promptPath = new URL("../ai/prompts/bingo.txt", import.meta.url);
+  // const aiInstruction = fs.readFileSync(promptPath, "utf-8");
 
-  const aiPrompt =  new Prompt([basePrompt_structure, original_bingo_questions_context, aiInstruction])
+  const aiPrompt = new Prompt([
+    basePrompt_structure,
+    original_bingo_questions_context,
+    aiConstruction,
+  ]);
   aiPrompt.generatePrompt();
   const prompt = aiPrompt.getPrompt();
 
-
   try {
-
     const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseJsonSchema: schemaJson,
-      temperature: 0.7,
-    },
-  });
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseJsonSchema: schemaJson,
+        temperature: 0.7,
+      },
+    });
 
-  if (!response.text) {
-    throw new Error("Gemini returned empty response");
-  }
+    if (!response.text) {
+      throw new Error("Gemini returned empty response");
+    }
 
-  const parsed = JSON.parse(response.text);
-  const validated: Record<string, string[]> = schema.parse(parsed);
-  return validated;
-
+    const parsed = JSON.parse(response.text);
+    const validated: Record<string, string[]> = schema.parse(parsed);
+    return validated;
   } catch (error) {
     console.error("Short version generation failed:", error);
-    return makeEmptyGrid(n_rows, n_cols)
+    return makeEmptyGrid(n_rows, n_cols);
   }
 }
 
@@ -361,20 +467,23 @@ function process_ai_result(ai_result: Record<string, string[]>) {
   const grid: string[][] = [];
 
   const keys: string[] = Object.keys(ai_result);
-  for(let i = 0; i < keys.length; i++) {
+  for (let i = 0; i < keys.length; i++) {
     const val: string[] = ai_result[keys[i]];
-    grid.push(val)
+    grid.push(val);
   }
 
   return grid;
 }
 
-function combine2DArrays(arr1: string[][], arr2: string[][]): { question: string; shortQuestion: string }[][] {
+function combine2DArrays(
+  arr1: string[][],
+  arr2: string[][],
+): { question: string; shortQuestion: string }[][] {
   return arr1.map((row, i) =>
     row.map((val, j) => ({
       question: val,
       shortQuestion: arr2[i]?.[j] || val,
-    }))
+    })),
   );
 }
 
@@ -416,10 +525,18 @@ export async function generateBingo(req: Request, res: Response) {
     }
 
     const bingo_questions = await generateBingoGrid(n_rows, n_cols, context);
-    const bingo_short_versions = await generateBingoGrid_shortVersions(n_rows, n_cols, JSON.stringify(bingo_questions));
+    const bingo_short_versions = await generateBingoGrid_shortVersions(
+      n_rows,
+      n_cols,
+      JSON.stringify(bingo_questions),
+    );
     const bingo_grid_questions: string[][] = process_ai_result(bingo_questions);
-    const bingo_grid_short_versions: string[][] = process_ai_result(bingo_short_versions);
-    const bingo_grid = combine2DArrays(bingo_grid_questions, bingo_grid_short_versions);
+    const bingo_grid_short_versions: string[][] =
+      process_ai_result(bingo_short_versions);
+    const bingo_grid = combine2DArrays(
+      bingo_grid_questions,
+      bingo_grid_short_versions,
+    );
 
     return res.status(200).json({
       status: true,
