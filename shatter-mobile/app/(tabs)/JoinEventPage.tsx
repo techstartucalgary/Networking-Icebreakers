@@ -1,15 +1,18 @@
 import { useJoinEvent } from "@/src/components/new-events/JoinEvent";
+import { colors } from "@/src/styling/constants";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
 	ActivityIndicator,
-	Button,
 	ImageBackground,
 	Text,
 	TextInput,
+	TouchableOpacity,
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AnimatedTab from "../../src/components/AnimatedTab";
 import { useAuth } from "../../src/components/context/AuthContext";
 import QRScannerBox from "../../src/components/new-events/QRScannerBox";
 import { JoinEventStyling as styles } from "../../src/styling/JoinEventPage.styles";
@@ -40,68 +43,100 @@ export default function JoinEventPage() {
 	};
 
 	return (
-		<ImageBackground
-			source={require("../../src/images/getStartedImage.png")}
-			style={styles.background}
-			resizeMode="cover"
-		>
-			<SafeAreaView style={styles.safe}>
-				<View style={styles.header}>
-					<Text style={styles.pageTitle}>Start Shattering</Text>
-					<Text style={styles.subtitle}>
-						Hey {user?.name || "there"}, Ready to Start Shattering Some
-						Boundaries?
-					</Text>
-				</View>
+		<AnimatedTab>
+			<ImageBackground
+				source={require("../../src/images/getStartedImage.png")}
+				style={styles.background}
+				resizeMode="cover"
+			>
+				<SafeAreaView style={styles.safe}>
+					<View style={styles.header}>
+						<Text style={styles.pageTitle}>Start Shattering</Text>
+						<Text style={styles.subtitle}>
+							Hey {user?.name || "there"}, Ready to Start Shattering Some
+							Boundaries?
+						</Text>
+					</View>
 
-				<View style={styles.container}>
-					{loading && (
-						<View style={styles.loadingContainer}>
-							<ActivityIndicator size="large" color="#1e3a8a" />
-							<Text style={styles.loading}>Joining event...</Text>
-						</View>
-					)}
-
-					{!loading && (
-						<>
-							{!showScanner && (
-								<Button
-									title="Scan QR Code"
-									onPress={() => setShowScanner(true)}
-								/>
-							)}
-
-							{showScanner && (
-								<QRScannerBox onClose={() => setShowScanner(false)} />
-							)}
-
-							<View style={styles.codeContainer}>
-								<TextInput
-									style={styles.input}
-									placeholder="Enter event code"
-									value={eventCode}
-									onChangeText={(text) => {
-										setEventCode(text);
-										setErrorMessage("");
-									}}
-									autoCapitalize="characters"
-									autoCorrect={false}
-								/>
-
-								<Button
-									title="Join Event"
-									onPress={handleJoinEvent}
-									disabled={!eventCode.trim()}
-								/>
-
-								{errorMessage && (
-									<Text style={styles.errorText}>{errorMessage}</Text>
-								)}
+					<View style={styles.container}>
+						{loading && (
+							<View style={styles.loadingContainer}>
+								<ActivityIndicator size="large" color="#1e3a8a" />
+								<Text style={styles.loading}>Joining event...</Text>
 							</View>
-						</>
-					)}
-				</View>
-			</SafeAreaView>
-		</ImageBackground>
+						)}
+
+						{!loading && (
+							<>
+								{/* QR Section */}
+								<View style={styles.section}>
+									<Text style={styles.label}>Scan QR Code</Text>
+
+									{!showScanner ? (
+										<TouchableOpacity
+											style={styles.buttonSecondary}
+											onPress={() => setShowScanner(true)}
+										>
+											<View style={styles.scannerButton}>
+												<Ionicons name="scan-outline" color={colors.white} />
+												<Text style={styles.buttonText}>Open Scanner</Text>
+											</View>
+										</TouchableOpacity>
+									) : (
+										<>
+											<QRScannerBox onClose={() => setShowScanner(false)} />
+											<TouchableOpacity
+												style={styles.buttonSecondary}
+												onPress={() => setShowScanner(false)}
+											>
+												<View style={styles.scannerButton}>
+													<Text style={styles.buttonText}>Close Scanner</Text>
+												</View>
+											</TouchableOpacity>
+										</>
+									)}
+								</View>
+
+								{/* Divider */}
+								<View style={styles.divider}>
+									<Text style={styles.dividerText}>OR</Text>
+								</View>
+
+								{/* Code Entry */}
+								<View>
+									<Text style={styles.label}>Enter Event Code</Text>
+
+									<TextInput
+										style={styles.input}
+										placeholder="ABC123"
+										value={eventCode}
+										onChangeText={(text) => {
+											setEventCode(text);
+											setErrorMessage("");
+										}}
+										autoCapitalize="characters"
+									/>
+
+									<TouchableOpacity
+										style={styles.button}
+										onPress={handleJoinEvent}
+										disabled={!eventCode.trim()}
+									>
+										<View style={styles.scannerButton}>
+											<Ionicons name="search-outline" color={colors.white} />
+											<Text style={styles.buttonText}>Join Event</Text>
+										</View>
+									</TouchableOpacity>
+
+									{errorMessage && (
+										<Text style={styles.errorText}>{errorMessage}</Text>
+									)}
+								</View>
+							</>
+						)}
+					</View>
+				</SafeAreaView>
+			</ImageBackground>
+		</AnimatedTab>
 	);
 }

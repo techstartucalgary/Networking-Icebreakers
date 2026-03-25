@@ -1,7 +1,8 @@
 //called by Profile.tsx for logging in
 import { User } from "@/src/interfaces/User";
 import { userFetch, userLogin } from "@/src/services/user.service";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import {
 	ActivityIndicator,
@@ -25,9 +26,10 @@ export default function LoginForm() {
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
 
-	const handleLinkedIn = () => {
-		// wire linkedin from backend
-		console.log("LinkedIn login pressed");
+	const handleLinkedIn = async () => {
+		await WebBrowser.openBrowserAsync(
+			`${process.env.EXPO_PUBLIC_API_BASE}/api/auth/linkedin`,
+		);
 	};
 
 	const handleLogin = async () => {
@@ -78,105 +80,112 @@ export default function LoginForm() {
 	};
 
 	return (
-		<ImageBackground
-			source={require("../../images/getStartedImage.png")}
-			style={styles.background}
-			resizeMode="cover"
-		>
-			<SafeAreaView style={styles.safe}>
-				<View style={styles.header}>
-					<Text style={styles.logoTitle}>SHATTER</Text>
-					<Text style={styles.brandSubtitle}>Break The Ice</Text>
-				</View>
-				<KeyboardAvoidingView
-					style={{ flex: 1 }}
-					behavior={Platform.OS === "ios" ? "padding" : "height"}
-					keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-				>
-					<View style={styles.formWrap}>
-						<ScrollView
-							showsVerticalScrollIndicator={false}
-							keyboardShouldPersistTaps="handled"
-							contentContainerStyle={{ paddingBottom: 40 }}
-						>
-							<Text style={styles.title}>Log In</Text>
-							<Text style={styles.subtitle}>Welcome back!</Text>
-							<Text style={styles.label}>Email</Text>
-							<View style={styles.inputWrap}>
-								<TextInput
-									style={styles.input}
-									placeholder="example@gmail.com"
-									value={email}
-									onChangeText={setEmail}
-									placeholderTextColor="#bbb"
-									keyboardType="email-address"
-									autoCapitalize="none"
-									returnKeyType="next"
-								/>
-							</View>
-							<Text style={styles.label}>Password</Text>
-							<View style={styles.inputWrap}>
-								<TextInput
-									style={styles.input}
-									placeholder="••••••••••••"
-									secureTextEntry
-									value={password}
-									onChangeText={setPassword}
-									placeholderTextColor="#bbb"
-									returnKeyType="done"
-								/>
-							</View>
-							<View style={styles.rowBetween}>
-								<View style={styles.rememberRow}>
-									<Text style={styles.rememberText}>Remember me</Text>
-								</View>
-								<TouchableOpacity>
-									<Text style={styles.forgotText}>Forgot your password?</Text>
-								</TouchableOpacity>
-							</View>
-							<TouchableOpacity
-								style={[styles.button, loading && styles.buttonDisabled]}
-								onPress={handleLogin}
-								disabled={loading}
-							>
-								{loading ? (
-									<ActivityIndicator color="#fff" />
-								) : (
-									<Text style={styles.buttonText}>Log In</Text>
-								)}
-							</TouchableOpacity>
-							{err && <Text style={styles.err}>{err}</Text>}
-							<View style={styles.dividerRow}>
-								<View style={styles.dividerLine} />
-								<Text style={styles.dividerText}>-OR-</Text>
-								<View style={styles.dividerLine} />
-							</View>
-							<TouchableOpacity
-								style={styles.socialButton}
-								onPress={handleLinkedIn}
-							>
-								<Text
-									style={{ fontSize: 18, fontWeight: "900", color: "#0A66C2" }}
-								>
-									in
-								</Text>
-								<Text style={styles.socialButtonText}>
-									Log in with LinkedIn
-								</Text>
-							</TouchableOpacity>
-							<TouchableOpacity
-								onPress={() => router.push("/UserPages/Signup")}
-							>
-								<Text style={styles.signupLinkText}>
-									Don&apos;t have an account?{" "}
-									<Text style={styles.signupLinkBold}>Sign Up</Text>
-								</Text>
-							</TouchableOpacity>
-						</ScrollView>
+		<>
+			<Stack.Screen options={{ animation: "slide_from_right" }} />
+			<ImageBackground
+				source={require("../../images/getStartedImage.png")}
+				style={styles.background}
+				resizeMode="cover"
+			>
+				<SafeAreaView style={styles.safe}>
+					<View style={styles.header}>
+						<Text style={styles.logoTitle}>SHATTER</Text>
+						<Text style={styles.brandSubtitle}>Break The Ice</Text>
 					</View>
-				</KeyboardAvoidingView>
-			</SafeAreaView>
-		</ImageBackground>
+					<KeyboardAvoidingView
+						style={{ flex: 1 }}
+						behavior={Platform.OS === "ios" ? "padding" : "height"}
+						keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+					>
+						<View style={styles.formWrap}>
+							<ScrollView
+								showsVerticalScrollIndicator={false}
+								keyboardShouldPersistTaps="handled"
+								contentContainerStyle={{ paddingBottom: 40 }}
+							>
+								<Text style={styles.title}>Log In</Text>
+								<Text style={styles.subtitle}>Welcome back!</Text>
+								<Text style={styles.label}>Email</Text>
+								<View style={styles.inputWrap}>
+									<TextInput
+										style={styles.input}
+										placeholder="example@gmail.com"
+										value={email}
+										onChangeText={setEmail}
+										placeholderTextColor="#bbb"
+										keyboardType="email-address"
+										autoCapitalize="none"
+										returnKeyType="next"
+									/>
+								</View>
+								<Text style={styles.label}>Password</Text>
+								<View style={styles.inputWrap}>
+									<TextInput
+										style={styles.input}
+										placeholder="••••••••••••"
+										secureTextEntry
+										value={password}
+										onChangeText={setPassword}
+										placeholderTextColor="#bbb"
+										returnKeyType="done"
+									/>
+								</View>
+								<View style={styles.rowBetween}>
+									<View style={styles.rememberRow}>
+										<Text style={styles.rememberText}>Remember me</Text>
+									</View>
+									<TouchableOpacity>
+										<Text style={styles.forgotText}>Forgot your password?</Text>
+									</TouchableOpacity>
+								</View>
+								<TouchableOpacity
+									style={[styles.button, loading && styles.buttonDisabled]}
+									onPress={handleLogin}
+									disabled={loading}
+								>
+									{loading ? (
+										<ActivityIndicator color="#fff" />
+									) : (
+										<Text style={styles.buttonText}>Log In</Text>
+									)}
+								</TouchableOpacity>
+								{err && <Text style={styles.err}>{err}</Text>}
+								<View style={styles.dividerRow}>
+									<View style={styles.dividerLine} />
+									<Text style={styles.dividerText}>-OR-</Text>
+									<View style={styles.dividerLine} />
+								</View>
+								<TouchableOpacity
+									style={styles.socialButton}
+									onPress={handleLinkedIn}
+								>
+									<Text
+										style={{
+											fontSize: 18,
+											fontWeight: "900",
+											color: "#0A66C2",
+										}}
+									>
+										in
+									</Text>
+									<Text style={styles.socialButtonText}>
+										Log in with LinkedIn
+									</Text>
+								</TouchableOpacity>
+								<TouchableOpacity
+									onPress={() => router.push("/UserPages/Signup")}
+								>
+									<Text style={styles.loginLinkText}>
+										Don&apos;t have an account?{" "}
+										<Text style={styles.loginLinkBold}>Sign Up</Text>
+									</Text>
+								</TouchableOpacity>
+							</ScrollView>
+						</View>
+					</KeyboardAvoidingView>
+				</SafeAreaView>
+			</ImageBackground>
+		</>
 	);
 }
 
