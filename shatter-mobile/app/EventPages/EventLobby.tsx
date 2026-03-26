@@ -1,7 +1,6 @@
-import { useGame } from "@/src/components/context/GameContext";
 import { EventState } from "@/src/interfaces/Event";
 import { getEventById } from "@/src/services/event.service";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,13 +9,15 @@ import { EventLobbyStyling as styles } from "../../src/styling/EventLobby.styles
 const POLL_INTERVAL = 3000; //3 seconds
 
 export default function EventLobby() {
-	const { gameState } = useGame();
+	const { eventId } = useLocalSearchParams<{ eventId: string }>(); //avoid race conditions with initializeGame
 	const [status, setStatus] = useState(EventState.UPCOMING);
 
 	//TODO: Websocket for game loading
 	useEffect(() => {
+		if (!eventId) return; //don't start polling until eventId is set
+
 		const interval = setInterval(async () => {
-			const res = await getEventById(gameState.eventId);
+			const res = await getEventById(eventId);
 			const event = res?.event;
 			if (!event) return;
 
@@ -32,7 +33,7 @@ export default function EventLobby() {
 		}, POLL_INTERVAL);
 
 		return () => clearInterval(interval);
-	}, [gameState.eventId]);
+	}, [eventId]);
 
 	return (
 		<SafeAreaView style={styles.safe}>

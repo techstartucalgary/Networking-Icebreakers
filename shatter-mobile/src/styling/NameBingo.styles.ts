@@ -8,7 +8,6 @@ const vh = (percent: number) => (height * percent) / 100;
 
 export const NameBingoStyling = StyleSheet.create({
 	container: {
-		flex: 1,
 		padding: 10,
 		backgroundColor: colors.lightGrey,
 	},
@@ -42,7 +41,7 @@ export const NameBingoStyling = StyleSheet.create({
 	selectedCardInfo: {
 		backgroundColor: colors.white,
 		padding: 10,
-		marginBottom: 10,
+		marginBottom: 5,
 		borderRadius: 8,
 		alignItems: "center",
 	},
@@ -76,7 +75,7 @@ export const NameBingoStyling = StyleSheet.create({
 	},
 	inputRow: {
 		flexDirection: "row",
-		marginBottom: 8,
+		marginBottom: 5,
 	},
 	inputFlex: {
 		height: 40,
@@ -131,8 +130,7 @@ export const NameBingoStyling = StyleSheet.create({
 		textAlign: "center",
 	},
 	rollerVertical: {
-		maxHeight: 125,
-		marginTop: 2,
+		height: vh(20),
 		width: "100%",
 		backgroundColor: "rgba(252, 250, 250, 0.97))",
 		padding: 5,

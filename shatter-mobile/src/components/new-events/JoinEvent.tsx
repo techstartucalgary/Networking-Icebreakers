@@ -1,5 +1,5 @@
 import { useAuth } from "@/src/components/context/AuthContext";
-import { EventState } from "@/src/interfaces/Event";
+import { EventState, GameType } from "@/src/interfaces/Event";
 import {
 	getEventByCode,
 	JoinEventIdGuest,
@@ -67,6 +67,10 @@ export function useJoinEvent() {
 				}
 			}
 
+			//TODO: Remove hard-coded game type
+			if (!event.gameType) {
+				event.gameType = GameType.NAME_BINGO;
+			}
 			initializeGame(event.gameType, event._id, event.currentState);
 		} catch (err: any) {
 			console.log(err);

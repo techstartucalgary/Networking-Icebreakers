@@ -43,15 +43,15 @@ export async function GetBingoCategoriesApi(
 	eventId: string,
 ): Promise<BingoCategoriesResponse> {
 	try {
+
 		const response: AxiosResponse<BingoDataResponse> = await axios.get(
 			`${API_BASE_URL}/bingo/getBingo/${eventId}`,
 		);
 
 		const grid = response.data.bingo.grid;
-		const categoriesList: string[][] =
-			response.data.success && grid ? grid : [];
 
-		return { success: true, categories: categoriesList };
+		return { success: true, tiles: grid };
+
 	} catch (error) {
 		const err = error as AxiosError;
 

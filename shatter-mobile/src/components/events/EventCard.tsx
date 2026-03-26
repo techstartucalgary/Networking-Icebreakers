@@ -1,12 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-	Image,
-	LayoutAnimation,
-	Pressable,
-	Text,
-	View
-} from "react-native";
+import { Image, LayoutAnimation, Pressable, Text, View } from "react-native";
 import EventIB, { EventState, GameType } from "../../interfaces/Event";
 import { EventCardStyling as styles } from "../../styling/EventCard.styles";
 import { useGame } from "../context/GameContext";
@@ -86,13 +80,15 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					{upcoming && (
 						<Pressable
 							onPress={() => {
-								if (event.currentState !== EventState.UPCOMING) {
-									//TODO: REMOVE hard-coded event data
-									event.currentState = EventState.UPCOMING;
+								//TODO: Remove hard-coded game type
+								if (!event.gameType) {
 									event.gameType = GameType.NAME_BINGO;
 								}
 								initializeGame(event.gameType, event._id, event.currentState);
-								router.push(`/EventPages/EventLobby`);
+								router.push({
+									pathname: "/EventPages/EventLobby",
+									params: { eventId: event._id },
+								});
 							}}
 							style={styles.upcomingButton}
 						>
@@ -103,13 +99,15 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					{live && (
 						<Pressable
 							onPress={() => {
-								if (event.currentState !== EventState.IN_PROGRESS) {
-									//TODO: REMOVE hard-coded event data
-									event.currentState = EventState.IN_PROGRESS;
+								//TODO: Remove hard-coded game type
+								if (!event.gameType) {
 									event.gameType = GameType.NAME_BINGO;
 								}
 								initializeGame(event.gameType, event._id, event.currentState);
-								router.push(`/GamePages/Game`);
+								router.push({
+									pathname: "/GamePages/Game",
+									params: { eventId: event._id },
+								});
 							}}
 							style={styles.joinButton}
 						>
@@ -120,13 +118,15 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 					{completed && (
 						<Pressable
 							onPress={() => {
-								if (event.currentState !== EventState.COMPLETED) {
-									//TODO: REMOVE hard-coded event data
-									event.currentState = EventState.COMPLETED;
+								//TODO: Remove hard-coded game type
+								if (!event.gameType) {
 									event.gameType = GameType.NAME_BINGO;
 								}
 								initializeGame(event.gameType, event._id, event.currentState);
-								router.push(`/GamePages/Game`);
+								router.push({
+									pathname: "/GamePages/Game",
+									params: { eventId: event._id },
+								});
 							}}
 							style={styles.viewButton}
 						>

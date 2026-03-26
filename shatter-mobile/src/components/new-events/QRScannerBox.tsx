@@ -67,7 +67,7 @@ export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 			(result) => {
 				if (!scanLock.current) handleScan(result.data);
 			},
-			{ highlightScanRegion: true }
+			{ highlightScanRegion: false }
 		);
 
 		scanner.start();
