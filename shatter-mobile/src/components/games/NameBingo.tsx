@@ -38,7 +38,6 @@ type WinningLine = {
 
 const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 	const { gameState, currentParticipantId } = useGame();
-
 	const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 	const [activeCardId, setActiveCardId] = useState<string | null>(null);
 	const [participants, setParticipants] = useState<Participant[]>([]);
@@ -53,7 +52,7 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 	const [animatedBlackoutIds, setAnimatedBlackoutIds] = useState<string[]>([]);
 
 	const storageKey = `bingo-cards-${eventId}`;
-	const gridSize = categories.length || 5;
+	const gridSize = categories.length || 3;
 	const cardSize = `${100 / gridSize}%` as DimensionValue;
 
 	//helper functions
@@ -320,12 +319,18 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 									setActiveCardId(card.cardId);
 								}}
 							>
-								<Text style={styles.category}>
+								<View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+									<Text
+										style={styles.category}
+										numberOfLines={2}
+										adjustsFontSizeToFit
+									>
 									{card.tile?.shortQuestion || "?"}
-								</Text>
-								{card.assignedParticipantId && (
+									</Text>
+									{card.assignedParticipantId && (
 									<Text style={styles.assignedName}>{card.assignedName}</Text>
-								)}
+									)}
+								</View>
 							</TouchableOpacity>
 						);
 					})}

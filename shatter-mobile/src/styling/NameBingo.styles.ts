@@ -26,7 +26,7 @@ export const NameBingoStyling = StyleSheet.create({
 		backgroundColor: colors.white,
 		borderRadius: 10,
 		justifyContent: "center",
-		alignItems: "center",
+    	alignItems: "center",
 		padding: 6,
 		shadowColor: colors.black,
 		shadowOpacity: 0.1,
@@ -60,8 +60,9 @@ export const NameBingoStyling = StyleSheet.create({
 	category: {
 		fontFamily: fonts.body,
 		fontWeight: "bold",
-		fontSize: 10,
+		fontSize: 15,
 		textAlign: "center",
+		padding: 3,
 	},
 	assignedName: {
 		fontFamily: fonts.body,
@@ -130,7 +131,7 @@ export const NameBingoStyling = StyleSheet.create({
 		textAlign: "center",
 	},
 	rollerVertical: {
-		height: vh(20),
+		height: vh(15),
 		width: "100%",
 		backgroundColor: "rgba(252, 250, 250, 0.97))",
 		padding: 5,
