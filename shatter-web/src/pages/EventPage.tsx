@@ -35,6 +35,25 @@ export default function EventPage() {
     grid: string[][];
   } | null>(null);
 
+  const normalizeBingoGrid = (grid: unknown): string[][] => {
+    if (!Array.isArray(grid)) return [];
+
+    return grid.map((row) => {
+      if (Array.isArray(row)) {
+        return row.map((cell) => String(cell ?? ""));
+      }
+
+      if (row && typeof row === "object") {
+        return Object.keys(row as Record<string, unknown>)
+          .filter((key) => /^\d+$/.test(key))
+          .sort((a, b) => Number(a) - Number(b))
+          .map((key) => String((row as Record<string, unknown>)[key] ?? ""));
+      }
+
+      return [];
+    });
+  };
+
   // Fetch bingo game for this event
   useEffect(() => {
     if (!eventId) return;
@@ -53,7 +72,10 @@ export default function EventPage() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.bingo) {
-          setBingoGame(data.bingo);
+          setBingoGame({
+            ...data.bingo,
+            grid: normalizeBingoGrid(data.bingo.grid),
+          });
         }
       })
       .catch(() => {
@@ -470,7 +492,7 @@ export default function EventPage() {
                              font-body font-semibold text-sm text-white p-2"
                   style={{ backgroundColor: "rgba(27, 37, 58, 0.6)" }}
                 >
-                  <span className="truncate text-center">{cell}</span>
+                  <span className="truncate text-center">{String(cell ?? "")}</span>
                 </div>
               ))}
             </div>
