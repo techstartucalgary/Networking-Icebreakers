@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { User } from "../models/user_model.js";
-import "../models/participant_model.js";
+import { Participant } from "../models/participant_model.js";
+import { Event } from "../models/event_model.js";
 import { hashPassword } from "../utils/password_hash.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -188,5 +189,70 @@ export const updateUser = async (req: Request, res: Response) => {
     }
     console.error("PUT /api/users/:userId error:", err);
     res.status(500).json({ success: false, error: "Failed to update user" });
+  }
+};
+
+/**
+ * GET /api/users/:userId/current-event
+ * Get the user's current active event (Upcoming or In Progress)
+ *
+ * @param req.params.userId - User ID (required)
+ * @param req.user.userId - Authenticated user ID (from access token)
+ *
+ * @returns 200 with active event details or hasActiveEvent: false
+ * @returns 403 if requesting another user's current event
+ */
+export const getCurrentEvent = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (req.user?.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: "You can only view your own current event",
+      });
+    }
+
+    const participantRecords = await Participant.find({ userId }).select("eventId").lean();
+    const eventIds = participantRecords.map((p) => p.eventId);
+
+    if (eventIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        hasActiveEvent: false,
+        event: null,
+      });
+    }
+
+    const activeEvent = await Event.findOne({
+      _id: { $in: eventIds },
+      currentState: { $in: ["Upcoming", "In Progress"] },
+    }).sort({ createdAt: -1 });
+
+    if (!activeEvent) {
+      return res.status(200).json({
+        success: true,
+        hasActiveEvent: false,
+        event: null,
+      });
+    }
+
+    const role = activeEvent.createdBy.toString() === userId ? "host" : "participant";
+
+    return res.status(200).json({
+      success: true,
+      hasActiveEvent: true,
+      event: {
+        _id: activeEvent._id,
+        eventName: activeEvent.name,
+        status: activeEvent.currentState,
+        joinCode: activeEvent.joinCode,
+        participantCount: activeEvent.participantIds.length,
+        role,
+      },
+    });
+  } catch (err: any) {
+    console.error("GET /api/users/:userId/current-event error:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 };

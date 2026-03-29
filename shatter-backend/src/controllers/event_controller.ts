@@ -8,6 +8,8 @@ import { generateJoinCode } from "../utils/event_utils.js";
 import { generateToken } from "../utils/jwt_utils.js";
 import { Participant, IParticipant } from "../models/participant_model.js";
 import { User } from "../models/user_model.js";
+import { ParticipantConnection } from "../models/participant_connection_model.js";
+import { Bingo } from "../models/bingo_model.js";
 import { Types } from "mongoose";
 
 /**
@@ -532,5 +534,153 @@ export async function getEventsByUserId(req: Request, res: Response) {
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+/**
+ * POST /api/events/:eventId/leave
+ * Leave an event as a participant
+ *
+ * @param req.params.eventId - Event ID to leave (required)
+ * @param req.user.userId - Authenticated user ID (from access token)
+ *
+ * @returns 200 on success
+ * @returns 400 if event is completed
+ * @returns 403 if user is the host
+ * @returns 404 if event not found or user is not a participant
+ */
+export async function leaveEvent(req: Request, res: Response) {
+  try {
+    const eventId = req.params.eventId as string;
+    const userId = req.user!.userId;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ success: false, error: "Event not found" });
+    }
+
+    if (event.currentState === "Completed") {
+      return res.status(400).json({
+        success: false,
+        error: "Cannot leave a completed event",
+      });
+    }
+
+    if (event.createdBy.toString() === userId) {
+      return res.status(403).json({
+        success: false,
+        error: "Host cannot leave their own event. Use delete instead.",
+      });
+    }
+
+    const participant = await Participant.findOne({ userId, eventId });
+    if (!participant) {
+      return res.status(404).json({
+        success: false,
+        error: "You are not a participant in this event",
+      });
+    }
+
+    const participantId = participant._id as Types.ObjectId;
+
+    await Promise.all([
+      Event.updateOne(
+        { _id: eventId },
+        { $pull: { participantIds: participantId } },
+      ),
+      Participant.deleteOne({ _id: participantId }),
+      User.updateOne(
+        { _id: userId },
+        { $pull: { eventHistoryIds: eventId } },
+      ),
+      ParticipantConnection.deleteMany({
+        _eventId: eventId,
+        $or: [
+          { primaryParticipantId: participantId },
+          { secondaryParticipantId: participantId },
+        ],
+      }),
+    ]);
+
+    await pusher.trigger(`event-${eventId}`, "participant-left", {
+      participantId,
+      name: participant.name,
+    });
+
+    return res.status(200).json({
+      success: true,
+      msg: "Successfully left the event",
+    });
+  } catch (err: any) {
+    console.error("LEAVE EVENT ERROR:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+/**
+ * DELETE /api/events/:eventId
+ * Delete/cancel an event (host only)
+ *
+ * @param req.params.eventId - Event ID to delete (required)
+ * @param req.user.userId - Authenticated user ID (from access token)
+ *
+ * @returns 200 on success
+ * @returns 400 if event is completed
+ * @returns 403 if user is not the host
+ * @returns 404 if event not found
+ */
+export async function deleteEvent(req: Request, res: Response) {
+  try {
+    const eventId = req.params.eventId as string;
+    const userId = req.user!.userId;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ success: false, error: "Event not found" });
+    }
+
+    if (event.createdBy.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: "Only the event host can delete this event",
+      });
+    }
+
+    if (event.currentState === "Completed") {
+      return res.status(400).json({
+        success: false,
+        error: "Cannot delete a completed event",
+      });
+    }
+
+    // Get all participant userIds for history cleanup
+    const participants = await Participant.find({ eventId }).select("userId").lean();
+    const userIds = participants
+      .map((p) => p.userId)
+      .filter((id) => id != null);
+
+    await Promise.all([
+      Participant.deleteMany({ eventId }),
+      Bingo.deleteMany({ _eventId: eventId }),
+      ParticipantConnection.deleteMany({ _eventId: eventId }),
+      User.updateMany(
+        { _id: { $in: userIds } },
+        { $pull: { eventHistoryIds: eventId } },
+      ),
+      Event.deleteOne({ _id: eventId }),
+    ]);
+
+    await pusher.trigger(`event-${eventId}`, "event-deleted", {
+      eventId,
+      message: "This event has been cancelled by the host",
+    });
+
+    return res.status(200).json({
+      success: true,
+      msg: "Event deleted successfully",
+    });
+  } catch (err: any) {
+    console.error("DELETE EVENT ERROR:", err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 }
