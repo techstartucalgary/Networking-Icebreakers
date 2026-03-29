@@ -26,6 +26,7 @@
     - [GET `/api/users/me`](#get-apiusersme)
     - [GET `/api/users/:userId`](#get-apiusersuserid)
     - [GET `/api/users/:userId/events`](#get-apiusersuseridevents)
+    - [GET `/api/users/:userId/current-event`](#get-apiusersuseridcurrent-event)
     - [PUT `/api/users/:userId`](#put-apiusersuserid)
   - [Events (`/api/events`)](#events-apievents)
     - [POST `/api/events/createEvent`](#post-apieventscreateevent)
@@ -34,6 +35,8 @@
     - [PUT `/api/events/:eventId/status`](#put-apieventseventidstatus)
     - [POST `/api/events/:eventId/join/user`](#post-apieventseventidjoinuser)
     - [POST `/api/events/:eventId/join/guest`](#post-apieventseventidjoinguest)
+    - [POST `/api/events/:eventId/leave`](#post-apieventseventidleave)
+    - [DELETE `/api/events/:eventId`](#delete-apieventseventid)
     - [GET `/api/events/createdEvents/user/:userId`](#get-apieventscreatedeventsuseruserid)
   - [Bingo (`/api/bingo`)](#bingo-apibingo)
     - [POST `/api/bingo/createBingo`](#post-apibingocreatebingo)
@@ -75,6 +78,7 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | GET | `/api/users/me` | Protected | Get current user's profile |
 | GET | `/api/users/:userId` | Protected | Get user by ID |
 | GET | `/api/users/:userId/events` | Protected | Get user's joined events |
+| GET | `/api/users/:userId/current-event` | Protected | Get user's current active event (self-only) |
 | PUT | `/api/users/:userId` | Protected | Update user profile (self-only) |
 | POST | `/api/events/createEvent` | Protected | Create a new event |
 | GET | `/api/events/event/:joinCode` | Public | Get event by join code |
@@ -82,6 +86,8 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | PUT | `/api/events/:eventId/status` | Protected | Update event lifecycle status (host-only) |
 | POST | `/api/events/:eventId/join/user` | Protected | Join event as authenticated user |
 | POST | `/api/events/:eventId/join/guest` | Public | Join event as guest |
+| POST | `/api/events/:eventId/leave` | Protected | Leave event as participant |
+| DELETE | `/api/events/:eventId` | Protected | Delete/cancel event (host-only) |
 | GET | `/api/events/createdEvents/user/:userId` | Protected | Get events created by user |
 | POST | `/api/bingo/createBingo` | Protected | Create bingo game for event |
 | GET | `/api/bingo/getBingo/:eventId` | Public | Get bingo by event ID |
@@ -454,6 +460,57 @@ Get all events a user has joined (populates event details).
 
 ---
 
+### GET `/api/users/:userId/current-event`
+
+Get the user's current active event (status is `Upcoming` or `In Progress`).
+
+- **Auth:** Protected (self-only)
+
+**URL Params:**
+
+| Param    | Type     | Required |
+|----------|----------|----------|
+| `userId` | ObjectId | Yes      |
+
+**Success Response (200) — active event exists:**
+
+```json
+{
+  "success": true,
+  "hasActiveEvent": true,
+  "event": {
+    "_id": "665a...",
+    "eventName": "Tech Meetup",
+    "status": "In Progress",
+    "joinCode": "48291037",
+    "participantCount": 25,
+    "role": "participant"
+  }
+}
+```
+
+**Success Response (200) — no active event:**
+
+```json
+{
+  "success": true,
+  "hasActiveEvent": false,
+  "event": null
+}
+```
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 403    | `"You can only view your own current event"` |
+
+**Notes:**
+- Returns the most recent active event if the user is in multiple
+- `role` is `"host"` if `event.createdBy` matches the user, otherwise `"participant"`
+
+---
+
 ### PUT `/api/users/:userId`
 
 Update a user's profile. Users can only update their own profile.
@@ -808,6 +865,84 @@ Join an event as a guest (no account required).
 - Returns a JWT so the guest can make authenticated requests
 - Guest can later upgrade to a full account via `PUT /api/users/:userId`
 - Triggers Pusher event `participant-joined` on channel `event-{eventId}` with payload `{ participantId, name }` (using the final display name)
+
+---
+
+### POST `/api/events/:eventId/leave`
+
+Leave an event as a participant.
+
+- **Auth:** Protected
+
+**URL Params:**
+
+| Param     | Type     | Required |
+|-----------|----------|----------|
+| `eventId` | ObjectId | Yes      |
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "msg": "Successfully left the event"
+}
+```
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 400    | `"Cannot leave a completed event"` |
+| 403    | `"Host cannot leave their own event. Use delete instead."` |
+| 404    | `"Event not found"` |
+| 404    | `"You are not a participant in this event"` |
+
+**Side Effects:**
+- Removes participant from event's `participantIds` array
+- Deletes the Participant document
+- Removes event from user's `eventHistoryIds` array
+- Deletes all ParticipantConnection records involving this participant in this event
+- Emits Pusher event `participant-left` on channel `event-{eventId}` with payload `{ participantId, name }`
+
+---
+
+### DELETE `/api/events/:eventId`
+
+Delete/cancel an event. Only the event host can delete, and only if the event is not completed.
+
+- **Auth:** Protected (host-only — `event.createdBy` must match authenticated user)
+
+**URL Params:**
+
+| Param     | Type     | Required |
+|-----------|----------|----------|
+| `eventId` | ObjectId | Yes      |
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "msg": "Event deleted successfully"
+}
+```
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 400    | `"Cannot delete a completed event"` |
+| 403    | `"Only the event host can delete this event"` |
+| 404    | `"Event not found"` |
+
+**Side Effects:**
+- Deletes all Participant documents for the event
+- Deletes Bingo document(s) for the event
+- Deletes all ParticipantConnection records for the event
+- Removes event from all participants' `eventHistoryIds` arrays
+- Deletes the Event document
+- Emits Pusher event `event-deleted` on channel `event-{eventId}` with payload `{ eventId, message }`
 
 ---
 

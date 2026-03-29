@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createEvent, getEventByJoinCode, getEventById, joinEventAsUser, joinEventAsGuest, getEventsByUserId, updateEventStatus } from '../controllers/event_controller.js';
+import { createEvent, getEventByJoinCode, getEventById, joinEventAsUser, joinEventAsGuest, getEventsByUserId, updateEventStatus, leaveEvent, deleteEvent } from '../controllers/event_controller.js';
 import { authMiddleware } from '../middleware/auth_middleware.js';
 
 const router = Router();
@@ -11,6 +11,8 @@ router.put("/:eventId/status", authMiddleware, updateEventStatus);
 router.get("/:eventId", getEventById);
 router.post("/:eventId/join/user", authMiddleware, joinEventAsUser);
 router.post("/:eventId/join/guest", joinEventAsGuest);
+router.post("/:eventId/leave", authMiddleware, leaveEvent);
+router.delete("/:eventId", authMiddleware, deleteEvent);
 router.get("/createdEvents/user/:userId", authMiddleware, getEventsByUserId);
 
 
