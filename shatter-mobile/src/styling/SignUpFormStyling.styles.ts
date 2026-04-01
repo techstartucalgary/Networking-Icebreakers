@@ -60,6 +60,7 @@ export const SignUpFormStyling = StyleSheet.create({
 		fontWeight: "700",
 		marginBottom: vh(2.5),
 		color: "#1B2A4A",
+		fontFamily: fonts.title,
 	},
 	input: {
 		borderWidth: 1,

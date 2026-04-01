@@ -62,7 +62,7 @@ export const GuestStyling = StyleSheet.create({
 		padding: 30,
 	},
 	label: {
-		fontFamily: fonts.body,
+		fontFamily: fonts.title,
 		fontWeight: "600",
 		marginTop: 12,
 		marginBottom: 4,
@@ -117,13 +117,13 @@ export const GuestStyling = StyleSheet.create({
 	buttonText: {
 		color: colors.white,
 		fontWeight: "700",
-		fontFamily: fonts.body,
+		fontFamily: fonts.title,
 		fontSize: 16,
 	},
 	buttonTextWarning: {
 		color: colors.lightGrey2,
-		fontWeight: "700",
+		fontWeight: "900",
 		fontFamily: fonts.body,
-		fontSize: 16,
+		fontSize: vw(4),
 	},
 });

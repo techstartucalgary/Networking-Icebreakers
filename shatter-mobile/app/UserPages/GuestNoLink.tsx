@@ -38,7 +38,7 @@ export default function GuestConfirm() {
 
 	return (
 		<>
-			<Stack.Screen options={{ animation: "slide_from_right" }} />
+			<Stack.Screen options={{ animation: "fade" }} />
 			<ImageBackground
 				source={require("../../src/images/getStartedImage.png")}
 				style={styles.background}

@@ -189,19 +189,17 @@ export default function SignUpForm() {
 										Already have an Account?{" "}
 										<Text style={styles.signupLinkBold}>Log In</Text>
 									</Text>
+								</TouchableOpacity>
 
-									<View style={styles.divider}>
-										<Text style={styles.dividerText}>OR</Text>
-									</View>
+								<View style={styles.divider}>
+									<Text style={styles.dividerText}>OR</Text>
+								</View>
 
-									<TouchableOpacity
-										style={styles.button}
-										onPress={() => router.push("/UserPages/Guest")}
-									>
-										<Text style={styles.buttonText}>
-											Continue as Guest
-										</Text>
-									</TouchableOpacity>
+								<TouchableOpacity
+									style={styles.button}
+									onPress={() => router.push("/UserPages/Guest")}
+								>
+									<Text style={styles.buttonText}>Continue as Guest</Text>
 								</TouchableOpacity>
 							</ScrollView>
 						</View>
