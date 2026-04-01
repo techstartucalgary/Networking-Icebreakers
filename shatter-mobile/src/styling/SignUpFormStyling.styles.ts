@@ -117,11 +117,30 @@ export const SignUpFormStyling = StyleSheet.create({
 		textAlign: "center",
 		fontSize: vw(3.5),
 		color: "#888",
-		marginTop: vh(1),
+		marginTop: vh(0.25),
 	},
 	signupLinkBold: {
 		fontWeight: "700",
 		color: "#1B2A4A",
+	},
+	divider: {
+		marginVertical: 15,
+		alignItems: "center",
+	},
+	dividerText: {
+		color: colors.lightGrey2,
+		fontSize: 16,
+		fontFamily: fonts.body,
+	},
+	secondaryButtonNoBack: {
+		padding: 10,
+		alignItems: "center",
+	},
+	guestButtonText: {
+		color: colors.darkNavy2,
+		fontWeight: "700",
+		fontFamily: fonts.body,
+		fontSize: vw(5),
 	},
 
 	// need to implement linkedin user

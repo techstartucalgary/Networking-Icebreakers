@@ -12,7 +12,11 @@ type AuthContextType = {
 		accessToken: string,
 		isGuest: boolean,
 	) => Promise<void>;
-	continueAsGuest: (name: string, socialLink: SocialLink) => Promise<void>;
+	continueAsGuest: (
+		name: string,
+		socialLink: SocialLink,
+		organization: string,
+	) => Promise<void>;
 	logout: () => Promise<void>;
 	updateUser: (updates: Partial<User>) => User | undefined;
 };
@@ -79,18 +83,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			userId: user?._id,
 			accessToken,
 			isGuest: isGuest,
-			guestInfo: { name: user.name, socialLinks: user.socialLinks },
+			guestInfo: { name: user.name, socialLinks: user.socialLinks || [] },
 		};
 		setAuthStorage(storageData);
 		await saveStoredAuth(storageData);
 	};
 
 	//when user initially creates a guest account
-	const continueAsGuest = async (name: string, socialLink: SocialLink) => {
+	const continueAsGuest = async (
+		name: string,
+		socialLink: SocialLink,
+		organization: string,
+	) => {
 		const guestUser: User = {
 			_id: null,
 			name: name,
 			socialLinks: [{ label: socialLink.label, url: socialLink.url }],
+			organization: organization,
 			isGuest: true,
 		};
 
@@ -100,7 +109,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			userId: guestUser._id,
 			accessToken: "",
 			isGuest: true,
-			guestInfo: { name: guestUser.name, socialLinks: guestUser.socialLinks },
+			guestInfo: {
+				name: guestUser.name,
+				socialLinks: guestUser.socialLinks || [],
+				organization: organization || "",
+			},
 		};
 
 		setAuthStorage(storageData);
