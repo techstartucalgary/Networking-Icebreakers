@@ -20,6 +20,7 @@ export type User = {
 	bio?: string;
 	profilePhoto?: string;
 	socialLinks?: SocialLink[];
-	organization?: string,
+	title?: string;
+	organization?: string;
 	isGuest: boolean;
 };

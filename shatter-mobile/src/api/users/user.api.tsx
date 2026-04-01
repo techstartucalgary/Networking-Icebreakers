@@ -290,6 +290,8 @@ export async function UserUpdateApi(
 			bio: updates.bio,
 			profilePhoto: updates.profilePhoto,
 			socialLinks: updates.socialLinks,
+			organization: updates.organization,
+			title: updates.title,
 		};
 
 		const response: AxiosResponse<UserInfoUpdateResponse> = await axios.put(

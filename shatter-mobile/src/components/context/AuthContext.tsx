@@ -83,7 +83,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			userId: user?._id,
 			accessToken,
 			isGuest: isGuest,
-			guestInfo: { name: user.name, socialLinks: user.socialLinks || [] },
+			guestInfo: {
+				name: user.name,
+				socialLinks: user.socialLinks || [],
+				organization: user.organization,
+			},
 		};
 		setAuthStorage(storageData);
 		await saveStoredAuth(storageData);
