@@ -29,15 +29,20 @@ const UserModal = ({ user, onRequestClose }: UserModalProps) => {
 						/>
 
 						<View style={styles.headerText}>
-							<Text style={styles.userName}>{user.name}</Text>
+							<Text style={styles.userName}>
+								{user.name}
+								{user.title ? ` - ${user.title}` : ""}
+							</Text>
 						</View>
 					</View>
 
+					{user.organization && <Text style={styles.userOrganization}>{user.organization}</Text>}
+
 					{user.bio && <Text style={styles.userBio}>{user.bio}</Text>}
 
-					{user.socialLinks?.length > 0 && (
+					{user.socialLinks && user.socialLinks?.length > 0 && (
 						<View>
-							{user.socialLinks.map((link, index) => (
+							{user.socialLinks?.map((link, index) => (
 								<Pressable
 									key={index}
 									onPress={() => {
