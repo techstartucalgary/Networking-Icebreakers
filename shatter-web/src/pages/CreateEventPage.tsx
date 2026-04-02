@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BingoTable from "../components/BingoTable";
 import { CreateEvent } from "../service/CreateEvent";
-import { createBingoGame } from "../service/BingoGame"; // ✅ NEW
 import { useNavigate } from "react-router-dom";
-
+export interface BingoCell {
+    question: string;
+    shortQuestion: string;
+}
 function CreateEventPage() {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -16,9 +18,14 @@ function CreateEventPage() {
     );
 
     // ✅ NEW: Name Bingo selection
-    const createEmptyGrid = (size: number) => Array.from({ length: size }, () => Array(size).fill(""));
-    const [nameBingoSelected, setNameBingoSelected] = useState(false);
-    const [bingoGrid, setBingoGrid] = useState<string[][]>(createEmptyGrid(3));
+    const createEmptyGrid = (size: number): BingoCell[][] =>
+        Array.from({ length: size }, () =>
+            Array.from({ length: size }, () => ({
+                question: "",
+                shortQuestion: "",
+            }))
+        );    const [nameBingoSelected, setNameBingoSelected] = useState(false);
+    const [bingoGrid, setBingoGrid] = useState<BingoCell[][]>(createEmptyGrid(3));
     const [bingoDescription, setBingoDescription] = useState("");
 
     const [loading, setLoading] = useState(false);
@@ -39,7 +46,7 @@ function CreateEventPage() {
             // ✅ Validate bingo (if selected)
             if (nameBingoSelected) {
                 const hasEmptyCells = bingoGrid.some(row =>
-                    row.some(cell => !cell.trim())
+                    row.some(cell => !cell.question.trim() || !cell.shortQuestion.trim())
                 );
 
                 if (hasEmptyCells) {
@@ -115,10 +122,12 @@ function CreateEventPage() {
         maxParticipant > 0;
 
     const token = localStorage.getItem("token");
-    if (!token) {
-        navigate("/login");
-        return;
-    }
+    useEffect(() => {
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+    }, [token, navigate])
     return (
         <div
             className="min-h-screen text-white"
@@ -304,7 +313,7 @@ function CreateEventPage() {
                                 <BingoTable
                                     grid={bingoGrid}
                                     onChange={(row, col, value) => {
-                                        const newGrid = bingoGrid.map(r => [...r]); // ✅ deep copy
+                                        const newGrid = bingoGrid.map(r => [...r]);
                                         newGrid[row][col] = value;
                                         setBingoGrid(newGrid);
                                     }}

@@ -4,6 +4,12 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BingoTable from "../components/BingoTable";
 import { getBingo } from "../service/BingoGame";
+
+export interface BingoCell {
+    question: string;
+    shortQuestion: string;
+}
+
 import {
     CalendarIcon,
     ClipboardIcon,
@@ -60,10 +66,15 @@ function DashboardPage() {
     currentState: "Upcoming",
   });
 
-  const createEmptyGrid = (size: number) => Array.from({ length: size }, () => Array(size).fill(""));
-  const [selectedIcebreaker, setSelectedIcebreaker] = useState<string | null>(null);
+const createEmptyGrid = (size: number): BingoCell[][] =>
+  Array.from({ length: size }, () =>
+    Array.from({ length: size }, () => ({
+      question: "",
+      shortQuestion: "",
+    }))
+  );  const [selectedIcebreaker, setSelectedIcebreaker] = useState<string | null>(null);
   const GRID_SIZE = 3;
-  const [bingoGrid, setBingoGrid] = useState<string[][]>(createEmptyGrid(GRID_SIZE));  const [bingoDescription, setBingoDescription] = useState("");
+  const [bingoGrid, setBingoGrid] = useState<BingoCell[][]>(createEmptyGrid(GRID_SIZE));  const [bingoDescription, setBingoDescription] = useState("");
   const [isSavingBingo, setIsSavingBingo] = useState(false);
   const [bingoSaveMessage, setBingoSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -146,27 +157,32 @@ function DashboardPage() {
     setSelectedEvent(event);
     setIsEditing(false);
     setSelectedIcebreaker(null);
-    
-    // Load bingo data if it exists
-    loadBingoData(event._id);
   };
 
-  const loadBingoData = async (eventId: string) => {
-    try {
-      const bingo = await getBingo(eventId);
-      if (bingo) {
-        setBingoGrid(bingo.grid);
-        setBingoDescription(bingo.description ?? "");
-      } else {
-        setBingoGrid(createEmptyGrid(GRID_SIZE));
-        setBingoDescription("");
-      }
-    } catch (err) {
-      console.error("Error loading bingo data:", err);
+const loadBingoData = async (eventId: string) => {
+  try {
+    const bingo = await getBingo(eventId);
+
+    if (bingo) {
+      const formattedGrid = bingo.grid.map(row =>
+        row.map(cell => ({
+          question: cell.question || "",
+          shortQuestion: cell.shortQuestion || "",
+        }))
+      );
+
+      setBingoGrid(formattedGrid);
+      setBingoDescription(bingo.description ?? "");
+    } else {
       setBingoGrid(createEmptyGrid(GRID_SIZE));
       setBingoDescription("");
     }
-  };
+  } catch (err) {
+    console.error("Error loading bingo data:", err);
+    setBingoGrid(createEmptyGrid(GRID_SIZE));
+    setBingoDescription("");
+  }
+};
 
   const handleEditClick = () => {
     if (!selectedEvent) return;
@@ -231,11 +247,6 @@ function DashboardPage() {
     }
   };
 
-  const handleBingoGridChange = (row: number, col: number, value: string) => {
-    const newGrid = bingoGrid.map(r => [...r]);
-    newGrid[row][col] = value;
-    setBingoGrid(newGrid);
-  };
 
   const handleSaveBingo = async () => {
     if (!selectedEvent) return;
@@ -247,7 +258,7 @@ function DashboardPage() {
       const token = localStorage.getItem("token");
 
       // Check if all grid cells are filled
-      const hasEmptyCells = bingoGrid.some(row => row.some(cell => !cell.trim()));
+      const hasEmptyCells = bingoGrid.some(row => row.some(cell => !cell.question.trim() || !cell.shortQuestion.trim()));
       if (hasEmptyCells) {
         setBingoSaveMessage({ type: "error", text: "Please fill in all bingo grid cells before saving." });
         setIsSavingBingo(false);
@@ -705,11 +716,11 @@ function DashboardPage() {
                             <div>
                             <BingoTable
                               grid={bingoGrid}
-                              onChange={(row, col, value) => {
-                                const newGrid = bingoGrid.map(r => [...r]);
-                                newGrid[row][col] = value;
-                                setBingoGrid(newGrid);
-                              }}
+                                onChange={(row, col, value) => {
+                                    const newGrid = bingoGrid.map(r => [...r]);
+                                    newGrid[row][col] = value;
+                                    setBingoGrid(newGrid);
+                                }}
                             />
                             </div>
 
