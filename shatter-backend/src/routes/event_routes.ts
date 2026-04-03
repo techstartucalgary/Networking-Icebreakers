@@ -14,6 +14,6 @@ router.post("/:eventId/join/guest", joinEventAsGuest);
 router.post("/:eventId/leave", authMiddleware, leaveEvent);
 router.delete("/:eventId", authMiddleware, deleteEvent);
 router.get("/createdEvents/user/:userId", authMiddleware, getEventsByUserId);
-router.put("/update/:eventId", authMiddleware, updateEvent);
+router.put("/:eventId", authMiddleware, updateEvent);
 
 export default router;

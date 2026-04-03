@@ -38,7 +38,7 @@
     - [POST `/api/events/:eventId/leave`](#post-apieventseventidleave)
     - [DELETE `/api/events/:eventId`](#delete-apieventseventid)
     - [GET `/api/events/createdEvents/user/:userId`](#get-apieventscreatedeventsuseruserid)
-    - [PUT `/api/events/update/:eventId`](#put-apieventsupdateeventid)
+    - [PUT `/api/events/:eventId`](#put-apieventseventid)
   - [Bingo (`/api/bingo`)](#bingo-apibingo)
     - [POST `/api/bingo/createBingo`](#post-apibingocreatebingo)
     - [GET `/api/bingo/getBingo/:eventId`](#get-apibingogetbingoeventid)
@@ -983,9 +983,9 @@ Get all events created by a specific user.
 |--------|-------|
 | 404    | `"No events found for this user"` |
 ---
-### PUT `/api/events/update/:eventId`
+### PUT `/api/events/:eventId`
 
-Update an existing event (host only). Only the fields provided in the request body will be updated.
+Update an existing event's basic information (host only). Only the fields provided in the request body will be updated. To change event status, use `PUT /api/events/:eventId/status` instead.
 
 - **Auth:** Protected (Bearer Token required)
 
@@ -1003,12 +1003,11 @@ Update an existing event (host only). Only the fields provided in the request bo
 
 | Field            | Type     | Description                              |
 |------------------|----------|------------------------------------------|
-| `name`           | string   | Updated event name                       |
-| `description`    | string   | Updated event description                |
+| `name`           | string   | Updated event name (cannot be empty)     |
+| `description`    | string   | Updated event description (cannot be empty) |
 | `startDate`      | Date     | Updated start date (ISO string)          |
 | `endDate`        | Date     | Updated end date (ISO string)            |
-| `maxParticipant` | number   | Updated max number of participants       |
-| `currentState`   | string   | `"Upcoming" \| "In Progress" \| "Completed"` |
+| `maxParticipant` | number   | Updated max participants (positive integer, >= current count) |
 | `gameType`       | string   | `"Name Bingo"`                           |
 | `eventImg`       | string   | URL of event image                       |
 
@@ -1043,14 +1042,17 @@ Update an existing event (host only). Only the fields provided in the request bo
 | 400    | `"Missing eventId"` |
 | 400    | `"Invalid eventId"` |
 | 400    | `"No fields provided to update"` |
+| 400    | `"Name must be a non-empty string"` |
+| 400    | `"Description must be a non-empty string"` |
 | 400    | `"Invalid startDate"` |
 | 400    | `"Invalid endDate"` |
 | 400    | `"endDate must be after startDate"` |
-| 400    | `"maxParticipant must be a positive number"` |
-| 400    | `"Invalid currentState"` |
-| 400    | `"Invalid gameType"` |
+| 400    | `"maxParticipant must be a positive integer"` |
+| 400    | `"maxParticipant cannot be less than the current number of participants ({count})"` |
+| 400    | `"Invalid gameType. Must be one of: Name Bingo"` |
+| 400    | `"eventImg must be a string"` |
 | 400    | `"Cannot update a completed event"` |
-| 401    | `"Unauthorized"` |
+| 401    | `"Unauthorized: missing authenticated user"` |
 | 403    | `"Only the event creator can update this event"` |
 | 404    | `"Event not found"` |
 
@@ -1060,8 +1062,9 @@ Update an existing event (host only). Only the fields provided in the request bo
 
 - Only the event creator (`createdBy`) can update the event.
 - Fields not included in the request body will remain unchanged.
-- `startDate` and `endDate` must be valid dates, and `endDate` must be after `startDate`.
-- Validation is enforced both at the request level and database level.
+- `currentState` cannot be changed through this endpoint — use `PUT /api/events/:eventId/status`.
+- `startDate` and `endDate` must be valid ISO date strings, and `endDate` must be after `startDate`.
+- `maxParticipant` cannot be set below the current number of participants in the event.
 
 ---
 

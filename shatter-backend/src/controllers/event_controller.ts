@@ -11,8 +11,6 @@ import { User } from "../models/user_model.js";
 import { ParticipantConnection } from "../models/participant_connection_model.js";
 import { Bingo } from "../models/bingo_model.js";
 import { Types } from "mongoose";
-import mongoose from "mongoose";
-
 
 /**
  * Create a participant with automatic name suffix on collision.
@@ -690,22 +688,22 @@ export async function deleteEvent(req: Request, res: Response) {
 
 /**
  * PUT /api/events/:eventId
- * Update an event (host only)
+ * Update an event's basic information (host only).
+ * Does NOT allow changing currentState — use PUT /:eventId/status for that.
  *
  * @param req.params.eventId - Event ID to update (required)
  * @param req.user.userId - Authenticated user ID (from access token)
- * 
+ *
  * @param req.body.name - Updated event name (optional)
  * @param req.body.description - Updated event description (optional)
  * @param req.body.startDate - Updated event start date (optional)
  * @param req.body.endDate - Updated event end date (optional)
  * @param req.body.maxParticipant - Updated maximum number of participants (optional)
- * @param req.body.currentState - Updated current state of the event (optional)
  * @param req.body.gameType - Updated game type of the event (optional)
- * 
- * 
+ * @param req.body.eventImg - Updated event image URL (optional)
+ *
  * @returns 200 on success
- * @returns 400 if event is completed
+ * @returns 400 if event is completed or validation fails
  * @returns 403 if user is not the host
  * @returns 404 if event not found
  */
@@ -715,7 +713,6 @@ type UpdateEventBody = {
   startDate?: string | Date;
   endDate?: string | Date;
   maxParticipant?: number;
-  currentState?: "Upcoming" | "In Progress" | "Completed";
   gameType?: "Name Bingo";
   eventImg?: string;
 };
@@ -739,7 +736,7 @@ export async function updateEvent(req: Request<{ eventId: string }, {}, UpdateEv
       });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+    if (!Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({
         success: false,
         error: "Invalid eventId",
@@ -759,7 +756,7 @@ export async function updateEvent(req: Request<{ eventId: string }, {}, UpdateEv
     if (event.createdBy.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
-        error: "Forbidden: only the event creator can update this event",
+        error: "Only the event creator can update this event",
       });
     }
 
@@ -776,7 +773,6 @@ export async function updateEvent(req: Request<{ eventId: string }, {}, UpdateEv
       startDate,
       endDate,
       maxParticipant,
-      currentState,
       gameType,
       eventImg,
     } = req.body;
@@ -787,19 +783,79 @@ export async function updateEvent(req: Request<{ eventId: string }, {}, UpdateEv
       startDate: Date;
       endDate: Date;
       maxParticipant: number;
-      currentState: "Upcoming" | "In Progress" | "Completed";
       gameType: "Name Bingo";
-      eventImg?: string;
+      eventImg: string;
     }> = {};
 
-    if (name !== undefined) updateData.name = name;
-    if (description !== undefined) updateData.description = description;
-    if (startDate !== undefined) updateData.startDate = new Date(startDate);
-    if (endDate !== undefined) updateData.endDate = new Date(endDate);
-    if (maxParticipant !== undefined) updateData.maxParticipant = maxParticipant;
-    if (currentState !== undefined) updateData.currentState = currentState;
-    if (gameType !== undefined) updateData.gameType = gameType;
-    if (eventImg !== undefined) updateData.eventImg = eventImg;
+    // Validate and set name
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({ success: false, error: "Name must be a non-empty string" });
+      }
+      updateData.name = name;
+    }
+
+    // Validate and set description
+    if (description !== undefined) {
+      if (typeof description !== "string" || !description.trim()) {
+        return res.status(400).json({ success: false, error: "Description must be a non-empty string" });
+      }
+      updateData.description = description;
+    }
+
+    // Validate and set startDate
+    if (startDate !== undefined) {
+      if (startDate === null || typeof startDate === "boolean") {
+        return res.status(400).json({ success: false, error: "Invalid startDate" });
+      }
+      const parsed = new Date(startDate);
+      if (isNaN(parsed.getTime())) {
+        return res.status(400).json({ success: false, error: "Invalid startDate" });
+      }
+      updateData.startDate = parsed;
+    }
+
+    // Validate and set endDate
+    if (endDate !== undefined) {
+      if (endDate === null || typeof endDate === "boolean") {
+        return res.status(400).json({ success: false, error: "Invalid endDate" });
+      }
+      const parsed = new Date(endDate);
+      if (isNaN(parsed.getTime())) {
+        return res.status(400).json({ success: false, error: "Invalid endDate" });
+      }
+      updateData.endDate = parsed;
+    }
+
+    // Validate and set maxParticipant
+    if (maxParticipant !== undefined) {
+      if (maxParticipant === null || !Number.isInteger(maxParticipant) || maxParticipant <= 0) {
+        return res.status(400).json({ success: false, error: "maxParticipant must be a positive integer" });
+      }
+      if (maxParticipant < event.participantIds.length) {
+        return res.status(400).json({
+          success: false,
+          error: `maxParticipant cannot be less than the current number of participants (${event.participantIds.length})`,
+        });
+      }
+      updateData.maxParticipant = maxParticipant;
+    }
+
+    // Validate and set gameType
+    if (gameType !== undefined) {
+      const validGameTypes = ["Name Bingo"];
+      if (typeof gameType !== "string" || !validGameTypes.includes(gameType)) {
+        return res.status(400).json({ success: false, error: `Invalid gameType. Must be one of: ${validGameTypes.join(", ")}` });
+      }
+      updateData.gameType = gameType;
+    }
+
+    if (eventImg !== undefined) {
+      if (typeof eventImg !== "string") {
+        return res.status(400).json({ success: false, error: "eventImg must be a string" });
+      }
+      updateData.eventImg = eventImg;
+    }
 
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({
@@ -808,7 +864,7 @@ export async function updateEvent(req: Request<{ eventId: string }, {}, UpdateEv
       });
     }
 
-    // Optional extra guard for dates here too
+    // Validate date ordering (compare updated dates against existing ones)
     const finalStartDate = updateData.startDate ?? event.startDate;
     const finalEndDate = updateData.endDate ?? event.endDate;
 
