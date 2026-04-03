@@ -1113,7 +1113,7 @@ Update a bingo game.
 
 ---
 
-### POST `/api/bingo/generate`
+### POST `/api/bingo/generateBingo`
 
 Generate an AI-powered bingo grid based on a given context.
 
