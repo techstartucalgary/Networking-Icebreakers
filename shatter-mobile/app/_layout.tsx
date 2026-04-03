@@ -1,6 +1,6 @@
 import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 import { GameProvider } from "@/src/components/context/GameContext";
-import FullPageLoader from "@/src/components/FullPageLoader";
+import FullPageLoader from "@/src/components/general/FullPageLoader";
 import { Poppins_600SemiBold, useFonts } from "@expo-google-fonts/poppins";
 import { WorkSans_400Regular } from "@expo-google-fonts/work-sans";
 import { Asset } from "expo-asset";

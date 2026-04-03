@@ -1,5 +1,5 @@
 import { getStoredAuth } from "@/src/components/context/AsyncStorage";
-import { SocialLinksModal } from "@/src/components/user/SocialLinksModal";
+import { SocialLinksModal } from "@/src/components/general/SocialLinksModal";
 import { userUpdate } from "@/src/services/user.service";
 import { colors } from "@/src/styling/constants";
 import { useRouter } from "expo-router";

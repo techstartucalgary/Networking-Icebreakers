@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		userId: "",
 		accessToken: "",
 		isGuest: true,
-		guestInfo: { name: "", socialLinks: [] },
+		guestInfo: { name: "", socialLinks: [], organization: "" },
 	});
 
 	const [user, setUser] = useState<User | undefined>(undefined);
@@ -48,6 +48,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 						email: res.user.email,
 						isGuest: res.user.isGuest,
 						socialLinks: res.user.socialLinks,
+						organization: res.user.organization,
+						title: res.user.title,
 						profilePhoto: res.user.profilePhoto,
 					};
 
@@ -63,6 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 						email: "",
 						isGuest: savedData.isGuest,
 						socialLinks: savedData.guestInfo.socialLinks,
+						organization: savedData.guestInfo.organization,
 					};
 					setUser(mappedUser);
 				}
