@@ -39,6 +39,8 @@
     - [DELETE `/api/events/:eventId`](#delete-apieventseventid)
     - [GET `/api/events/createdEvents/user/:userId`](#get-apieventscreatedeventsuseruserid)
     - [PUT `/api/events/:eventId`](#put-apieventseventid)
+    - [GET `/api/events/:eventId/leaderboard`](#get-apieventseventidleaderboard)
+    - [PUT `/api/events/:eventId/leaderboard/score`](#put-apieventseventidleaderboardscore)
   - [Bingo (`/api/bingo`)](#bingo-apibingo)
     - [POST `/api/bingo/createBingo`](#post-apibingocreatebingo)
     - [GET `/api/bingo/getBingo/:eventId`](#get-apibingogetbingoeventid)
@@ -90,6 +92,8 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | POST | `/api/events/:eventId/leave` | Protected | Leave event as participant |
 | DELETE | `/api/events/:eventId` | Protected | Delete/cancel event (host-only) |
 | GET | `/api/events/createdEvents/user/:userId` | Protected | Get events created by user |
+| GET | `/api/events/:eventId/leaderboard` | Protected | Get bingo leaderboard for event |
+| PUT | `/api/events/:eventId/leaderboard/score` | Protected | Update own bingo score |
 | POST | `/api/bingo/createBingo` | Protected | Create bingo game for event |
 | GET | `/api/bingo/getBingo/:eventId` | Public | Get bingo by event ID |
 | PUT | `/api/bingo/updateBingo` | Protected | Update bingo game |
@@ -1065,6 +1069,90 @@ Update an existing event's basic information (host only). Only the fields provid
 - `currentState` cannot be changed through this endpoint — use `PUT /api/events/:eventId/status`.
 - `startDate` and `endDate` must be valid ISO date strings, and `endDate` must be after `startDate`.
 - `maxParticipant` cannot be set below the current number of participants in the event.
+
+---
+
+### GET `/api/events/:eventId/leaderboard`
+
+Get the bingo leaderboard for an event. Returns participants sorted by completion status and lines completed. Connections count is computed from ParticipantConnection records (unique connected partners).
+
+- **Auth:** Protected
+
+**URL Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `eventId` | ObjectId | Yes | The event ID |
+
+**Response (200):**
+
+```json
+[
+  {
+    "participantId": "abc123",
+    "name": "Jane Doe",
+    "profilePhoto": "https://example.com/photo.jpg",
+    "connectionsCount": 5,
+    "linesCompleted": 3,
+    "completed": true
+  }
+]
+```
+
+**Sort order:** `completed` desc (completed first), then `linesCompleted` desc, then `connectionsCount` desc.
+
+**Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `participantId` | string | Participant document ID |
+| `name` | string | User's display name |
+| `profilePhoto` | string \| null | User's profile photo URL |
+| `connectionsCount` | number | Number of unique people connected with (from ParticipantConnection records) |
+| `linesCompleted` | number | Completed bingo lines (vertical, horizontal, diagonal) |
+| `completed` | boolean | Whether the entire bingo sheet is filled |
+
+---
+
+### PUT `/api/events/:eventId/leaderboard/score`
+
+Update the authenticated user's bingo score for an event. Triggers a Pusher `leaderboard-updated` event on channel `event-{eventId}`.
+
+- **Auth:** Protected
+
+**URL Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `eventId` | ObjectId | Yes | The event ID |
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `linesCompleted` | number | No | Number of completed bingo lines |
+| `completed` | boolean | No | Whether the entire bingo sheet is filled |
+
+At least one field must be provided.
+
+**Response (200):**
+
+```json
+{
+  "participantId": "abc123",
+  "name": "Jane Doe",
+  "linesCompleted": 3,
+  "completed": false,
+  "connectionsCount": 2
+}
+```
+
+**Error Responses:**
+
+| Status | Description |
+|--------|-------------|
+| 400 | Invalid eventId or no valid fields provided |
+| 404 | Participant not found for this event |
 
 ---
 

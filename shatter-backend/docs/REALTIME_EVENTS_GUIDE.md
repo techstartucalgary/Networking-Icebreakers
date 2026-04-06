@@ -15,6 +15,7 @@
   - [`event-ended`](#event-ended)
   - [`participant-left`](#participant-left)
   - [`event-deleted`](#event-deleted)
+  - [`leaderboard-updated`](#leaderboard-updated)
 - [Planned Events](#planned-events-)
   - [`bingo-achieved`](#bingo-achieved)
 - [Client Integration Examples](#client-integration-examples)
@@ -207,6 +208,40 @@ Each event has its own channel. Subscribe when a user enters an event, unsubscri
 | `message` | string   | Human-readable cancellation message |
 
 **Use case:** Navigate participants away from the event screen and show a cancellation notice.
+
+---
+
+### `leaderboard-updated`
+
+**Channel:** `event-{eventId}`
+
+Triggered when a participant updates their bingo score via `PUT /api/events/:eventId/leaderboard/score`.
+
+**Payload:**
+
+```json
+{
+  "participantId": "666b...",
+  "name": "Jane Doe",
+  "linesCompleted": 3,
+  "connectionsCount": 5,
+  "completed": false
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `participantId` | string | The participant who updated their score |
+| `name` | string | Participant's display name |
+| `linesCompleted` | number | Completed bingo lines (vertical, horizontal, diagonal) |
+| `connectionsCount` | number | Unique connected partners count |
+| `completed` | boolean | Whether the entire bingo sheet is filled |
+
+**Sources:**
+- `src/controllers/leaderboard_controller.ts` → `updateScore()` (score changes)
+- `src/controllers/participant_connections_controller.ts` → `createParticipantConnection()`, `createParticipantConnectionByEmails()`, `deleteParticipantConnection()` (connection changes — payload is `{}`)
+
+**Recommended client action:** Re-fetch the full leaderboard via `GET /api/events/:eventId/leaderboard` to get the latest sorted data.
 
 ---
 
