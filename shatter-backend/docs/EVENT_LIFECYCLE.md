@@ -120,6 +120,20 @@ Invalid transitions (e.g., `Completed` → `In Progress`, `Upcoming` → `Comple
 - Payload: `{ status: 'Completed' }`
 - Frontend should show results/summary screen
 
+#### Participant Leaves (`POST /api/events/:eventId/leave`)
+- Only allowed when `currentState` is `Upcoming` or `In Progress`
+- Removes participant from event, deletes Participant document, cleans up user history and connections
+- Triggers Pusher event `participant-left` on channel `event-{eventId}`
+- Payload: `{ participantId, name }`
+
+#### Event Deleted (`DELETE /api/events/:eventId`)
+- Only allowed when `currentState` is `Upcoming` or `In Progress` (host-only)
+- Cascade deletes: all Participants, Bingo, ParticipantConnections, and the Event itself
+- Removes event from all participants' `eventHistoryIds`
+- Triggers Pusher event `event-deleted` on channel `event-{eventId}`
+- Payload: `{ eventId, message }`
+- Frontend should navigate participants away and show a cancellation notice
+
 ---
 
 ## Current Event Endpoints and State
@@ -132,6 +146,9 @@ Invalid transitions (e.g., `Completed` → `In Progress`, `Upcoming` → `Comple
 | `PUT /api/events/:eventId/status` | Validates and transitions `currentState` (host-only) |
 | `POST /api/events/:eventId/join/user` | Does **not** check `currentState` |
 | `POST /api/events/:eventId/join/guest` | Does **not** check `currentState` |
+| `POST /api/events/:eventId/leave` | Blocked when `Completed`. Allowed in `Upcoming` and `In Progress`. |
+| `DELETE /api/events/:eventId` | Blocked when `Completed`. Allowed in `Upcoming` and `In Progress`. Host-only. |
+| `GET /api/users/:userId/current-event` | Returns events with `currentState` in `['Upcoming', 'In Progress']` |
 
 ---
 
@@ -141,6 +158,7 @@ Invalid transitions (e.g., `Completed` → `In Progress`, `Upcoming` → `Comple
 |--------|-----------|----------------|-------------|
 | Join event | Yes | Yes (if not full) | No |
 | Leave event | Yes | Yes | No |
+| Delete/cancel event (host) | Yes | Yes | No |
 | View participants | Yes | Yes | Yes |
 | Play bingo / activities | No | Yes | No |
 | Update bingo grid | No | Yes | No |

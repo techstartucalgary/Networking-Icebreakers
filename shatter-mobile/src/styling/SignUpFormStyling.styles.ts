@@ -95,6 +95,34 @@ export const SignUpFormStyling = StyleSheet.create({
 		fontWeight: "bold",
 		color: colors.error,
 	},
+	socialButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		borderWidth: 1.5,
+		borderColor: "#0A66C2",
+		borderRadius: 50,
+		paddingVertical: vh(1.8),
+		gap: vw(2),
+		marginTop: vh(1),
+		marginBottom: vh(1),
+	},
+	socialButtonText: {
+		fontSize: vw(4),
+		fontWeight: "700",
+		color: "#0A66C2",
+		letterSpacing: 0.5,
+	},
+	signupLinkText: {
+		textAlign: "center",
+		fontSize: vw(3.5),
+		color: "#888",
+		marginTop: vh(1),
+	},
+	signupLinkBold: {
+		fontWeight: "700",
+		color: "#1B2A4A",
+	},
 
 	// need to implement linkedin user
 	//   dividerRow: {

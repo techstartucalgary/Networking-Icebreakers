@@ -1,7 +1,16 @@
 import { SocialLink } from "@/src/interfaces/User";
+import { colors } from "@/src/styling/constants";
+import { GuestStyling as styles } from "@/src/styling/Guest.styles";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+	ImageBackground,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/components/context/AuthContext";
 
 export default function GuestPage() {
@@ -35,59 +44,59 @@ export default function GuestPage() {
 	};
 
 	return (
-		<View style={styles.container}>
-			<Text style={styles.title}>Continue as Guest</Text>
-			<Text style={styles.subtitle}>
-				Enter your name so others can identify you.
-			</Text>
+		<ImageBackground
+			source={require("../../src/images/getStartedImage.png")}
+			style={styles.background}
+			resizeMode="cover"
+		>
+			<SafeAreaView style={styles.safe}>
+				<View style={styles.header}>
+					<Text style={styles.pageTitle}>Guest Access</Text>
+					<Text style={styles.subtitle}>Enter your details to continue</Text>
+				</View>
 
-			<TextInput
-				style={styles.input}
-				placeholder="Your Name"
-				value={name}
-				onChangeText={setName}
-			/>
+				<View style={styles.container}>
+					<Text style={styles.label}>Your Name</Text>
+					<TextInput
+						style={styles.input}
+						placeholder="Your Name"
+						placeholderTextColor={colors.lightGrey2}
+						value={name}
+						onChangeText={setName}
+					/>
 
-			<TextInput
-				style={styles.input}
-				placeholder="Contact Link"
-				value={contactLink}
-				onChangeText={setContactLink}
-			/>
+					<Text style={styles.label}>Contact Link</Text>
+					<TextInput
+						style={styles.input}
+						placeholder="LinkedIn, portfolio, etc."
+						placeholderTextColor={colors.lightGrey2}
+						value={contactLink}
+						onChangeText={setContactLink}
+						autoCapitalize="none"
+						keyboardType="url"
+					/>
+					<Text style={styles.inputInfo}>
+						Your contact link can be your LinkedIn profile URL, a portfolio
+						link, or another relevant personal link.
+					</Text>
 
-			<Button title="Continue" onPress={handleContinue} />
-			<Button title="Back" onPress={() => router.push("/UserPages/Signup")} />
-			<Text style={styles.inputInfo}>
-				Your contact link can be your LinkedIn profile URL, a portfolio link, or
-				another relevant personal link.
-			</Text>
-			{error && <Text style={styles.error}>{error}</Text>}
-		</View>
+					{error ? <Text style={styles.error}>{error}</Text> : null}
+
+					<TouchableOpacity
+						style={styles.primaryButton}
+						onPress={handleContinue}
+					>
+						<Text style={styles.buttonText}>Continue</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity
+						style={styles.secondaryButton}
+						onPress={() => router.push("/UserPages/Signup")}
+					>
+						<Text style={styles.buttonText}>Back</Text>
+					</TouchableOpacity>
+				</View>
+			</SafeAreaView>
+		</ImageBackground>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		padding: 20,
-		justifyContent: "center",
-		backgroundColor: "rgba(255, 255, 255, 0.97)",
-	},
-	title: { fontSize: 24, fontWeight: "bold", marginBottom: 10 },
-	subtitle: { fontSize: 16, marginBottom: 20 },
-	input: {
-		borderWidth: 1,
-		borderColor: "#aaa",
-		padding: 10,
-		borderRadius: 8,
-		marginBottom: 20,
-	},
-	error: {
-		textAlign: "center",
-		color: "#e63232",
-	},
-	inputInfo: {
-		textAlign: "center",
-		color: "#afafaf",
-	},
-});

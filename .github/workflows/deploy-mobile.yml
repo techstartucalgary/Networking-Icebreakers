@@ -1,0 +1,60 @@
+name: Deploy Mobile to Vercel
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "shatter-mobile/**"
+
+jobs:
+  build-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: shatter-mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: shatter-mobile
+        run: npm ci
+
+      - name: Build check only (no deploy)
+        working-directory: shatter-mobile
+        run: npx expo export --platform web
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: shatter-mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: shatter-mobile
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Build and Deploy to Vercel
+        working-directory: shatter-mobile
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_MOBILE }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_MOBILE }}
+        run: |
+          npx expo export --platform web
+          vercel deploy --prod --yes --token=$VERCEL_TOKEN

@@ -1,14 +1,16 @@
 import { useJoinEvent } from "@/src/components/new-events/JoinEvent";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Platform, StyleSheet, Text, View } from "react-native";
+import QrScanner from "qr-scanner";
 
 export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 	const [permission, requestPermission] = useCameraPermissions();
 	const [scanned, setScanned] = useState(false);
 	const router = useRouter();
 	const scanLock = useRef(false);
+	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const { joinEvent } = useJoinEvent();
 
 	//extract joinCode from QR code
@@ -28,6 +30,7 @@ export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 		}
 	};
 
+	//join event based on QR data
 	const handleScan = async (data: string) => {
 		if (scanLock.current) return;
 		scanLock.current = true; //lock scanner
@@ -55,17 +58,36 @@ export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 		}
 	};
 
-	if (!permission) return <View />;
+	//web QR scanning
+	useEffect(() => {
+		if (Platform.OS !== "web" || !videoRef.current) return;
 
-	if (!permission.granted) {
-		return (
-			<View style={styles.centered}>
-				<Text style={{ marginBottom: 10 }}>Camera access is required.</Text>
-				<Text onPress={requestPermission} style={styles.link}>
-					Grant Camera Permission
-				</Text>
-			</View>
+		const scanner = new QrScanner(
+			videoRef.current,
+			(result) => {
+				if (!scanLock.current) handleScan(result.data);
+			},
+			{ highlightScanRegion: false }
 		);
+
+		scanner.start();
+		return () => scanner.stop();
+	}, []);
+
+	//mobile QR permissions
+	if (Platform.OS !== "web") {
+		if (!permission) return <View />;
+
+		if (!permission.granted) {
+			return (
+				<View style={styles.centered}>
+					<Text style={{ marginBottom: 10 }}>Camera access is required.</Text>
+					<Text onPress={requestPermission} style={styles.link}>
+						Grant Camera Permission
+					</Text>
+				</View>
+			);
+		}
 	}
 
 	return (
@@ -76,11 +98,18 @@ export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 					<Text style={{ color: "white", marginTop: 8 }}>Joining Event...</Text>
 				</View>
 			)}
-			<CameraView
-				style={styles.camera}
-				facing="back"
-				onBarcodeScanned={({ data }) => handleScan(data)}
-			/>
+
+			{/* platform-specific scanner */}
+			{Platform.OS === "web" ? (
+				<video ref={videoRef} style={styles.camera} />
+			) : (
+				<CameraView
+					style={styles.camera}
+					facing="back"
+					barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+					onBarcodeScanned={({ data }) => handleScan(data)}
+				/>
+			)}
 		</View>
 	);
 }

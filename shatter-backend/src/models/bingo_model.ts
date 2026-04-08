@@ -1,14 +1,20 @@
-import { Schema, model, Types, Document } from "mongoose";
+import { Schema, model, Types, HydratedDocument } from "mongoose";
 
+export interface BingoTile {
+  question: string;
+  shortQuestion: string;
+}
 
-export interface BingoDocument extends Document {
+export interface IBingo {
   _id: string;
   _eventId: Types.ObjectId;
   description?: string;
-  grid?: string[][];
+  grid?: BingoTile[][];
 }
 
-const bingoSchema = new Schema<BingoDocument>(
+export type BingoDocument = HydratedDocument<IBingo>;
+
+const bingoSchema = new Schema<IBingo>(
   {
     _id: { type: String },
     _eventId: {
@@ -17,7 +23,12 @@ const bingoSchema = new Schema<BingoDocument>(
       required: true,
     },
     description: { type: String },
-    grid: { type: [[String]] },
+    grid: {
+      type: [[{
+        question: { type: String, required: true },
+        shortQuestion: { type: String, required: true },
+      }]],
+    },
   },
   {
     versionKey: false,
@@ -31,4 +42,4 @@ bingoSchema.pre("save", function (next) {
   next();
 });
 
-export const Bingo = model<BingoDocument>("Bingo", bingoSchema);
+export const Bingo = model<IBingo>("Bingo", bingoSchema);

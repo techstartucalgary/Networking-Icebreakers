@@ -1,19 +1,20 @@
 //called by Profile.tsx for signing up
 import { User } from "@/src/interfaces/User";
 import { userSignup, userUpdate } from "@/src/services/user.service";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  Button,
-  ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+	ActivityIndicator,
+	Button,
+	ImageBackground,
+	KeyboardAvoidingView,
+	Platform,
+	ScrollView,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SignUpFormStyling as styles } from "../../styling/SignUpFormStyling.styles";
@@ -26,6 +27,12 @@ export default function SignUpForm() {
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
+
+	const handleLinkedIn = async () => {
+		await WebBrowser.openBrowserAsync(
+			`${process.env.EXPO_PUBLIC_API_BASE}/api/auth/linkedin`,
+		);
+	};
 
 	const handleSignup = async () => {
 		setError("");
@@ -58,7 +65,7 @@ export default function SignUpForm() {
 
 			//create default photo for profile and update user account
 			const encodedName = encodeURIComponent(name ?? "Unknown");
-			const profilePhoto = `https://ui-avatars.com/api/?name=${encodedName}&background=random&format=png`;
+			const profilePhoto = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedName}`;
 
 			const res = await userUpdate(
 				userResponse.userId,
@@ -94,86 +101,107 @@ export default function SignUpForm() {
 	};
 
 	return (
-		<ImageBackground
-			source={require("../../images/getStartedImage.png")}
-			style={styles.background}
-			resizeMode="cover"
-		>
-			<SafeAreaView style={styles.safe}>
-				<View style={styles.header}>
-					<Text style={styles.logoTitle}>SHATTER</Text>
-					<Text style={styles.brandSubtitle}>Break The Ice</Text>
-				</View>
-				<KeyboardAvoidingView
-					style={{ flex: 1, justifyContent: "flex-end" }}
-					behavior={Platform.OS === "ios" ? "padding" : "height"}
-					keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-				>
-					<View style={styles.formWrap}>
-						<ScrollView
-							showsVerticalScrollIndicator={false}
-							keyboardShouldPersistTaps="handled"
-							contentContainerStyle={{ flexGrow: 1 }}
-						>
-							<Text style={styles.title}>Sign Up</Text>
-							<TextInput
-								style={styles.input}
-								placeholder="Name"
-								value={name}
-								onChangeText={setName}
-								placeholderTextColor="#888"
-							/>
-							<TextInput
-								style={styles.input}
-								placeholder="Email"
-								value={email}
-								onChangeText={setEmail}
-								placeholderTextColor="#888"
-							/>
-							<TextInput
-								style={styles.input}
-								placeholder="Password"
-								secureTextEntry
-								value={password}
-								onChangeText={setPassword}
-								placeholderTextColor="#888"
-							/>
-
-							<TouchableOpacity
-								style={[styles.button, loading && { backgroundColor: "#ccc" }]}
-								onPress={handleSignup}
-								disabled={loading}
-							>
-								{loading ? (
-									<ActivityIndicator color="#fff" />
-								) : (
-									<Text style={styles.buttonText}>Sign Up</Text>
-								)}
-							</TouchableOpacity>
-
-							{err && <Text style={styles.err}>{err}</Text>}
-
-							<TouchableOpacity
-								onPress={() => router.push("/UserPages/Login")}
-								style={{ marginTop: 16 }}
-							>
-								<Text style={{ textAlign: "center", color: "#1B2A4A" }}>
-									Already have an account? Log In
-								</Text>
-							</TouchableOpacity>
-							<Text style={{ textAlign: "center", color: "#afafaf" }}>
-								Password must be at least 8 characters long
-							</Text>
-							<Button
-								title="Continue as Guest"
-								onPress={() => router.push("/UserPages/Guest")}
-								color="#4A90B8"
-							/>
-						</ScrollView>
+		<>
+			<Stack.Screen options={{ animation: "slide_from_left" }} />
+			<ImageBackground
+				source={require("../../images/getStartedImage.png")}
+				style={styles.background}
+				resizeMode="cover"
+			>
+				<SafeAreaView style={styles.safe}>
+					<View style={styles.header}>
+						<Text style={styles.logoTitle}>SHATTER</Text>
+						<Text style={styles.brandSubtitle}>Break The Ice</Text>
 					</View>
-				</KeyboardAvoidingView>
-			</SafeAreaView>
-		</ImageBackground>
+					<KeyboardAvoidingView
+						style={{ flex: 1, justifyContent: "flex-end" }}
+						behavior={Platform.OS === "ios" ? "padding" : "height"}
+						keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+					>
+						<View style={styles.formWrap}>
+							<ScrollView
+								showsVerticalScrollIndicator={false}
+								keyboardShouldPersistTaps="handled"
+								contentContainerStyle={{ flexGrow: 1 }}
+							>
+								<Text style={styles.title}>Sign Up</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="Name"
+									value={name}
+									onChangeText={setName}
+									placeholderTextColor="#888"
+								/>
+								<TextInput
+									style={styles.input}
+									placeholder="Email"
+									value={email}
+									onChangeText={setEmail}
+									placeholderTextColor="#888"
+								/>
+								<TextInput
+									style={styles.input}
+									placeholder="Password"
+									secureTextEntry
+									value={password}
+									onChangeText={setPassword}
+									placeholderTextColor="#888"
+								/>
+
+								<TouchableOpacity
+									style={[
+										styles.button,
+										loading && { backgroundColor: "#ccc" },
+									]}
+									onPress={handleSignup}
+									disabled={loading}
+								>
+									{loading ? (
+										<ActivityIndicator color="#fff" />
+									) : (
+										<Text style={styles.buttonText}>Sign Up</Text>
+									)}
+								</TouchableOpacity>
+
+								{err && <Text style={styles.err}>{err}</Text>}
+								<TouchableOpacity
+									style={styles.socialButton}
+									onPress={handleLinkedIn}
+								>
+									<Text
+										style={{
+											fontSize: 18,
+											fontWeight: "900",
+											color: "#0A66C2",
+										}}
+									>
+										in
+									</Text>
+									<Text style={styles.socialButtonText}>
+										Sign up with LinkedIn
+									</Text>
+								</TouchableOpacity>
+
+								<TouchableOpacity
+									onPress={() => router.push("/UserPages/Login")}
+									style={{ marginTop: 16 }}
+								>
+									<Text style={styles.signupLinkText}>
+										Already have an Account?{" "}
+										<Text style={styles.signupLinkBold}>Log In</Text>
+									</Text>
+									<Button
+										title="Continue as Guest"
+										onPress={() => router.push("/UserPages/Guest")}
+										color="#407c9e"
+									/>
+								</TouchableOpacity>
+							</ScrollView>
+						</View>
+					</KeyboardAvoidingView>
+				</SafeAreaView>
+			</ImageBackground>
+		</>
 	);
 }
 

@@ -1,0 +1,2 @@
+You will generate the bingo grid with shortened version of the questions while maintaining the same structure.
+Each entry should be turned into a max 3 word version of the question that describes what the question is about.

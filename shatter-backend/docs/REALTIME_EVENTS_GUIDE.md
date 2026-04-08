@@ -1,6 +1,6 @@
 # Shatter Backend — Real-Time Events Guide
 
-**Last updated:** 2026-03-01
+**Last updated:** 2026-03-08
 
 ---
 
@@ -13,6 +13,8 @@
   - [`participant-joined`](#participant-joined)
   - [`event-started`](#event-started)
   - [`event-ended`](#event-ended)
+  - [`participant-left`](#participant-left)
+  - [`event-deleted`](#event-deleted)
 - [Planned Events](#planned-events-)
   - [`bingo-achieved`](#bingo-achieved)
 - [Client Integration Examples](#client-integration-examples)
@@ -106,7 +108,7 @@ Each event has its own channel. Subscribe when a user enters an event, unsubscri
 | Field           | Type     | Description |
 |-----------------|----------|-------------|
 | `participantId` | ObjectId | The new participant's ID |
-| `name`          | string   | The participant's display name |
+| `name`          | string   | The participant's display name (may include a `#XXX` suffix if the name was already taken in the event, e.g., `"John#472"`) |
 
 **Use case:** Update the live participant list in the event lobby/dashboard without polling.
 
@@ -155,6 +157,56 @@ Each event has its own channel. Subscribe when a user enters an event, unsubscri
 | `status` | string | The new event status (`"Completed"`) |
 
 **Use case:** Transition the UI from the active game screen to the results/summary screen.
+
+---
+
+### `participant-left`
+
+**Channel:** `event-{eventId}`
+
+**Triggered when:**
+- A participant leaves an event (`POST /api/events/:eventId/leave`)
+
+**Payload:**
+
+```json
+{
+  "participantId": "666b1a2b3c4d5e6f7a8b9c0d",
+  "name": "John Doe"
+}
+```
+
+| Field           | Type     | Description |
+|-----------------|----------|-------------|
+| `participantId` | ObjectId | The leaving participant's ID |
+| `name`          | string   | The participant's display name |
+
+**Use case:** Remove the participant from the live participant list in the event lobby/dashboard.
+
+---
+
+### `event-deleted`
+
+**Channel:** `event-{eventId}`
+
+**Triggered when:**
+- The event host deletes/cancels the event (`DELETE /api/events/:eventId`)
+
+**Payload:**
+
+```json
+{
+  "eventId": "665a1b2c3d4e5f6a7b8c9d0e",
+  "message": "This event has been cancelled by the host"
+}
+```
+
+| Field     | Type     | Description |
+|-----------|----------|-------------|
+| `eventId` | ObjectId | The deleted event's ID |
+| `message` | string   | Human-readable cancellation message |
+
+**Use case:** Navigate participants away from the event screen and show a cancellation notice.
 
 ---
 

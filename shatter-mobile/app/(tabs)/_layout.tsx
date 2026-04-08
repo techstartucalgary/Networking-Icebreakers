@@ -11,28 +11,30 @@ export const EventPageHeaderStyling = {
 	),
 };
 
+export const JoinEventPageHeaderStyling = {
+	title: "",
+	headerTransparent: true,
+	headerTitle: "",
+	tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+		<Ionicons name="qr-code-outline" size={size} color={color} />
+	),
+};
+
+export const ProfilePageHeaderStyling = {
+	title: "",
+	headerTransparent: true,
+	headerTitle: "",
+	tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+		<Ionicons name="person-outline" size={size} color={color} />
+	),
+};
+
 export default function RootLayout() {
 	return (
 		<Tabs screenOptions={barStyles}>
 			<Tabs.Screen name="EventsPage" options={EventPageHeaderStyling} />
-			<Tabs.Screen
-				name="JoinEventPage"
-				options={{
-					title: "",
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="qr-code-outline" size={size} color={color} />
-					),
-				}}
-			/>
-			<Tabs.Screen
-				name="ProfilePage"
-				options={{
-					title: "",
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="person-outline" size={size} color={color} />
-					),
-				}}
-			/>
+			<Tabs.Screen name="JoinEventPage" options={JoinEventPageHeaderStyling} />
+			<Tabs.Screen name="ProfilePage" options={ProfilePageHeaderStyling} />
 		</Tabs>
 	);
 }
