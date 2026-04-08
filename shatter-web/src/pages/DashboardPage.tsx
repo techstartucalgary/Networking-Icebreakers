@@ -77,6 +77,8 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
   const [bingoGrid, setBingoGrid] = useState<BingoCell[][]>(createEmptyGrid(GRID_SIZE));  const [bingoDescription, setBingoDescription] = useState("");
   const [isSavingBingo, setIsSavingBingo] = useState(false);
   const [bingoSaveMessage, setBingoSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isDeletingEvent, setIsDeletingEvent] = useState(false);
+  const [deleteEventMessage, setDeleteEventMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const navigate = useNavigate();
 
@@ -157,6 +159,7 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
     setSelectedEvent(event);
     setIsEditing(false);
     setSelectedIcebreaker(null);
+    setDeleteEventMessage(null);
   };
 
 const loadBingoData = async (eventId: string) => {
@@ -244,6 +247,45 @@ const loadBingoData = async (eventId: string) => {
     } catch (err: any) {
       console.error("Error updating event:", err);
       alert(err?.message || "Failed to update event. The backend may not support updates yet.");
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!selectedEvent || isDeletingEvent) return;
+    setDeleteEventMessage(null);
+
+    const confirmed = window.confirm(`Delete "${selectedEvent.name}"? This cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      setIsDeletingEvent(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/events/${selectedEvent._id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.msg || errorData?.error || "Failed to delete event");
+      }
+
+      await fetchUserEvents();
+      setSelectedEvent(null);
+      setSelectedIcebreaker(null);
+      setIsEditing(false);
+      setDeleteEventMessage({ type: "success", text: "Event deleted successfully." });
+    } catch (err: any) {
+      setDeleteEventMessage({ type: "error", text: err?.message || "Failed to delete event" });
+    } finally {
+      setIsDeletingEvent(false);
     }
   };
 
@@ -501,9 +543,37 @@ const loadBingoData = async (eventId: string) => {
                         >
                           Edit
                         </button>
+                        <button
+                          onClick={handleDeleteEvent}
+                          disabled={isDeletingEvent}
+                          className="px-4 py-2 rounded-lg font-body font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ backgroundColor: "rgba(239, 68, 68, 0.2)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#fca5a5" }}
+                        >
+                          {isDeletingEvent ? "Deleting..." : "Delete"}
+                        </button>
                       </div>
                     )}
                   </div>
+
+                  {deleteEventMessage && (
+                    <div
+                      className={`mb-4 px-4 py-3 rounded-lg font-body text-sm flex items-center justify-between ${
+                        deleteEventMessage.type === "success"
+                          ? "bg-green-500/20 border border-green-500/40 text-green-400"
+                          : "bg-red-500/20 border border-red-500/40 text-red-400"
+                      }`}
+                    >
+                      <span>{deleteEventMessage.text}</span>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteEventMessage(null)}
+                        className="text-white/60 hover:text-white ml-2"
+                        aria-label="Dismiss delete event message"
+                      >
+                        <XIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Edit Form */}
                   {isEditing ? (
