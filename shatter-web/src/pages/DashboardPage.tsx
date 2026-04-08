@@ -79,6 +79,7 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
   const [bingoSaveMessage, setBingoSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isDeletingEvent, setIsDeletingEvent] = useState(false);
   const [deleteEventMessage, setDeleteEventMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -160,6 +161,7 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
     setIsEditing(false);
     setSelectedIcebreaker(null);
     setDeleteEventMessage(null);
+    setIsDeleteConfirmOpen(false);
   };
 
 const loadBingoData = async (eventId: string) => {
@@ -254,9 +256,6 @@ const loadBingoData = async (eventId: string) => {
     if (!selectedEvent || isDeletingEvent) return;
     setDeleteEventMessage(null);
 
-    const confirmed = window.confirm(`Delete "${selectedEvent.name}"? This cannot be undone.`);
-    if (!confirmed) return;
-
     try {
       setIsDeletingEvent(true);
       const token = localStorage.getItem("token");
@@ -281,6 +280,7 @@ const loadBingoData = async (eventId: string) => {
       setSelectedEvent(null);
       setSelectedIcebreaker(null);
       setIsEditing(false);
+      setIsDeleteConfirmOpen(false);
       setDeleteEventMessage({ type: "success", text: "Event deleted successfully." });
     } catch (err: any) {
       setDeleteEventMessage({ type: "error", text: err?.message || "Failed to delete event" });
@@ -544,16 +544,41 @@ const loadBingoData = async (eventId: string) => {
                           Edit
                         </button>
                         <button
-                          onClick={handleDeleteEvent}
+                          onClick={() => setIsDeleteConfirmOpen(true)}
                           disabled={isDeletingEvent}
                           className="px-4 py-2 rounded-lg font-body font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                           style={{ backgroundColor: "rgba(239, 68, 68, 0.2)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#fca5a5" }}
                         >
-                          {isDeletingEvent ? "Deleting..." : "Delete"}
+                          Delete
                         </button>
                       </div>
                     )}
                   </div>
+
+                  {isDeleteConfirmOpen && selectedEvent && (
+                    <div className="mb-4 p-4 rounded-lg border border-red-500/40 bg-red-500/10">
+                      <p className="text-sm font-body text-red-300 mb-3">
+                        Delete "{selectedEvent.name}"? This cannot be undone.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleDeleteEvent}
+                          disabled={isDeletingEvent}
+                          className="px-4 py-2 rounded-lg font-body font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ backgroundColor: "#ef4444", color: "#ffffff" }}
+                        >
+                          {isDeletingEvent ? "Deleting..." : "Yes, delete event"}
+                        </button>
+                        <button
+                          onClick={() => setIsDeleteConfirmOpen(false)}
+                          disabled={isDeletingEvent}
+                          className="px-4 py-2 rounded-lg font-body font-semibold text-sm bg-white/10 hover:bg-white/20 border border-white/30 text-white transition-all duration-200 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {deleteEventMessage && (
                     <div
