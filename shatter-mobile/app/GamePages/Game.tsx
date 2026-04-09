@@ -60,7 +60,7 @@ const GamePage = () => {
 					</View>
 
 					<View style={styles.gameContainer}>
-						<IcebreakerGame />
+						<IcebreakerGame event={event}/>
 					</View>
 				</View>
 			</SafeAreaView>
