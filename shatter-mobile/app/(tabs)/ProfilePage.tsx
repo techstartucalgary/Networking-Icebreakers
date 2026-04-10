@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { SvgUri } from "react-native-svg";
 import { useAuth } from "../../src/components/context/AuthContext";
 import AnimatedTab from "../../src/components/general/AnimatedTab";
-import { ProfilePageStyling as styles } from "../../src/styling/ProfilePage.styles";
+import { ProfilePageStyling as styles, AVATAR_TOP, AVATAR_SIZE } from "../../src/styling/ProfilePage.styles";
 
 export default function Profile() {
 	const { user, logout } = useAuth();
@@ -53,23 +53,23 @@ export default function Profile() {
 								Welcome back, {user.name || "Networker"}!
 							</Text>
 						</View>
+
+						{/* scrollable part */}
 						<View style={styles.container}>
 							<ScrollView
-								contentContainerStyle={{ alignItems: "center" }}
+								contentContainerStyle={styles.scrollContent}
 								showsVerticalScrollIndicator={false}
 							>
-								<Image
-									source={{ uri: user.profilePhoto }}
-									style={styles.avatar}
-								/>
+								<Text style={styles.userName}>{user.name || "Networker"}</Text>
 								<Text style={styles.subtitleText}>{user.email}</Text>
 
-								{socialLinks.length === 0 && (
-									<Text style={styles.emptyText}>
-										No social links added yet.
-									</Text>
-								)}
+								{user.bio ? (
+									<Text style={styles.bioText}>{user.bio}</Text>
+								) : null}
 
+								{socialLinks.length === 0 && (
+									<Text style={styles.emptyText}>No social links added yet.</Text>
+								)}
 								{socialLinks.map((link, index) => (
 									<View key={index} style={styles.linkContainer}>
 										<Text style={styles.linkLabel}>{link.label}</Text>
@@ -85,9 +85,23 @@ export default function Profile() {
 								</TouchableOpacity>
 
 								<TouchableOpacity style={styles.logoutButton} onPress={logout}>
-									<Text style={styles.buttonText}>Log Out</Text>
+									<Text style={[styles.buttonText, { color: "#B91C1C" }]}>
+										Log Out
+									</Text>
 								</TouchableOpacity>
 							</ScrollView>
+						</View>
+
+						{/* Avatar straddling the card edge */}
+						<View style={styles.avatarWrapper}>
+							{user.profilePhoto ? (
+								<Image source={{ uri: user.profilePhoto }} style={styles.avatar} />
+							) : (
+								<SvgUri
+									uri={`https://api.dicebear.com/9.1.1/initials/svg?seed=${encodeURIComponent(user.name || "Unknown")}&size=128`}
+									style={styles.avatar}
+								/>
+							)}
 						</View>
 					</SafeAreaView>
 				</ImageBackground>
@@ -111,63 +125,66 @@ export default function Profile() {
 								Welcome, {user.name || "Networker"}!
 							</Text>
 						</View>
+
+						{/* White card */}
 						<View style={styles.container}>
 							<ScrollView
-								contentContainerStyle={{ alignItems: "center" }}
+								contentContainerStyle={styles.scrollContent}
 								showsVerticalScrollIndicator={false}
 							>
-								<SvgUri
-									uri={
-										user.profilePhoto ??
-										`https://api.dicebear.com/9.1.1/initials/png?seed=${encodeURIComponent(user.name || "Unknown")}&size=128`
-									}
-									style={styles.avatar}
-								/>
+								<Text style={styles.userName}>{user.name || "Networker"}</Text>
+
 								<Text style={styles.notice}>
 									You are logged in as a guest. Some features may be limited.
 								</Text>
 								{!user._id && (
 									<Text style={styles.notice}>
-										To upgrade your account, join an event and then come back
-										here to set it up!
+										To upgrade your account, join an event and then come back here to set it up!
 									</Text>
 								)}
 
 								{socialLinks.length === 0 && (
-									<Text style={styles.emptyText}>
-										No social links added yet.
-									</Text>
+									<Text style={styles.emptyText}>No social links added yet.</Text>
 								)}
-
 								{socialLinks.map((link, index) => (
 									<View key={index} style={styles.linkContainer}>
-										<>
-											<Text style={styles.linkLabel}>{link.label}</Text>
-											<Text style={styles.linkUrl}>{link.url}</Text>
-										</>
+										<Text style={styles.linkLabel}>{link.label}</Text>
+										<Text style={styles.linkUrl}>{link.url}</Text>
 									</View>
 								))}
 
-								{/* Guest user who has joined event / has userId */}
 								{user._id && (
-									<View>
+									<>
+										<Text style={styles.notice}>
+											Go here to upgrade your account to a user!
+										</Text>
 										<TouchableOpacity
 											style={styles.editButton}
 											onPress={() => router.push("/UserPages/UpdateProfile")}
 										>
 											<Text style={styles.buttonText}>Update Profile</Text>
 										</TouchableOpacity>
-
-										<Text style={styles.notice}>
-											Go here to upgrade your account to a user!
-										</Text>
-									</View>
+									</>
 								)}
 
 								<TouchableOpacity style={styles.logoutButton} onPress={logout}>
-									<Text style={styles.buttonText}>Log Out</Text>
+									<Text style={[styles.buttonText, { color: "#B91C1C" }]}>
+										Log Out
+									</Text>
 								</TouchableOpacity>
 							</ScrollView>
+						</View>
+
+						{/* Avatar straddling the card edge */}
+						<View style={styles.avatarWrapper}>
+							{user.profilePhoto ? (
+								<Image source={{ uri: user.profilePhoto }} style={styles.avatar} />
+							) : (
+								<SvgUri
+									uri={`https://api.dicebear.com/9.1.1/initials/svg?seed=${encodeURIComponent(user.name || "Unknown")}&size=128`}
+									style={styles.avatar}
+								/>
+							)}
 						</View>
 					</SafeAreaView>
 				</ImageBackground>
