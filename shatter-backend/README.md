@@ -84,4 +84,3 @@ All routes are prefixed with `/api`. See the [API Reference](docs/API_REFERENCE.
 
 - Don't push directly to `main`. Create a feature branch and open a pull request
 - Use [Postman](https://www.postman.com/) to test API endpoints locally
-- If you need to test with the frontend, see [`shatter-web/readme.MD`](../shatter-web/readme.MD)
