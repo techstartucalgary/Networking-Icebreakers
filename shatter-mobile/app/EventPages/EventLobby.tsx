@@ -28,6 +28,7 @@ export default function EventLobby() {
 
 				router.replace({
 					pathname: "/GamePages/Game",
+					params: { eventId: event._id },
 				});
 			}
 		}, POLL_INTERVAL);

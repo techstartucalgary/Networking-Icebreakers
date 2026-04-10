@@ -45,6 +45,13 @@ export const UserModalStyling = StyleSheet.create({
 		color: colors.darkNavy,
 		fontWeight: "bold",
 	},
+	userOrganization: {
+		fontFamily: fonts.title,
+		fontSize: 16,
+		color: colors.darkNavy,
+		marginBottom: 12,
+		lineHeight: 22,
+	},
 	userBio: {
 		fontFamily: fonts.body,
 		fontSize: 15,

@@ -6,7 +6,6 @@ import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import {
 	ActivityIndicator,
-	Button,
 	ImageBackground,
 	KeyboardAvoidingView,
 	Platform,
@@ -190,11 +189,17 @@ export default function SignUpForm() {
 										Already have an Account?{" "}
 										<Text style={styles.signupLinkBold}>Log In</Text>
 									</Text>
-									<Button
-										title="Continue as Guest"
-										onPress={() => router.push("/UserPages/Guest")}
-										color="#407c9e"
-									/>
+								</TouchableOpacity>
+
+								<View style={styles.divider}>
+									<Text style={styles.dividerText}>OR</Text>
+								</View>
+
+								<TouchableOpacity
+									style={styles.button}
+									onPress={() => router.push("/UserPages/Guest")}
+								>
+									<Text style={styles.buttonText}>Continue as Guest</Text>
 								</TouchableOpacity>
 							</ScrollView>
 						</View>

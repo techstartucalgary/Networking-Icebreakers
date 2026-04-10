@@ -2,8 +2,8 @@ import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ImageBackground, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FullPageLoader from "../../src/components/FullPageLoader";
 import IcebreakerGame from "../../src/components/games/IcebreakerGame";
+import FullPageLoader from "../../src/components/general/FullPageLoader";
 import { getEventById } from "../../src/services/event.service";
 import { GamePageStyling as styles } from "../../src/styling/GamePage.styles";
 
@@ -60,7 +60,7 @@ const GamePage = () => {
 					</View>
 
 					<View style={styles.gameContainer}>
-						<IcebreakerGame event={event}/>
+						<IcebreakerGame event={event} />
 					</View>
 				</View>
 			</SafeAreaView>

@@ -59,7 +59,7 @@ export const JoinEventStyling = StyleSheet.create({
 	},
 
 	label: {
-		fontFamily: fonts.body,
+		fontFamily: fonts.title,
 		fontWeight: "600",
 		fontSize: 14,
 		marginBottom: 6,
@@ -121,7 +121,7 @@ export const JoinEventStyling = StyleSheet.create({
 	loading: {
 		padding: 10,
 		color: colors.darkNavy,
-		fontFamily: fonts.body,
+		fontFamily: fonts.title,
 		fontWeight: "bold",
 		marginTop: 10,
 		fontSize: 16,
@@ -132,7 +132,7 @@ export const JoinEventStyling = StyleSheet.create({
 	},
 	dividerText: {
 		color: colors.lightGrey2,
-		fontSize: 12,
+		fontSize: vw(4),
 		fontFamily: fonts.body,
 	},
 });

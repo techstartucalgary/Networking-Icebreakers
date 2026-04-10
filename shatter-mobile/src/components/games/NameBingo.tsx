@@ -2,21 +2,21 @@ import { useGame } from "@/src/components/context/GameContext";
 import { EventState, Participant } from "@/src/interfaces/Event";
 import { BingoTile } from "@/src/interfaces/Game";
 import {
-	getBingoCategories,
-	getParticipantsByEventId,
+    getBingoCategories,
+    getParticipantsByEventId,
 } from "@/src/services/game.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import {
-	DimensionValue,
-	ScrollView,
-	Text,
-	TextInput,
-	TouchableOpacity,
-	View,
+    DimensionValue,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { NameBingoStyling as styles } from "../../styling/NameBingo.styles";
-import FullPageLoader from "../FullPageLoader";
+import FullPageLoader from "../general/FullPageLoader";
 
 type NameBingoProps = {
 	eventId: string;
@@ -319,16 +319,22 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 									setActiveCardId(card.cardId);
 								}}
 							>
-								<View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+								<View
+									style={{
+										flex: 1,
+										justifyContent: "center",
+										alignItems: "center",
+									}}
+								>
 									<Text
 										style={styles.category}
 										numberOfLines={2}
 										adjustsFontSizeToFit
 									>
-									{card.tile?.shortQuestion || "?"}
+										{card.tile?.shortQuestion || "?"}
 									</Text>
 									{card.assignedParticipantId && (
-									<Text style={styles.assignedName}>{card.assignedName}</Text>
+										<Text style={styles.assignedName}>{card.assignedName}</Text>
 									)}
 								</View>
 							</TouchableOpacity>

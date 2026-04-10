@@ -4,16 +4,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-	ActivityIndicator,
-	ImageBackground,
-	Text,
-	TextInput,
-	TouchableOpacity,
-	View,
+    ActivityIndicator,
+    ImageBackground,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AnimatedTab from "../../src/components/AnimatedTab";
 import { useAuth } from "../../src/components/context/AuthContext";
+import AnimatedTab from "../../src/components/general/AnimatedTab";
 import QRScannerBox from "../../src/components/new-events/QRScannerBox";
 import { JoinEventStyling as styles } from "../../src/styling/JoinEventPage.styles";
 
