@@ -3,7 +3,9 @@ import type { Participant } from "../types/participant";
 
 export interface Connection {
   from: string; // participantId
-  to: string;   // participantId
+  to: string; // participantId
+  /** From GET /participantConnections/connected-users */
+  connectionDescription?: string | null;
 }
 
 export interface ActivityItem {
@@ -15,10 +17,88 @@ export interface ActivityItem {
   timestamp: number;
 }
 
-interface ConnectedUserResponse {
+/** Row from GET /api/participantConnections/connected-users */
+interface ConnectedUserRow {
+  user: {
+    _id?: string;
+    name?: string;
+    email?: string;
+    linkedinUrl?: string;
+    bio?: string;
+    profilePhoto?: string;
+    socialLinks?: Record<string, string>;
+  } | null;
   participantId: string | { toString(): string };
   participantName?: string | null;
   connectionDescription?: string | null;
+}
+
+export interface GraphEdge extends Connection {
+  /** Stable key for React / hover */
+  edgeId: string;
+  bundleIndex: number;
+  bundleSize: number;
+}
+
+function canonConnectionKey(from: string, to: string, description: string | null): string {
+  const a = from <= to ? from : to;
+  const b = from <= to ? to : from;
+  return JSON.stringify([a, b, description]);
+}
+
+/** Each API row is from perspective of `querier`. Symmetric fetches double-count the same DB connection. */
+function parallelCountFromMultisetCount(count: number): number {
+  if (count <= 0) return 0;
+  return count % 2 === 0 ? count / 2 : count;
+}
+
+function buildGraphEdgesFromMultiset(multiset: Map<string, number>): GraphEdge[] {
+  const edges: GraphEdge[] = [];
+  for (const [key, rawCount] of multiset) {
+    let a: string;
+    let b: string;
+    let description: string | null;
+    try {
+      const parsed = JSON.parse(key) as [string, string, string | null | undefined];
+      a = parsed[0];
+      b = parsed[1];
+      description = parsed[2] ?? null;
+    } catch {
+      continue;
+    }
+    const n = parallelCountFromMultisetCount(rawCount);
+    for (let j = 0; j < n; j++) {
+      edges.push({
+        from: a,
+        to: b,
+        connectionDescription: description,
+        edgeId: `${a}|${b}|${description ?? ""}|${j}`,
+        bundleIndex: j,
+        bundleSize: n,
+      });
+    }
+  }
+  return edges;
+}
+
+/** Quadratic path with perpendicular offset for bundled edges between the same pair */
+function edgeCurvePath(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  bundleIndex: number,
+  bundleSize: number
+): string {
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const off = bundleSize > 1 ? (bundleIndex - (bundleSize - 1) / 2) * 14 : 0;
+  const cx = mx + (-dy / len) * off;
+  const cy = my + (dx / len) * off;
+  return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
 }
 
 interface EventSpotlightProps {
@@ -26,10 +106,6 @@ interface EventSpotlightProps {
   eventId: string | null;
   connections?: Connection[];
   activity?: ActivityItem[];
-  /** Generate demo connections when API returns no connections */
-  useDemoConnections?: boolean;
-  /** Generate demo activity when none provided */
-  useDemoActivity?: boolean;
 }
 
 const BUBBLE_RADIUS = 32;
@@ -66,60 +142,63 @@ export default function EventSpotlight({
   eventId,
   connections: connectionsProp = [],
   activity = [],
-  useDemoConnections = false,
-  useDemoActivity = true,
 }: EventSpotlightProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [fetchedConnections, setFetchedConnections] = useState<Connection[]>([]);
+  const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
+  const [fetchedGraphEdges, setFetchedGraphEdges] = useState<GraphEdge[]>([]);
   const [connectionsLoading, setConnectionsLoading] = useState(false);
 
-  // Fetch connections from GET /api/participantConnections/connected-users
+  // GET /api/participantConnections/connected-users — per participant; merge with multiset (handles multiples + symmetric dupes)
   useEffect(() => {
     if (!eventId || participants.length === 0) {
-      setFetchedConnections([]);
+      setFetchedGraphEdges([]);
       return;
     }
 
     const token = localStorage.getItem("token");
     if (!token) {
-      setFetchedConnections([]);
+      setFetchedGraphEdges([]);
       return;
     }
 
     const apiUrl = import.meta.env.VITE_API_URL;
-    const connectionSet = new Set<string>();
-    const conns: Connection[] = [];
 
     const fetchAll = async () => {
       setConnectionsLoading(true);
       try {
+        const multiset = new Map<string, number>();
+
         const results = await Promise.all(
           participants.map(async (p) => {
             const url = `${apiUrl}/participantConnections/connected-users?eventId=${encodeURIComponent(eventId)}&participantId=${encodeURIComponent(p.participantId)}`;
             const res = await fetch(url, {
               headers: { Authorization: `Bearer ${token}` },
             });
-            if (!res.ok) return [];
-            const data: ConnectedUserResponse[] = await res.json();
-            return data.map((item) => ({
-              from: p.participantId,
-              to: normalizeId(item.participantId),
-            }));
+            if (!res.ok) return [] as ConnectedUserRow[];
+            const data: unknown = await res.json();
+            if (!Array.isArray(data)) return [];
+            return data as ConnectedUserRow[];
           })
         );
 
-        for (const list of results) {
-          for (const c of list) {
-            const key = [c.from, c.to].sort().join("|");
-            if (!connectionSet.has(key)) {
-              connectionSet.add(key);
-              conns.push(c);
-            }
+        for (let pi = 0; pi < results.length; pi++) {
+          const list = results[pi];
+          const querier = participants[pi].participantId;
+          for (const item of list) {
+            const other = normalizeId(item.participantId);
+            if (!other || other === querier) continue;
+            const desc =
+              item.connectionDescription != null && item.connectionDescription !== ""
+                ? item.connectionDescription
+                : null;
+            const key = canonConnectionKey(querier, other, desc);
+            multiset.set(key, (multiset.get(key) ?? 0) + 1);
           }
         }
-        setFetchedConnections(conns);
+
+        setFetchedGraphEdges(buildGraphEdgesFromMultiset(multiset));
       } catch {
-        setFetchedConnections([]);
+        setFetchedGraphEdges([]);
       } finally {
         setConnectionsLoading(false);
       }
@@ -128,8 +207,19 @@ export default function EventSpotlight({
     fetchAll();
   }, [eventId, participants]);
 
-  // Use prop connections if provided, else fetched connections
-  const connections = connectionsProp.length > 0 ? connectionsProp : fetchedConnections;
+  const propToGraphEdges = (conns: Connection[]): GraphEdge[] =>
+    conns.map((c, i) => ({
+      from: c.from,
+      to: c.to,
+      connectionDescription: c.connectionDescription ?? null,
+      edgeId: `prop-${c.from}-${c.to}-${i}`,
+      bundleIndex: 0,
+      bundleSize: 1,
+    }));
+
+  /** Real edges only: optional props override, else GET /participantConnections/connected-users */
+  const effectiveGraphEdges =
+    connectionsProp.length > 0 ? propToGraphEdges(connectionsProp) : fetchedGraphEdges;
 
   // Container dimensions
   const size = 400;
@@ -150,65 +240,12 @@ export default function EventSpotlight({
     return map;
   }, [participants, centerX, centerY, graphRadius]);
 
-  // Demo connections: connect participants in a fun pattern (every other, creating a star)
-  const effectiveConnections = useMemo(() => {
-    if (connections.length > 0) return connections;
-    if (!useDemoConnections || participants.length < 2) return [];
-
-    const demo: Connection[] = [];
-    const n = participants.length;
-    for (let i = 0; i < n; i++) {
-      const j = (i + 2) % n; // Skip one for star pattern
-      if (i < j) {
-        demo.push({ from: participants[i].participantId, to: participants[j].participantId });
-      }
-    }
-    return demo.slice(0, Math.min(demo.length, 8)); // Cap demo lines
-  }, [connections, participants, useDemoConnections]);
-
-  // Demo activity: join events + fake connection events
-  const effectiveActivity = useMemo(() => {
-    if (activity.length > 0) return activity;
-    if (!useDemoActivity) return [];
-
-    const items: ActivityItem[] = participants
-      .slice(0, 5)
-      .map((p, i) => ({
-        id: `join-${p.participantId}`,
-        type: "joined" as const,
-        participantName: p.name,
-        timestamp: Date.now() - (participants.length - i) * 60000,
-      }));
-
-    // Add some fake connection events
-    if (participants.length >= 2) {
-      items.push({
-        id: "conn-1",
-        type: "connection",
-        fromName: participants[0].name,
-        toName: participants[1].name,
-        timestamp: Date.now() - 120000,
-      });
-      if (participants.length >= 4) {
-        items.push({
-          id: "conn-2",
-          type: "connection",
-          fromName: participants[2].name,
-          toName: participants[3].name,
-          timestamp: Date.now() - 90000,
-        });
-      }
-    }
-
-    return items.sort((a, b) => b.timestamp - a.timestamp).slice(0, 8);
-  }, [activity, participants, useDemoActivity]);
-
   // Leaderboard: count connections per participant — show ALL participants
   const leaderboard = useMemo(() => {
     const scores = new Map<string, { name: string; count: number }>();
     participants.forEach((p) => scores.set(p.participantId, { name: p.name, count: 0 }));
 
-    effectiveConnections.forEach((c) => {
+    effectiveGraphEdges.forEach((c) => {
       const from = scores.get(c.from);
       const to = scores.get(c.to);
       if (from) from.count++;
@@ -218,7 +255,7 @@ export default function EventSpotlight({
     return Array.from(scores.entries())
       .map(([id, { name, count }]) => ({ participantId: id, name, connections: count }))
       .sort((a, b) => b.connections - a.connections);
-  }, [participants, effectiveConnections]);
+  }, [participants, effectiveGraphEdges]);
 
   const formatTimeAgo = (ts: number) => {
     const sec = Math.floor((Date.now() - ts) / 1000);
@@ -256,6 +293,9 @@ export default function EventSpotlight({
         </h3>
         <p className="text-white/60 font-body text-sm mt-0.5">
           See who&apos;s here and who&apos;s connecting
+          {connectionsLoading && (
+            <span className="block text-[#4DC4FF] mt-1">Loading connections…</span>
+          )}
         </p>
       </div>
 
@@ -266,27 +306,46 @@ export default function EventSpotlight({
             viewBox={`0 0 ${size} ${size}`}
             className="overflow-visible w-full max-w-[400px] h-auto aspect-square"
           >
-            {/* Connection lines */}
+            {/* Connection lines (GET /participantConnections/connected-users) */}
             <g>
-              {effectiveConnections.map((conn, i) => {
+              {effectiveGraphEdges.map((conn) => {
                 const fromPos = positions.get(conn.from);
                 const toPos = positions.get(conn.to);
                 if (!fromPos || !toPos) return null;
+                const isHover = hoveredEdgeId === conn.edgeId;
+                const label =
+                  conn.connectionDescription?.trim() ||
+                  "Connected (no description)";
+                const d = edgeCurvePath(
+                  fromPos.x,
+                  fromPos.y,
+                  toPos.x,
+                  toPos.y,
+                  conn.bundleIndex,
+                  conn.bundleSize
+                );
                 return (
-                  <line
-                    key={`${conn.from}-${conn.to}-${i}`}
-                    x1={fromPos.x}
-                    y1={fromPos.y}
-                    x2={toPos.x}
-                    y2={toPos.y}
-                    stroke="rgba(77, 196, 255, 0.5)"
-                    strokeWidth={2}
-                    className="transition-opacity duration-200"
-                    style={{
-                      strokeDasharray: "6 4",
-                      animation: "dash 1s linear infinite",
-                    }}
-                  />
+                  <g
+                    key={conn.edgeId}
+                    onMouseEnter={() => setHoveredEdgeId(conn.edgeId)}
+                    onMouseLeave={() => setHoveredEdgeId(null)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <path
+                      d={d}
+                      fill="none"
+                      stroke={
+                        isHover ? "rgba(77, 196, 255, 0.95)" : "rgba(77, 196, 255, 0.5)"
+                      }
+                      strokeWidth={isHover ? 3 : 2}
+                      className="transition-all duration-200"
+                      style={{
+                        strokeDasharray: "6 4",
+                        animation: "dash 1s linear infinite",
+                      }}
+                    />
+                    <title>{label}</title>
+                  </g>
                 );
               })}
             </g>
@@ -376,10 +435,10 @@ export default function EventSpotlight({
               Recent Activity
             </h4>
             <div className="space-y-2 max-h-36 overflow-y-auto">
-              {effectiveActivity.length === 0 ? (
+              {activity.length === 0 ? (
                 <p className="text-white/50 text-sm font-body">No activity yet</p>
               ) : (
-                effectiveActivity.map((item) => (
+                activity.map((item) => (
                   <div
                     key={item.id}
                     className="flex items-start gap-2 text-sm font-body"

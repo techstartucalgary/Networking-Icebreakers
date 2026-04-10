@@ -327,12 +327,7 @@ export default function EventPage() {
 
         {/* Live Activity Spotlight */}
         <div className="mb-12">
-          <EventSpotlight
-            participants={participants}
-            eventId={eventId}
-            useDemoConnections={false}
-            useDemoActivity={true}
-          />
+          <EventSpotlight participants={participants} eventId={eventId} />
         </div>
 
         {/* Main Content Grid */}
