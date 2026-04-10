@@ -213,6 +213,51 @@ export const linkedinAuth = async (req: Request, res: Response) => {
 
 
 /**
+ * GET /api/auth/linkedin/link
+ * Initiates LinkedIn OAuth flow for linking a LinkedIn account to an existing guest user.
+ * Protected route - requires JWT auth (guest users only).
+ */
+export const linkedinLink = async (req: Request, res: Response) => {
+    try {
+	const userId = req.user?.userId;
+	if (!userId) {
+	    return res.status(401).json({ error: 'Authentication required' });
+	}
+
+	const user = await User.findById(userId);
+	if (!user) {
+	    return res.status(404).json({ error: 'User not found' });
+	}
+
+	if (user.authProvider !== 'guest') {
+	    return res.status(403).json({
+		error: 'Only guest accounts can link a LinkedIn profile',
+	    });
+	}
+
+	if (user.linkedinId) {
+	    return res.status(409).json({
+		error: 'LinkedIn account already linked',
+	    });
+	}
+
+	// Encode linking context into the state JWT (signed, tamper-proof)
+	const stateToken = jwt.sign(
+	    { linking: true, userId: user._id.toString() },
+	    JWT_SECRET,
+	    { expiresIn: '5m' }
+	);
+
+	const authUrl = getLinkedInAuthUrl(stateToken);
+	res.redirect(authUrl);
+    } catch (error) {
+	console.error('LinkedIn link initiation error:', error);
+	res.status(500).json({ error: 'Failed to initiate LinkedIn linking' });
+    }
+};
+
+
+/**
  * GET /api/auth/linkedin/callback
  * LinkedIn redirects here after user authorization
  */
@@ -236,9 +281,10 @@ export const linkedinCallback = async (req: Request, res: Response) => {
 	    return res.status(400).json({ error: 'Missing code or state parameter' });
 	}
 
-	// Verify state token (CSRF protection)
+	// Verify state token (CSRF protection) and extract payload
+	let statePayload: { linking?: boolean; userId?: string };
 	try {
-	    jwt.verify(state, JWT_SECRET);
+	    statePayload = jwt.verify(state, JWT_SECRET) as { linking?: boolean; userId?: string };
 	} catch {
 	    return res.status(401).json({ error: 'Invalid state parameter' });
 	}
@@ -257,34 +303,80 @@ export const linkedinCallback = async (req: Request, res: Response) => {
 	    });
 	}
 
-	// Find existing user by LinkedIn ID
-	let user = await User.findOne({ linkedinId: linkedinProfile.sub });
+	let user;
 
-	if (!user) {
-	    // Check if email already exists with password auth (email conflict)
-	    const existingEmailUser = await User.findOne({
-		email: linkedinProfile.email.toLowerCase().trim(),
-	    });
+	if (statePayload.linking && statePayload.userId) {
+	    // --- LinkedIn linking flow (guest -> linkedin) ---
 
-	    if (existingEmailUser) {
+	    // Check if this LinkedIn account is already linked to another user
+	    const existingLinkedinUser = await User.findOne({ linkedinId: linkedinProfile.sub });
+	    if (existingLinkedinUser) {
 		return res.redirect(
-		    `${frontendUrl}/auth/error?message=Email already registered with password&suggestion=Please login with your password`
+		    `${frontendUrl}/auth/error?message=This LinkedIn account is already linked to another user`
 		);
 	    }
 
-	    // Create new user from LinkedIn data
-	    user = await User.create({
-		name: linkedinProfile.name,
-		email: linkedinProfile.email.toLowerCase().trim(),
+	    // Atomically update the guest user (filter ensures still a guest)
+	    const updateFields: Record<string, any> = {
 		linkedinId: linkedinProfile.sub,
-		profilePhoto: linkedinProfile.picture,
 		authProvider: 'linkedin',
 		lastLogin: new Date(),
-	    });
+	    };
+
+	    // Only fill in fields that are currently empty on the guest user
+	    if (linkedinProfile.email) {
+		updateFields.email = linkedinProfile.email.toLowerCase().trim();
+	    }
+	    if (linkedinProfile.picture) {
+		updateFields.profilePhoto = linkedinProfile.picture;
+	    }
+	    if (linkedinProfile.name) {
+		updateFields.name = linkedinProfile.name;
+	    }
+
+	    user = await User.findOneAndUpdate(
+		{ _id: statePayload.userId, authProvider: 'guest' },
+		{ $set: updateFields },
+		{ new: true }
+	    );
+
+	    if (!user) {
+		return res.redirect(
+		    `${frontendUrl}/auth/error?message=Account not found or no longer a guest account`
+		);
+	    }
 	} else {
-	    // Update existing user's last login
-	    user.lastLogin = new Date();
-	    await user.save();
+	    // --- Normal LinkedIn signup/login flow ---
+
+	    // Find existing user by LinkedIn ID
+	    user = await User.findOne({ linkedinId: linkedinProfile.sub });
+
+	    if (!user) {
+		// Check if email already exists with password auth (email conflict)
+		const existingEmailUser = await User.findOne({
+		    email: linkedinProfile.email.toLowerCase().trim(),
+		});
+
+		if (existingEmailUser) {
+		    return res.redirect(
+			`${frontendUrl}/auth/error?message=Email already registered with password&suggestion=Please login with your password`
+		    );
+		}
+
+		// Create new user from LinkedIn data
+		user = await User.create({
+		    name: linkedinProfile.name,
+		    email: linkedinProfile.email.toLowerCase().trim(),
+		    linkedinId: linkedinProfile.sub,
+		    profilePhoto: linkedinProfile.picture,
+		    authProvider: 'linkedin',
+		    lastLogin: new Date(),
+		});
+	    } else {
+		// Update existing user's last login
+		user.lastLogin = new Date();
+		await user.save();
+	    }
 	}
 
 	// Generate single-use auth code and redirect to frontend
