@@ -145,10 +145,12 @@
 
 | Field     | Type     | Required | Default | Notes |
 |-----------|----------|----------|---------|-------|
-| `_id`     | ObjectId | Auto     | Auto    | |
-| `userId`  | ObjectId | No       | `null`  | Refs `User`. Nullable for legacy reasons |
-| `name`    | String   | Yes      | —       | Display name in the event |
-| `eventId` | ObjectId | Yes      | —       | Refs `Event` |
+| `_id`            | ObjectId | Auto     | Auto    | |
+| `userId`         | ObjectId | No       | `null`  | Refs `User`. Nullable for legacy reasons |
+| `name`           | String   | Yes      | —       | Display name in the event |
+| `eventId`        | ObjectId | Yes      | —       | Refs `Event` |
+| `linesCompleted` | Number   | No       | `0`     | Completed bingo lines (vertical, horizontal, diagonal) |
+| `completed`      | Boolean  | No       | `false` | Whether the entire bingo sheet is filled |
 
 ### Indexes
 
