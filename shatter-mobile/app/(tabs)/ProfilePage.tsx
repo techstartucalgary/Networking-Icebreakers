@@ -1,18 +1,18 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-	Image,
-	ImageBackground,
-	ScrollView,
-	Text,
-	TouchableOpacity,
-	View,
+    Image,
+    ImageBackground,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SvgUri } from "react-native-svg";
-import AnimatedTab from "../../src/components/AnimatedTab";
 import { useAuth } from "../../src/components/context/AuthContext";
-import {ProfilePageStyling as styles, AVATAR_TOP, AVATAR_SIZE} from "../../src/styling/ProfilePage.styles";
+import AnimatedTab from "../../src/components/general/AnimatedTab";
+import { ProfilePageStyling as styles, AVATAR_TOP, AVATAR_SIZE } from "../../src/styling/ProfilePage.styles";
 
 export default function Profile() {
 	const { user, logout } = useAuth();

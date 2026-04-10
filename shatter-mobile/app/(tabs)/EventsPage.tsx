@@ -11,8 +11,8 @@ import {
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AnimatedTab from "../../src/components/AnimatedTab";
 import EventCard from "../../src/components/events/EventCard";
+import AnimatedTab from "../../src/components/general/AnimatedTab";
 import EventIB from "../../src/interfaces/Event";
 import { getUserEvents } from "../../src/services/event.service";
 import { EventPageStyling as styles } from "../../src/styling/EventPage.styles";

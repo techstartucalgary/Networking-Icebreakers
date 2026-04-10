@@ -1,14 +1,48 @@
 import { Request, Response } from "express";
-import { Event } from "../models/event_model";
-import { pusher } from "../utils/pusher_websocket";
+import { Event } from "../models/event_model.js";
+import { pusher } from "../utils/pusher_websocket.js";
 
-import "../models/participant_model";
+import "../models/participant_model.js";
 
-import { generateJoinCode } from "../utils/event_utils";
-import { generateToken } from "../utils/jwt_utils";
-import { Participant } from "../models/participant_model";
-import { User } from "../models/user_model";
+import { generateJoinCode } from "../utils/event_utils.js";
+import { generateToken } from "../utils/jwt_utils.js";
+import { Participant, IParticipant } from "../models/participant_model.js";
+import { User } from "../models/user_model.js";
 import { Types } from "mongoose";
+
+/**
+ * Create a participant with automatic name suffix on collision.
+ * If the name already exists in the event, retries with a random #XXX suffix.
+ */
+async function createParticipantWithRetry(
+  userId: Types.ObjectId | null,
+  name: string,
+  eventId: string,
+  maxRetries: number = 5
+): Promise<{ participant: IParticipant; finalName: string }> {
+  let finalName = name;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const participant = await Participant.create({
+        userId,
+        name: finalName,
+        eventId,
+      });
+      return { participant, finalName };
+    } catch (e: any) {
+      if (e.code === 11000 && e.keyPattern?.name && e.keyPattern?.eventId) {
+        const suffix = String(Math.floor(Math.random() * 999) + 1).padStart(
+          3,
+          "0"
+        );
+        finalName = `${name}#${suffix}`;
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw { code: 11000, keyPattern: { name: 1, eventId: 1 } };
+}
 
 /**
  * POST /api/events/createEvent
@@ -136,7 +170,7 @@ export async function getEventByJoinCode(req: Request, res: Response) {
 export async function joinEventAsUser(req: Request, res: Response) {
   try {
     const { name, userId } = req.body;
-    const { eventId } = req.params;
+    const eventId = req.params.eventId as string;
 
     if (!userId || !name || !eventId)
       return res.status(400).json({
@@ -159,22 +193,22 @@ export async function joinEventAsUser(req: Request, res: Response) {
     if (event.participantIds.length >= event.maxParticipant)
       return res.status(400).json({ success: false, msg: "Event is full" });
 
-    let participant = await Participant.findOne({
+    const existingParticipant = await Participant.findOne({
       userId,
       eventId,
     });
 
-    if (participant) {
+    if (existingParticipant) {
       return res
         .status(409)
         .json({ success: false, msg: "User already joined" });
     }
 
-    participant = await Participant.create({
+    const { participant, finalName } = await createParticipantWithRetry(
       userId,
       name,
       eventId,
-    });
+    );
 
     const participantId = participant._id as Types.ObjectId;
 
@@ -196,14 +230,14 @@ export async function joinEventAsUser(req: Request, res: Response) {
     );
 
     console.log("Room socket:", eventId);
-    console.log("Participant data:", { participantId, name });
+    console.log("Participant data:", { participantId, name: finalName });
 
     await pusher.trigger(
       `event-${eventId}`, // channel (room)
       "participant-joined", // event name
       {
         participantId,
-        name,
+        name: finalName,
       },
     );
 
@@ -213,12 +247,6 @@ export async function joinEventAsUser(req: Request, res: Response) {
     });
   } catch (e: any) {
     if (e.code === 11000) {
-      if (e.keyPattern?.name && e.keyPattern?.eventId) {
-        return res.status(409).json({
-          success: false,
-          msg: "This name is already taken in this event",
-        });
-      }
       if (e.keyPattern?.email) {
         return res.status(409).json({
           success: false,
@@ -244,13 +272,44 @@ export async function joinEventAsUser(req: Request, res: Response) {
  */
 export async function joinEventAsGuest(req: Request, res: Response) {
   try {
-    const { name } = req.body;
-    const { eventId } = req.params;
+    const { name, email, socialLinks, organization, title } = req.body as {
+      name?: string;
+      email?: string;
+      socialLinks?: { linkedin?: string; github?: string; other?: string };
+      organization?: string;
+      title?: string;
+    };
+    const eventId = req.params.eventId as string;
 
     if (!name || !eventId) {
       return res.status(400).json({
         success: false,
         msg: "Missing fields: guest name and eventId are required",
+      });
+    }
+
+    // Require at least one contact method or organization
+    const hasEmail = email && email.trim();
+    const hasSocialLink = socialLinks && (
+      socialLinks.linkedin?.trim() ||
+      socialLinks.github?.trim() ||
+      socialLinks.other?.trim()
+    );
+    const hasOrganization = organization && organization.trim();
+
+    if (!hasEmail && !hasSocialLink && !hasOrganization) {
+      return res.status(400).json({
+        success: false,
+        msg: "At least one contact method (email or social link) or organization is required",
+      });
+    }
+
+    // Validate email format if provided
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (hasEmail && !EMAIL_REGEX.test(email.toLowerCase().trim())) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid email format",
       });
     }
 
@@ -267,17 +326,26 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     const user = await User.create({
       name,
       authProvider: 'guest',
+      ...(hasEmail && { email: email.toLowerCase().trim() }),
+      ...(hasSocialLink && { socialLinks }),
+      ...(hasOrganization && { organization: organization.trim() }),
+      ...(title && title.trim() && { title: title.trim() }),
     });
 
     const userId = user._id as Types.ObjectId;
     const token = generateToken(userId.toString());
 
-    // Create participant linked to the new user
-    const participant = await Participant.create({
+    // Create participant linked to the new user, with automatic #XXX suffix on name collision
+    const { participant, finalName } = await createParticipantWithRetry(
       userId,
       name,
       eventId,
-    });
+    );
+
+    // Update guest user's name to match the suffixed participant name
+    if (finalName !== name) {
+      await User.updateOne({ _id: userId }, { name: finalName });
+    }
 
     const participantId = participant._id as Types.ObjectId;
 
@@ -293,14 +361,14 @@ export async function joinEventAsGuest(req: Request, res: Response) {
 
     // Emit socket
     console.log("Room socket:", eventId);
-    console.log("Participant data:", { participantId, name });
+    console.log("Participant data:", { participantId, name: finalName });
 
     await pusher.trigger(
       `event-${eventId}`, // channel (room)
       "participant-joined", // event name
       {
         participantId,
-        name,
+        name: finalName,
       },
     );
 
@@ -312,12 +380,6 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     });
   } catch (e: any) {
     if (e.code === 11000) {
-      if (e.keyPattern?.name && e.keyPattern?.eventId) {
-        return res.status(409).json({
-          success: false,
-          msg: "This name is already taken in this event",
-        });
-      }
       if (e.keyPattern?.email) {
         return res.status(409).json({
           success: false,
@@ -342,7 +404,7 @@ export async function joinEventAsGuest(req: Request, res: Response) {
  */
 export async function getEventById(req: Request, res: Response) {
   try {
-    const { eventId } = req.params;
+    const eventId = req.params.eventId as string;
 
     if (!eventId) {
       return res
@@ -393,7 +455,7 @@ export async function getEventById(req: Request, res: Response) {
  */
 export async function updateEventStatus(req: Request, res: Response) {
   try {
-    const { eventId } = req.params;
+    const eventId = req.params.eventId as string;
     const { status } = req.body;
 
     const validStatuses = ['In Progress', 'Completed'];

@@ -1,11 +1,12 @@
 import express from "express";
 import cors from "cors";
 
-import userRoutes from './routes/user_route';
-import authRoutes from './routes/auth_routes';
-import eventRoutes from './routes/event_routes';
-import bingoRoutes from './routes/bingo_routes';
-import participantConnectionRoutes from "./routes/participant_connections_routes";
+import { ensureConnection } from "./utils/db.js";
+import userRoutes from './routes/user_route.js';
+import authRoutes from './routes/auth_routes.js';
+import eventRoutes from './routes/event_routes.js';
+import bingoRoutes from './routes/bingo_routes.js';
+import participantConnectionRoutes from "./routes/participant_connections_routes.js";
 
 
 const app = express();
@@ -39,6 +40,9 @@ app.use(
 app.get("/", (_req, res) => {
   res.send("Hello");
 });
+
+// Ensure DB connection is alive before handling any API request
+app.use("/api", ensureConnection);
 
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);

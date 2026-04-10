@@ -19,6 +19,8 @@ export type User = {
 	password?: string;
 	bio?: string;
 	profilePhoto?: string;
-	socialLinks: SocialLink[];
+	socialLinks?: SocialLink[];
+	title?: string;
+	organization?: string;
 	isGuest: boolean;
 };

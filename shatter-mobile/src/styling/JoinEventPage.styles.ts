@@ -46,39 +46,93 @@ export const JoinEventStyling = StyleSheet.create({
 		width: "100%",
 		bottom: 0,
 		backgroundColor: colors.lightGrey,
-		borderTopLeftRadius: 8,
-		borderTopRightRadius: 8,
+		borderTopLeftRadius: 12,
+		borderTopRightRadius: 12,
 		padding: 20,
 	},
-	codeContainer: {
-		width: "100%",
-		marginTop: 20,
+
+	section: {
+		backgroundColor: colors.white,
+		borderRadius: 10,
+		padding: 15,
+		marginBottom: 20,
 	},
+
+	label: {
+		fontFamily: fonts.title,
+		fontWeight: "600",
+		fontSize: 14,
+		marginBottom: 6,
+		color: colors.darkNavy,
+	},
+
 	input: {
 		borderWidth: 1,
 		borderColor: "#ccc",
 		borderRadius: 8,
 		padding: 12,
-		marginBottom: 10,
 		fontSize: 16,
+		marginBottom: 10,
+		color: colors.darkNavy,
 	},
+
+	button: {
+		backgroundColor: colors.darkNavy,
+		padding: 14,
+		borderRadius: 8,
+		alignItems: "center",
+		marginTop: 10,
+	},
+
+	buttonSecondary: {
+		backgroundColor: colors.darkBlue,
+		padding: 12,
+		borderRadius: 8,
+		alignItems: "center",
+		marginTop: 10,
+	},
+
+	scannerButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 5,
+	},
+
+	buttonText: {
+		color: colors.white,
+		fontWeight: "700",
+		fontSize: 16,
+		fontFamily: fonts.body,
+	},
+
 	errorText: {
 		color: "#d32f2f",
 		textAlign: "center",
 		marginTop: 8,
 		fontSize: 14,
 	},
+
 	loadingContainer: {
 		justifyContent: "center",
 		alignItems: "center",
 		flex: 1,
 	},
+
 	loading: {
 		padding: 10,
 		color: colors.darkNavy,
-		fontFamily: fonts.body,
+		fontFamily: fonts.title,
 		fontWeight: "bold",
 		marginTop: 10,
 		fontSize: 16,
+	},
+	divider: {
+		marginVertical: 15,
+		alignItems: "center",
+	},
+	dividerText: {
+		color: colors.lightGrey2,
+		fontSize: vw(4),
+		fontFamily: fonts.body,
 	},
 });

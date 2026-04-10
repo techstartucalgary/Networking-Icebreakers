@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-import { generateToken, verifyToken } from './jwt_utils';
+import { generateToken, verifyToken } from './jwt_utils.js';
 
 
 function testJWT() {

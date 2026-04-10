@@ -7,7 +7,7 @@ export type AuthDataStorage = {
 	userId: string | null;
 	accessToken: string;
 	isGuest: boolean;
-	guestInfo: { name: string; socialLinks: SocialLink[] };
+	guestInfo: { name: string; socialLinks?: SocialLink[], organization?: string };
 };
 
 export const getStoredAuth = async (): Promise<AuthDataStorage> => {

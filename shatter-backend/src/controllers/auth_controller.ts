@@ -1,11 +1,11 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
-import { User } from '../models/user_model';
-import { AuthCode } from '../models/auth_code_model';
-import { hashPassword, comparePassword } from '../utils/password_hash';
-import { generateToken } from '../utils/jwt_utils';
-import { getLinkedInAuthUrl, getLinkedInAccessToken, getLinkedInProfile } from '../utils/linkedin_oauth';
+import { User } from '../models/user_model.js';
+import { AuthCode } from '../models/auth_code_model.js';
+import { hashPassword, comparePassword } from '../utils/password_hash.js';
+import { generateToken } from '../utils/jwt_utils.js';
+import { getLinkedInAuthUrl, getLinkedInAccessToken, getLinkedInProfile } from '../utils/linkedin_oauth.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || '';
 
@@ -57,8 +57,13 @@ export const signup = async (req: Request, res: Response) => {
 	// check if email already exists
 	const existingUser = await User.findOne({ email: normalizedEmail }).lean();
 	if (existingUser) {
+	    if (existingUser.authProvider === 'linkedin') {
+		return res.status(409).json({
+		    error: 'This email is associated with a LinkedIn account. Please log in with LinkedIn.',
+		});
+	    }
 	    return res.status(409).json({
-		error: 'Email already exists'
+		error: 'Email already exists',
 	    });
 	}
 

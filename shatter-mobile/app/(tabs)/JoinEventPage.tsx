@@ -1,17 +1,19 @@
 import { useJoinEvent } from "@/src/components/new-events/JoinEvent";
+import { colors } from "@/src/styling/constants";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-	ActivityIndicator,
-	Button,
-	ImageBackground,
-	Text,
-	TextInput,
-	View,
+    ActivityIndicator,
+    ImageBackground,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AnimatedTab from "../../src/components/AnimatedTab";
 import { useAuth } from "../../src/components/context/AuthContext";
+import AnimatedTab from "../../src/components/general/AnimatedTab";
 import QRScannerBox from "../../src/components/new-events/QRScannerBox";
 import { JoinEventStyling as styles } from "../../src/styling/JoinEventPage.styles";
 
@@ -66,35 +68,65 @@ export default function JoinEventPage() {
 
 						{!loading && (
 							<>
-								{!showScanner && (
-									<Button
-										title="Scan QR Code"
-										onPress={() => setShowScanner(true)}
-									/>
-								)}
+								{/* QR Section */}
+								<View style={styles.section}>
+									<Text style={styles.label}>Scan QR Code</Text>
 
-								{showScanner && (
-									<QRScannerBox onClose={() => setShowScanner(false)} />
-								)}
+									{!showScanner ? (
+										<TouchableOpacity
+											style={styles.buttonSecondary}
+											onPress={() => setShowScanner(true)}
+										>
+											<View style={styles.scannerButton}>
+												<Ionicons name="scan-outline" color={colors.white} />
+												<Text style={styles.buttonText}>Open Scanner</Text>
+											</View>
+										</TouchableOpacity>
+									) : (
+										<>
+											<QRScannerBox onClose={() => setShowScanner(false)} />
+											<TouchableOpacity
+												style={styles.buttonSecondary}
+												onPress={() => setShowScanner(false)}
+											>
+												<View style={styles.scannerButton}>
+													<Text style={styles.buttonText}>Close Scanner</Text>
+												</View>
+											</TouchableOpacity>
+										</>
+									)}
+								</View>
 
-								<View style={styles.codeContainer}>
+								{/* Divider */}
+								<View style={styles.divider}>
+									<Text style={styles.dividerText}>OR</Text>
+								</View>
+
+								{/* Code Entry */}
+								<View>
+									<Text style={styles.label}>Enter Event Code</Text>
+
 									<TextInput
 										style={styles.input}
-										placeholder="Enter event code"
+										placeholder="ABC123"
 										value={eventCode}
 										onChangeText={(text) => {
 											setEventCode(text);
 											setErrorMessage("");
 										}}
 										autoCapitalize="characters"
-										autoCorrect={false}
 									/>
 
-									<Button
-										title="Join Event"
+									<TouchableOpacity
+										style={styles.button}
 										onPress={handleJoinEvent}
 										disabled={!eventCode.trim()}
-									/>
+									>
+										<View style={styles.scannerButton}>
+											<Ionicons name="search-outline" color={colors.white} />
+											<Text style={styles.buttonText}>Join Event</Text>
+										</View>
+									</TouchableOpacity>
 
 									{errorMessage && (
 										<Text style={styles.errorText}>{errorMessage}</Text>

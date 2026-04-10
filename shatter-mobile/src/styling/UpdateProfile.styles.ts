@@ -196,10 +196,12 @@ export const UpdateProfileStyling = StyleSheet.create({
 		flexDirection: "row",
 		flexWrap: "wrap",
 		justifyContent: "flex-start",
+		marginTop: 8,
+// 		gap: 4,
 		gap: token.gap,
 	},
 	avatarOption: {
-		width: "30%",
+		width: "32%",
 		aspectRatio: 1,
 		borderRadius: token.radiusMd,
 		borderWidth: 2,
@@ -207,6 +209,8 @@ export const UpdateProfileStyling = StyleSheet.create({
 		overflow: "hidden",
 	},
 	avatarOptionSelected: {
+// 		borderColor: colors.darkNavy,
+		borderRadius: 25,
 		borderColor: token.avatarRingSelected,
 	},
 	avatarOptionImage: {
