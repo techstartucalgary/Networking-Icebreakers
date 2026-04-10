@@ -4,10 +4,7 @@ import Footer from "../components/Footer";
 import BingoTable from "../components/BingoTable";
 import { CreateEvent } from "../service/CreateEvent";
 import { useNavigate } from "react-router-dom";
-export interface BingoCell {
-    question: string;
-    shortQuestion: string;
-}
+import type { BingoCell } from "../types/BingoCell";
 function CreateEventPage() {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -26,7 +23,7 @@ function CreateEventPage() {
             }))
         );    const [nameBingoSelected, setNameBingoSelected] = useState(false);
     const [bingoGrid, setBingoGrid] = useState<BingoCell[][]>(createEmptyGrid(3));
-    const [bingoDescription, setBingoDescription] = useState("");
+    //const [bingoDescription, setBingoDescription] = useState("");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -299,6 +296,7 @@ function CreateEventPage() {
                 {/*Icebreaker Properties*/}
                                         {nameBingoSelected && (
                             <div className="mt-6 space-y-4">
+                            {/*
                                 <div>
                                     <label className="text-sm text-white mb-2 block">
                                         Bingo Description
@@ -309,7 +307,7 @@ function CreateEventPage() {
                                         className="w-full p-3 rounded bg-white border text-black"
                                     />
                                 </div>
-
+                            */}
                                 <BingoTable
                                     grid={bingoGrid}
                                     onChange={(row, col, value) => {
