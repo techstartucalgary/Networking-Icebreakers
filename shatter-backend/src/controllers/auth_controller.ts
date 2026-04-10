@@ -214,8 +214,8 @@ export const linkedinAuth = async (req: Request, res: Response) => {
 
 /**
  * GET /api/auth/linkedin/link
- * Initiates LinkedIn OAuth flow for linking a LinkedIn account to an existing guest user.
- * Protected route - requires JWT auth (guest users only).
+ * Initiates LinkedIn OAuth flow for linking a LinkedIn account to an existing user.
+ * Protected route - requires JWT auth (guest or local users only).
  */
 export const linkedinLink = async (req: Request, res: Response) => {
     try {
@@ -229,9 +229,9 @@ export const linkedinLink = async (req: Request, res: Response) => {
 	    return res.status(404).json({ error: 'User not found' });
 	}
 
-	if (user.authProvider !== 'guest') {
+	if (user.authProvider === 'linkedin') {
 	    return res.status(403).json({
-		error: 'Only guest accounts can link a LinkedIn profile',
+		error: 'Account is already a LinkedIn account',
 	    });
 	}
 
@@ -306,7 +306,7 @@ export const linkedinCallback = async (req: Request, res: Response) => {
 	let user;
 
 	if (statePayload.linking && statePayload.userId) {
-	    // --- LinkedIn linking flow (guest -> linkedin) ---
+	    // --- LinkedIn linking flow (guest or local -> attach LinkedIn) ---
 
 	    // Check if this LinkedIn account is already linked to another user
 	    const existingLinkedinUser = await User.findOne({ linkedinId: linkedinProfile.sub });
@@ -316,33 +316,45 @@ export const linkedinCallback = async (req: Request, res: Response) => {
 		);
 	    }
 
-	    // Atomically update the guest user (filter ensures still a guest)
+	    // Look up the user to determine their current authProvider
+	    const existingUser = await User.findById(statePayload.userId);
+	    if (!existingUser || existingUser.authProvider === 'linkedin') {
+		return res.redirect(
+		    `${frontendUrl}/auth/error?message=Account not found or already a LinkedIn account`
+		);
+	    }
+
 	    const updateFields: Record<string, any> = {
 		linkedinId: linkedinProfile.sub,
-		authProvider: 'linkedin',
 		lastLogin: new Date(),
 	    };
 
-	    // Only fill in fields that are currently empty on the guest user
-	    if (linkedinProfile.email) {
+	    // Guest users get fully upgraded to linkedin authProvider
+	    // Local users keep their authProvider (preserves password login)
+	    if (existingUser.authProvider === 'guest') {
+		updateFields.authProvider = 'linkedin';
+	    }
+
+	    // Only fill in fields that are currently empty
+	    if (linkedinProfile.email && !existingUser.email) {
 		updateFields.email = linkedinProfile.email.toLowerCase().trim();
 	    }
-	    if (linkedinProfile.picture) {
+	    if (linkedinProfile.picture && !existingUser.profilePhoto) {
 		updateFields.profilePhoto = linkedinProfile.picture;
 	    }
-	    if (linkedinProfile.name) {
+	    if (linkedinProfile.name && existingUser.authProvider === 'guest') {
 		updateFields.name = linkedinProfile.name;
 	    }
 
-	    user = await User.findOneAndUpdate(
-		{ _id: statePayload.userId, authProvider: 'guest' },
+	    user = await User.findByIdAndUpdate(
+		statePayload.userId,
 		{ $set: updateFields },
 		{ new: true }
 	    );
 
 	    if (!user) {
 		return res.redirect(
-		    `${frontendUrl}/auth/error?message=Account not found or no longer a guest account`
+		    `${frontendUrl}/auth/error?message=Account not found`
 		);
 	    }
 	} else {

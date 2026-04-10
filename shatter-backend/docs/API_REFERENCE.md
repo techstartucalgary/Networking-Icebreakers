@@ -75,7 +75,7 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | POST | `/api/auth/signup` | Public | Create new user account |
 | POST | `/api/auth/login` | Public | Log in with email + password |
 | GET | `/api/auth/linkedin` | Public | Initiate LinkedIn OAuth flow |
-| GET | `/api/auth/linkedin/link` | Protected | Link LinkedIn to guest account (guest only) |
+| GET | `/api/auth/linkedin/link` | Protected | Link LinkedIn to existing account (guest or local) |
 | GET | `/api/auth/linkedin/callback` | Public | LinkedIn OAuth callback (not called directly) |
 | POST | `/api/auth/exchange` | Public | Exchange OAuth auth code for JWT |
 | GET | `/api/users` | Public | List all users |
@@ -247,9 +247,9 @@ Initiate LinkedIn OAuth flow. Redirects the browser to LinkedIn's authorization 
 
 ### GET `/api/auth/linkedin/link`
 
-Initiate LinkedIn OAuth flow for linking a LinkedIn account to an existing guest user. Redirects to LinkedIn's authorization page with the guest user's identity encoded in the state token.
+Initiate LinkedIn OAuth flow for linking a LinkedIn account to an existing user. Redirects to LinkedIn's authorization page with the user's identity encoded in the state token.
 
-- **Auth:** Protected (guest users only)
+- **Auth:** Protected (guest or local users only)
 - **Response:** 302 redirect to LinkedIn
 
 **Error Responses:**
@@ -257,11 +257,11 @@ Initiate LinkedIn OAuth flow for linking a LinkedIn account to an existing guest
 | Status | Condition |
 |--------|-----------|
 | 401 | Missing or invalid JWT |
-| 403 | User is not a guest account |
+| 403 | Account is already a LinkedIn account |
 | 404 | User not found |
 | 409 | LinkedIn account already linked |
 
-**Flow:** After LinkedIn authorization, the callback detects the linking context from the state token, attaches the LinkedIn profile to the existing guest user, and upgrades `authProvider` from `'guest'` to `'linkedin'`.
+**Flow:** After LinkedIn authorization, the callback detects the linking context from the state token and attaches the LinkedIn profile to the existing user. Guest users get upgraded to `authProvider: 'linkedin'`. Local users keep `authProvider: 'local'` (preserves password login) and gain LinkedIn profile data.
 
 ---
 
