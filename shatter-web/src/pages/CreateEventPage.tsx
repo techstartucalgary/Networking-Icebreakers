@@ -23,7 +23,7 @@ function CreateEventPage() {
             }))
         );    const [nameBingoSelected, setNameBingoSelected] = useState(false);
     const [bingoGrid, setBingoGrid] = useState<BingoCell[][]>(createEmptyGrid(3));
-    //const [bingoDescription, setBingoDescription] = useState("");
+    const [bingoDescription, setBingoDescription] = useState("");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

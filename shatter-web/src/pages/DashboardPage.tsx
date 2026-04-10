@@ -79,10 +79,11 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
       question: "",
       shortQuestion: "",
     }))
-  );  const [selectedIcebreaker, setSelectedIcebreaker] = useState<string | null>(null);
+  );  
+  const [selectedIcebreaker, setSelectedIcebreaker] = useState<string | null>(null);
   const GRID_SIZE = 3;
   const [bingoGrid, setBingoGrid] = useState<BingoCell[][]>(createEmptyGrid(GRID_SIZE));
-  //const [bingoDescription, setBingoDescription] = useState("");
+  const [bingoDescription, setBingoDescription] = useState("");
   const [isSavingBingo, setIsSavingBingo] = useState(false);
   const [bingoSaveMessage, setBingoSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isDeletingEvent, setIsDeletingEvent] = useState(false);
