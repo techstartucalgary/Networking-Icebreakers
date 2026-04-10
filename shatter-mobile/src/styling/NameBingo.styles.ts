@@ -8,8 +8,7 @@ const vh = (percent: number) => (height * percent) / 100;
 
 export const NameBingoStyling = StyleSheet.create({
 	container: {
-		flex: 1,
-		padding: 12,
+		padding: 10,
 		backgroundColor: colors.lightGrey,
 	},
 	center: {
@@ -27,9 +26,9 @@ export const NameBingoStyling = StyleSheet.create({
 		backgroundColor: colors.white,
 		borderRadius: 10,
 		justifyContent: "center",
-		alignItems: "center",
+    	alignItems: "center",
 		padding: 6,
-		shadowColor: "#000",
+		shadowColor: colors.black,
 		shadowOpacity: 0.1,
 		shadowOffset: { width: 0, height: 2 },
 		shadowRadius: 4,
@@ -42,7 +41,7 @@ export const NameBingoStyling = StyleSheet.create({
 	selectedCardInfo: {
 		backgroundColor: colors.white,
 		padding: 10,
-		marginBottom: 10,
+		marginBottom: 5,
 		borderRadius: 8,
 		alignItems: "center",
 	},
@@ -61,8 +60,9 @@ export const NameBingoStyling = StyleSheet.create({
 	category: {
 		fontFamily: fonts.body,
 		fontWeight: "bold",
-		fontSize: 8,
+		fontSize: 15,
 		textAlign: "center",
+		padding: 3,
 	},
 	assignedName: {
 		fontFamily: fonts.body,
@@ -76,7 +76,7 @@ export const NameBingoStyling = StyleSheet.create({
 	},
 	inputRow: {
 		flexDirection: "row",
-		marginBottom: 8,
+		marginBottom: 5,
 	},
 	inputFlex: {
 		height: 40,
@@ -131,28 +131,35 @@ export const NameBingoStyling = StyleSheet.create({
 		textAlign: "center",
 	},
 	rollerVertical: {
-		maxHeight: 100,
-		marginTop: 2,
+		height: vh(15),
 		width: "100%",
+		backgroundColor: "rgba(252, 250, 250, 0.97))",
+		padding: 5,
+		shadowColor: colors.black,
+		shadowOpacity: 0.1,
+		shadowOffset: { width: 0, height: 2 },
+		shadowRadius: 4,
+		elevation: 2,
+		borderRadius: 8,
 	},
 	rollerItemVertical: {
 		paddingVertical: 10,
 		paddingHorizontal: 6,
-		backgroundColor: "#eee",
+		backgroundColor: colors.white,
 		borderRadius: 8,
 		marginBottom: 6,
 		width: "100%",
 		alignItems: "center",
 	},
 	rollerItemActive: {
-		backgroundColor: colors.lightBlue,
+		backgroundColor: "#A8C8E8",
 	},
 	rollerText: {
 		fontSize: 14,
 	},
 	rollerHighlighted: {
 		borderWidth: 2,
-		borderColor: colors.lightBlue,
+		borderColor: "#A8C8E8",
 	},
 	err: {
 		fontSize: 12,

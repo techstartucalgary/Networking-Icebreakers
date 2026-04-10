@@ -1,5 +1,6 @@
 import { useGame } from "@/src/components/context/GameContext";
 import { EventState, Participant } from "@/src/interfaces/Event";
+import { BingoTile } from "@/src/interfaces/Game";
 import {
 	getBingoCategories,
 	getParticipantsByEventId,
@@ -26,7 +27,7 @@ type Card = {
 	cardId: string;
 	assignedParticipantId?: string;
 	assignedName?: string;
-	category: string;
+	tile: BingoTile;
 };
 
 type WinningLine = {
@@ -37,25 +38,153 @@ type WinningLine = {
 
 const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 	const { gameState, currentParticipantId } = useGame();
-	const [selectedCardId, setSelectedCardId] = useState<string | null>(null); //what user chooses
-	const [activeCardId, setActiveCardId] = useState<string | null>(null); //card in the roller
+	const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+	const [activeCardId, setActiveCardId] = useState<string | null>(null);
 	const [participants, setParticipants] = useState<Participant[]>([]);
-	const [categories, setCategories] = useState<string[][]>([]);
+	const [categories, setCategories] = useState<BingoTile[][]>([]);
 	const [cards, setCards] = useState<Card[]>([]);
 	const [search, setSearch] = useState("");
 	const [loading, setLoading] = useState(true);
-	const [err, setError] = useState("");
+	const [error, setError] = useState("");
 	const [bingoStatus, setBingoStatus] = useState<string | null>(null);
 	const [winningLines, setWinningLines] = useState<WinningLine[]>([]);
 	const [blackoutAnimating, setBlackoutAnimating] = useState(false);
 	const [animatedBlackoutIds, setAnimatedBlackoutIds] = useState<string[]>([]);
 
 	const storageKey = `bingo-cards-${eventId}`;
+	const gridSize = categories.length || 3;
+	const cardSize = `${100 / gridSize}%` as DimensionValue;
 
-	//check bingo board state on reload
+	//helper functions
+	const getInitialCards = (tiles: BingoTile[][]) =>
+		tiles.flatMap((row, rowIdx) =>
+			row.map((tile, colIdx) => ({
+				cardId: `card-${rowIdx}-${colIdx}`,
+				tile,
+			})),
+		);
+
+	const isValidParticipant = (participantId: string) =>
+		participantId !== currentParticipantId;
+
+	const isAlreadyAssigned = (participantId: string) =>
+		cards.some((c) => c.assignedParticipantId === participantId);
+
+	const checkBingoStatus = (
+		cardsArr: Card[],
+		categoriesList: BingoTile[][],
+	): WinningLine[] | "Blackout" => {
+		const numRows = categoriesList.length;
+		const numCols = categoriesList[0]?.length || 0;
+		const grid: (string | undefined)[][] = Array.from(
+			{ length: numRows },
+			(_, i) =>
+				Array.from(
+					{ length: numCols },
+					(_, j) =>
+						cardsArr.find((c) => c.cardId === `card-${i}-${j}`)
+							?.assignedParticipantId,
+				),
+		);
+
+		const lines: WinningLine[] = [];
+
+		//rows & Columns
+		for (let i = 0; i < numRows; i++)
+			if (grid[i].every(Boolean)) lines.push({ type: "row", index: i });
+		for (let j = 0; j < numCols; j++)
+			if (grid.every((row) => row[j])) lines.push({ type: "col", index: j });
+
+		//diagonals
+		if (grid.every((row, i) => row[i]))
+			lines.push({ type: "diag", reverse: false });
+		if (grid.every((row, i) => row[numCols - 1 - i]))
+			lines.push({ type: "diag", reverse: true });
+
+		if (cardsArr.every((c) => c.assignedParticipantId)) return "Blackout";
+
+		return lines;
+	};
+
+	const isCardWinning = (cardId: string) => {
+		const [rowIdx, colIdx] = cardId.replace("card-", "").split("-").map(Number);
+		return winningLines.some((line) => {
+			const size = categories.length;
+			if (line.type === "row" && line.index === rowIdx) return true;
+			if (line.type === "col" && line.index === colIdx) return true;
+			if (line.type === "diag") {
+				if (!line.reverse && rowIdx === colIdx) return true;
+				if (line.reverse && colIdx === size - 1 - rowIdx) return true;
+			}
+			return false;
+		});
+	};
+
+	const playBlackoutAnimation = async () => {
+		if (!categories.length) return;
+		setBlackoutAnimating(true);
+		setAnimatedBlackoutIds([]);
+
+		const order: string[] = [];
+		categories.forEach((row, i) =>
+			row.forEach((_, j) => order.push(`card-${i}-${j}`)),
+		);
+
+		for (const id of order) {
+			await new Promise((res) => setTimeout(res, 80));
+			setAnimatedBlackoutIds((prev) => [...prev, id]);
+		}
+
+		setBlackoutAnimating(false);
+		setBingoStatus("Blackout!");
+	};
+
+	//load saved cards if re-entering
+	const loadSavedCards = async () => {
+		try {
+			const saved = await AsyncStorage.getItem(storageKey);
+			if (!saved) return false;
+			const parsed: Card[] = JSON.parse(saved);
+			setCards(parsed);
+			return true;
+		} catch (err) {
+			console.log("Error loading saved cards:", err);
+			return false;
+		}
+	};
+
+	//load bingo game data on load
+	useEffect(() => {
+		const fetchData = async () => {
+			setLoading(true);
+			try {
+				const categoriesData = await getBingoCategories(eventId);
+				setCategories(categoriesData.tiles);
+
+				const participantsData = await getParticipantsByEventId(eventId);
+				setParticipants(participantsData?.participants || []);
+
+				const hasSaved = await loadSavedCards();
+				if (!hasSaved) {
+					const initialCards = getInitialCards(categoriesData.tiles);
+					setCards(initialCards);
+					await AsyncStorage.setItem(storageKey, JSON.stringify(initialCards));
+				}
+			} catch (err) {
+				console.log("Error fetching bingo data:", err);
+				setError((err as Error).message);
+				setParticipants([]);
+				setCards([]);
+			} finally {
+				setLoading(false);
+			}
+		};
+		if (eventId) fetchData();
+	}, [eventId]);
+
+	//check for bingo on load
 	useEffect(() => {
 		if (!cards.length || !categories.length) return;
-
 		const result = checkBingoStatus(cards, categories);
 
 		if (result === "Blackout") {
@@ -70,72 +199,13 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 		}
 	}, [cards, categories]);
 
-	//if left game and re-entered
-	const loadSavedCards = async () => {
-		try {
-			const saved = await AsyncStorage.getItem(storageKey);
-
-			if (!saved || saved.length <= 0) {
-				return false; //no saved cards
-			}
-
-			const parsed: Card[] = JSON.parse(saved);
-			setCards(parsed);
-			return true;
-		} catch (error) {
-			console.log("Error loading saved cards:", error);
-			return false;
-		}
-	};
-
-	useEffect(() => {
-		const fetchData = async () => {
-			setLoading(true);
-
-			try {
-				//load game categories
-				const categoriesData = await getBingoCategories(eventId);
-				const categoriesList =
-					categoriesData?.success && categoriesData.categories
-						? categoriesData.categories
-						: [];
-				setCategories(categoriesList);
-
-				//load participants
-				const res = await getParticipantsByEventId(eventId);
-				const participantsList = res?.participants || [];
-				setParticipants(participantsList);
-
-				//load local cards if needed
-				const hasSaved = await loadSavedCards();
-				if (!hasSaved) {
-					const initialCards: Card[] = categoriesList.flatMap((row, rowIdx) =>
-						row.map((cat, colIdx) => ({
-							cardId: `card-${rowIdx}-${colIdx}`,
-							category: cat,
-						})),
-					);
-					setCards(initialCards);
-					await AsyncStorage.setItem(storageKey, JSON.stringify(initialCards));
-				}
-			} catch (err) {
-				console.log("Error fetching bingo data:", err);
-				setError((err as Error).message);
-				setParticipants([]);
-				setCards([]);
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		if (eventId) fetchData();
-	}, [eventId]);
-
 	const handleAssign = async (participant: Participant) => {
 		if (!selectedCardId || !participant || !currentParticipantId) return;
-
-		if (!isValidParticipant(participant._id, currentParticipantId)) return;
-		if (isAlreadyAssigned(participant._id)) return;
+		if (
+			!isValidParticipant(participant._id) ||
+			isAlreadyAssigned(participant._id)
+		)
+			return;
 
 		const updatedCards = cards.map((c) =>
 			c.cardId === selectedCardId
@@ -146,166 +216,63 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 					}
 				: c,
 		);
-
 		setCards(updatedCards);
-		setSearch("");
 		setSelectedCardId(null);
-
+		setSearch("");
 		await AsyncStorage.setItem(storageKey, JSON.stringify(updatedCards));
 
-		if (onConnect) {
-			const userToConnect: Participant = {
-				userId: participant.userId,
+		onConnect?.(
+			{
 				_id: participant._id,
+				userId: participant.userId,
 				name: participant.name,
-			};
-
-			onConnect(userToConnect, "Met during Name Bingo");
-		}
-
-		if (categories) {
-			const result = checkBingoStatus(updatedCards, categories);
-
-			if (result === "Blackout") {
-				setWinningLines([]);
-				playBlackoutAnimation();
-			} else if (result.length > 0) {
-				setWinningLines(result);
-				setBingoStatus(`Bingo x${result.length}!`);
-			} else {
-				setWinningLines([]);
-				setBingoStatus(null);
-			}
-		}
-	};
-
-	const checkBingoStatus = (
-		cards: Card[],
-		categoriesList: string[][],
-	): WinningLine[] | "Blackout" => {
-		const numRows = categoriesList.length;
-		const numCols = categoriesList[0]?.length || 0;
-
-		const grid: (string | undefined)[][] = [];
-
-		for (let i = 0; i < numRows; i++) {
-			grid[i] = [];
-			for (let j = 0; j < numCols; j++) {
-				const card = cards.find((c) => c.cardId === `card-${i}-${j}`);
-				grid[i][j] = card?.assignedParticipantId;
-			}
-		}
-
-		const foundLines: WinningLine[] = [];
-
-		//Rows
-		for (let i = 0; i < numRows; i++) {
-			if (grid[i].every((name) => name)) {
-				foundLines.push({ type: "row", index: i });
-			}
-		}
-
-		//Columns
-		for (let j = 0; j < numCols; j++) {
-			if (grid.every((row) => row[j])) {
-				foundLines.push({ type: "col", index: j });
-			}
-		}
-
-		//Main diagonal
-		if (grid.every((row, i) => row[i])) {
-			foundLines.push({ type: "diag", reverse: false });
-		}
-
-		//Anti-diagonal
-		if (grid.every((row, i) => row[numCols - 1 - i])) {
-			foundLines.push({ type: "diag", reverse: true });
-		}
-
-		//Blackout check
-		if (cards.every((c) => c.assignedParticipantId)) return "Blackout";
-
-		return foundLines;
-	};
-
-	const playBlackoutAnimation = async () => {
-		if (!categories.length) return;
-
-		setBlackoutAnimating(true);
-		setAnimatedBlackoutIds([]);
-
-		const numRows = categories.length;
-		const numCols = categories[0].length;
-
-		const order: string[] = [];
-
-		for (let i = 0; i < numRows; i++) {
-			for (let j = 0; j < numCols; j++) {
-				order.push(`card-${i}-${j}`);
-			}
-		}
-
-		for (let id of order) {
-			await new Promise((res) => setTimeout(res, 80));
-			setAnimatedBlackoutIds((prev) => [...prev, id]);
-		}
-
-		setBlackoutAnimating(false);
-		setBingoStatus("Blackout!");
-	};
-
-	//check if secondary is not primary
-	const isValidParticipant = (
-		participantId: string,
-		primaryParticipantId: string,
-	) => participantId !== primaryParticipantId;
-
-	//check if secondary hasn't been assigned to anything yet
-	const isAlreadyAssigned = (participantId: string) =>
-		cards.some((c) => c.assignedParticipantId === participantId);
-
-	const filteredParticipants = participants.filter((participant) => {
-		if (!currentParticipantId) return false;
-
-		return (
-			participant.name.toLowerCase().includes(search.toLowerCase()) &&
-			!isAlreadyAssigned(participant._id) &&
-			isValidParticipant(participant._id, currentParticipantId)
+			},
+			"Met during Name Bingo",
 		);
-	});
 
-	const flatCategories = categories.flatMap((row, rowIdx) =>
-		row.map((cat, colIdx) => ({
-			category: cat,
-			cardId: `card-${rowIdx}-${colIdx}`,
-		})),
+		const result = checkBingoStatus(updatedCards, categories);
+		if (result === "Blackout") {
+			setWinningLines([]);
+			playBlackoutAnimation();
+		} else if (Array.isArray(result) && result.length > 0) {
+			setWinningLines(result);
+			setBingoStatus(`Bingo x${result.length}!`);
+		} else {
+			setWinningLines([]);
+			setBingoStatus(null);
+		}
+	};
+
+	const filteredParticipants = participants.filter(
+		(p) =>
+			currentParticipantId &&
+			p.name.toLowerCase().includes(search.toLowerCase()) &&
+			!isAlreadyAssigned(p._id) &&
+			isValidParticipant(p._id),
 	);
 
-	//grid management
-	const selectedCard = cards.find((c) => c.cardId === selectedCardId); //find selected card for category
-	const gridSize = categories.length || 5;
-	const cardSize = `${100 / gridSize}%` as DimensionValue; //dynamic card size for different grid sizes
+	const selectedCard = cards.find((c) => c.cardId === selectedCardId);
 
 	if (loading) return <FullPageLoader message="Loading bingo..." />;
 
 	return (
-		<View style={styles.container}>
-			{/* Selected card category */}
+		<ScrollView style={styles.container}>
+			{/* Selected card */}
 			{selectedCard && (
 				<View style={styles.selectedCardInfo}>
 					<Text style={styles.selectedCardCategory}>
-						{selectedCard.category}
+						{selectedCard.tile?.question || "?"}
 					</Text>
 				</View>
 			)}
 
-			{/* No card selected when name selected */}
-			{!selectedCardId && !(gameState.progress === EventState.COMPLETED) && (
+			{/* Hint */}
+			{!selectedCardId && gameState.progress !== EventState.COMPLETED && (
 				<Text style={styles.selectCardHint}>Select a square first</Text>
 			)}
 
-			{/* Search bar with type-ahead + dropdown */}
-			{!(gameState.progress === EventState.COMPLETED) && (
+			{/* Search */}
+			{gameState.progress !== EventState.COMPLETED && (
 				<View style={styles.searchContainer}>
 					<TextInput
 						style={styles.inputFlex}
@@ -313,7 +280,6 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 						value={search}
 						onChangeText={setSearch}
 					/>
-
 					{search.length > 0 && filteredParticipants.length > 0 && (
 						<ScrollView style={styles.dropdown}>
 							{filteredParticipants.map((p) => (
@@ -330,40 +296,13 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 				</View>
 			)}
 
-			{/* Card grid */}
+			{/* Card Grid */}
 			<View style={{ padding: 12 }}>
 				<View style={styles.grid}>
 					{cards.map((card) => {
-						let isWinningCard = false;
 						const isBlackoutAnimated = animatedBlackoutIds.includes(
 							card.cardId,
 						);
-
-						//check for winning bingo line
-						if (winningLines.length > 0) {
-							winningLines.forEach((line) => {
-								const [rowIdx, colIdx] = card.cardId
-									.replace("card-", "")
-									.split("-")
-									.map(Number);
-
-								if (line.type === "row" && line.index === rowIdx)
-									isWinningCard = true;
-
-								if (line.type === "col" && line.index === colIdx)
-									isWinningCard = true;
-
-								if (line.type === "diag") {
-									const size = categories.length;
-
-									if (!line.reverse && rowIdx === colIdx) isWinningCard = true;
-
-									if (line.reverse && colIdx === size - 1 - rowIdx)
-										isWinningCard = true;
-								}
-							});
-						}
-
 						return (
 							<TouchableOpacity
 								key={card.cardId}
@@ -372,7 +311,7 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 									{ width: cardSize },
 									selectedCardId === card.cardId && styles.selectedCard,
 									activeCardId === card.cardId && styles.rollerHighlighted,
-									isWinningCard && styles.winningCard,
+									isCardWinning(card.cardId) && styles.winningCard,
 									isBlackoutAnimated && styles.blackoutCard,
 								]}
 								onPress={() => {
@@ -380,23 +319,27 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 									setActiveCardId(card.cardId);
 								}}
 							>
-								{/* TODO: Want to display number instead of category text*/}
-								<Text style={styles.category}>{card.category}</Text>
-								{card.assignedParticipantId && (
+								<View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+									<Text
+										style={styles.category}
+										numberOfLines={2}
+										adjustsFontSizeToFit
+									>
+									{card.tile?.shortQuestion || "?"}
+									</Text>
+									{card.assignedParticipantId && (
 									<Text style={styles.assignedName}>{card.assignedName}</Text>
-								)}
+									)}
+								</View>
 							</TouchableOpacity>
 						);
 					})}
-					<Text style={styles.err}>{err}</Text>
+					<Text style={styles.err}>{error}</Text>
 				</View>
 
 				{/* Roller */}
-				<ScrollView
-					style={styles.rollerVertical}
-					showsVerticalScrollIndicator={false}
-				>
-					{flatCategories.map((item) => (
+				<ScrollView style={styles.rollerVertical}>
+					{cards.map((item) => (
 						<TouchableOpacity
 							key={item.cardId}
 							style={[
@@ -408,12 +351,12 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 								setSelectedCardId(item.cardId);
 							}}
 						>
-							<Text style={styles.rollerText}>{item.category}</Text>
+							<Text style={styles.rollerText}>{item.tile.question || "?"}</Text>
 						</TouchableOpacity>
 					))}
 				</ScrollView>
 			</View>
-		</View>
+		</ScrollView>
 	);
 };
 

@@ -1,6 +1,6 @@
 # Shatter Backend — Database Schema Reference
 
-**Last updated:** 2026-03-01
+**Last updated:** 2026-03-08
 **Database:** MongoDB with Mongoose ODM
 **Collections:** 6
 
@@ -63,6 +63,8 @@
 | `passwordHash`     | String            | No       | —          | `select: false` — excluded from queries by default |
 | `linkedinId`       | String            | No       | —          | Unique (sparse) |
 | `linkedinUrl`      | String            | No       | —          | Unique (sparse) |
+| `organization`     | String            | No       | —          | Trimmed |
+| `title`            | String            | No       | —          | Trimmed |
 | `bio`              | String            | No       | —          | Trimmed |
 | `profilePhoto`     | String            | No       | —          | |
 | `socialLinks`      | Object            | No       | —          | `{ linkedin?: String, github?: String, other?: String }` |
@@ -157,6 +159,7 @@
 ### Key Behaviors
 
 - The compound unique index on `(eventId, name)` is case-insensitive, so "John" and "john" are treated as the same name within an event.
+- When a name collision occurs during join, the backend automatically appends a random `#XXX` suffix (e.g., `John#472`) and retries, allowing multiple participants with the same base name.
 - No timestamps are enabled on this model.
 
 ---
@@ -174,7 +177,7 @@
 | `_id`         | String     | Auto     | Auto    | Custom: `bingo_<8 random chars>` |
 | `_eventId`    | ObjectId   | Yes      | —       | Refs `Event` |
 | `description` | String     | No       | —       | |
-| `grid`        | [[String]] | No       | —       | 2D array of strings |
+| `grid`        | [[{ question: String, shortQuestion: String }]] | No | — | 2D array of BingoTile objects |
 
 ### Pre-Save Hooks
 

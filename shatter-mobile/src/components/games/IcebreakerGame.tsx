@@ -1,4 +1,4 @@
-import { EventState, Participant } from "@/src/interfaces/Event";
+import EventIB, { EventState, Participant } from "@/src/interfaces/Event";
 import { getEventById } from "@/src/services/event.service";
 import { createConnection } from "@/src/services/user.service";
 import { useRouter } from "expo-router";
@@ -12,7 +12,11 @@ import NameBingo from "./NameBingo";
 
 const POLL_INTERVAL = 4000; //4 seconds
 
-const IcebreakerGame = () => {
+type IcebreakerGameProps = {
+	event: EventIB;
+};
+
+const IcebreakerGame = ({ event }: IcebreakerGameProps) => {
 	const { user } = useAuth();
 	const { setGameProgress } = useGame();
 	const { gameState, currentParticipantId } = useGame();
@@ -20,11 +24,11 @@ const IcebreakerGame = () => {
 
 	//TODO: Websocket for event progress
 	useEffect(() => {
-		if (!gameState.eventId) return;
+		if (!event._id) return;
 
 		const interval = setInterval(async () => {
 			try {
-				const res = await getEventById(gameState.eventId);
+				const res = await getEventById(event._id);
 
 				if (res.event.currentState) {
 					setGameProgress(res.event.currentState);
@@ -41,14 +45,14 @@ const IcebreakerGame = () => {
 		}, POLL_INTERVAL);
 
 		return () => clearInterval(interval);
-	}, [gameState.eventId]);
+	}, [event._id]);
 
 	//Pick game-specific component
 	const renderGame = () => {
-		switch (gameState.gameType) {
+		switch (event.gameType) {
 			case "Name Bingo":
 				return (
-					<NameBingo eventId={gameState.eventId} onConnect={handleConnect} />
+					<NameBingo eventId={event._id} onConnect={handleConnect} />
 				);
 			default:
 				return <Text>Game not found</Text>;

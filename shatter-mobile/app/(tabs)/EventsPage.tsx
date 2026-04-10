@@ -11,6 +11,7 @@ import {
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AnimatedTab from "../../src/components/AnimatedTab";
 import EventCard from "../../src/components/events/EventCard";
 import EventIB from "../../src/interfaces/Event";
 import { getUserEvents } from "../../src/services/event.service";
@@ -65,37 +66,45 @@ export default function EventsPage() {
 	};
 
 	return (
-		<ImageBackground
-			source={require("../../src/images/getStartedImage.png")}
-			style={styles.background}
-			resizeMode="cover"
-		>
-			<SafeAreaView style={styles.safe}>
-				<View style={styles.container}>
-					{loading ? (
-						<View style={styles.loadingContainer}>
-							<ActivityIndicator size="large" color="#1e3a8a" />
-							<Text style={styles.loading}>Loading events...</Text>
-						</View>
-					) : events.length === 0 ? (
-						<View style={styles.loadingContainer}>
-							<Text style={styles.loading}>No events joined</Text>
-						</View>
-					) : (
-						<FlatList
-							data={events}
-							keyExtractor={(item) => item._id}
-							renderItem={({ item }) => (
-								<EventCard
-									event={item}
-									expanded={expandedEventId === item._id}
-									onPress={() => handlePress(item)}
-								/>
-							)}
-						/>
-					)}
-				</View>
-			</SafeAreaView>
-		</ImageBackground>
+		<AnimatedTab>
+			<ImageBackground
+				source={require("../../src/images/getStartedImage.png")}
+				style={styles.background}
+				resizeMode="cover"
+			>
+				<SafeAreaView style={styles.safe}>
+					<View style={styles.header}>
+						<Text style={styles.pageTitle}>Upcoming Events</Text>
+						<Text style={styles.subtitle}>
+							Check out your joined events below.
+						</Text>
+					</View>
+					<View style={styles.container}>
+						{loading ? (
+							<View style={styles.loadingContainer}>
+								<ActivityIndicator size="large" color="#1e3a8a" />
+								<Text style={styles.loading}>Loading events...</Text>
+							</View>
+						) : events.length === 0 ? (
+							<View style={styles.loadingContainer}>
+								<Text style={styles.loading}>No events joined</Text>
+							</View>
+						) : (
+							<FlatList
+								data={events}
+								keyExtractor={(item) => item._id}
+								renderItem={({ item }) => (
+									<EventCard
+										event={item}
+										expanded={expandedEventId === item._id}
+										onPress={() => handlePress(item)}
+									/>
+								)}
+							/>
+						)}
+					</View>
+				</SafeAreaView>
+			</ImageBackground>
+		</AnimatedTab>
 	);
 }

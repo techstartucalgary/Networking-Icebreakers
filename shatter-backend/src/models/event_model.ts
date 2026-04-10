@@ -1,7 +1,7 @@
 import mongoose, { Schema, model, Document, Types } from "mongoose";
-import { User } from "../models/user_model";
+import { User } from "../models/user_model.js";
 
-import { IParticipant } from "./participant_model";
+import { IParticipant } from "./participant_model.js";
 
 export interface IEvent extends Document {
   name: string;

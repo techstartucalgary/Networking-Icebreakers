@@ -93,12 +93,11 @@ export async function UserFetchApi(
 		);
 
 		//TODO: Remove profile photo assigning here
-		//assign default photo if none stored (handled in signup as well)
 		if (!response.data.user.profilePhoto) {
 			const encodedName = encodeURIComponent(
 				response.data.user.name ?? "Unknown",
 			);
-			response.data.user.profilePhoto = `https://ui-avatars.com/api/?name=${encodedName}&background=random&format=png`;
+			response.data.user.profilePhoto = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedName}`;
 		}
 
 		return response.data;
@@ -320,6 +319,35 @@ export async function UserUpdateApi(
 					throw new Error("Server error. Please try again later.");
 				default:
 					throw new Error("Info update failed.");
+			}
+		}
+
+		throw new Error("Network error. Check your connection.");
+	}
+}
+
+export async function ExchangeLinkedInCodeApi(
+	code: string,
+): Promise<UserLoginResponse> {
+	try {
+		const response: AxiosResponse<UserLoginResponse> = await axios.post(
+			`${API_BASE_URL_AUTH}/exchange`,
+			{ code },
+		);
+		return response.data;
+	} catch (error) {
+		const err = error as AxiosError;
+
+		if (err.response) {
+			switch (err.response.status) {
+				case 400:
+					throw new Error("Auth code is required.");
+				case 401:
+					throw new Error("Invalid or expired auth code.");
+				case 500:
+					throw new Error("Server error. Please try again later.");
+				default:
+					throw new Error("Authentication failed.");
 			}
 		}
 

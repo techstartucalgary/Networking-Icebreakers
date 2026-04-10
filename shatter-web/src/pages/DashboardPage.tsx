@@ -30,6 +30,18 @@ interface Event {
   createdBy?: string;
 }
 
+async function readApiErrorMessage(res: Response): Promise<string> {
+  const text = await res.text().catch(() => "");
+  try {
+    const j = JSON.parse(text) as Record<string, unknown>;
+    const msg = j.message ?? j.error ?? j.msg;
+    if (typeof msg === "string" && msg.trim()) return msg;
+  } catch {
+    /* ignore */
+  }
+  return text.trim() || `Request failed (${res.status})`;
+}
+
 function getUserIdFromToken(token: string): string | null {
   try {
     const parts = token.split(".");
@@ -59,7 +71,6 @@ function DashboardPage() {
     startDate: "",
     endDate: "",
     maxParticipant: 0,
-    currentState: "Upcoming",
   });
 
 const createEmptyGrid = (size: number): BingoCell[][] =>
@@ -74,6 +85,10 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
   //const [bingoDescription, setBingoDescription] = useState("");
   const [isSavingBingo, setIsSavingBingo] = useState(false);
   const [bingoSaveMessage, setBingoSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isDeletingEvent, setIsDeletingEvent] = useState(false);
+  const [deleteEventMessage, setDeleteEventMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [editFormMessage, setEditFormMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const navigate = useNavigate();
 
@@ -99,15 +114,18 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEvent?._id]);
 
-  const fetchUserEvents = async (signal?: AbortSignal) => {
+  const fetchUserEvents = async (
+    signal?: AbortSignal,
+    opts?: { skipLoading?: boolean }
+  ): Promise<Event[] | null> => {
     try {
-      setLoading(true);
+      if (!opts?.skipLoading) setLoading(true);
       setError(null);
 
       const token = localStorage.getItem("token");
       if (!token) {
         navigate("/login");
-        return;
+        return null;
       }
 
       const userId = getUserIdFromToken(token);
@@ -115,7 +133,7 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
         localStorage.removeItem("token");
         window.dispatchEvent(new Event("authChange"));
         navigate("/login");
-        return;
+        return null;
       }
 
       const baseUrl = import.meta.env.VITE_API_URL;
@@ -139,14 +157,17 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
         throw new Error(data?.message || "Backend did not return success.");
       }
 
-      setEvents(Array.isArray(data.events) ? data.events : []);
+      const list = Array.isArray(data.events) ? data.events : [];
+      setEvents(list);
+      return list;
     } catch (err: any) {
-      if (err?.name === "AbortError") return;
+      if (err?.name === "AbortError") return null;
       console.error("Error fetching events:", err);
       setError(err?.message || "Failed to load events");
       setEvents([]);
+      return null;
     } finally {
-      setLoading(false);
+      if (!opts?.skipLoading) setLoading(false);
     }
   };
 
@@ -154,6 +175,9 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
     setSelectedEvent(event);
     setIsEditing(false);
     setSelectedIcebreaker(null);
+    setDeleteEventMessage(null);
+    setEditFormMessage(null);
+    setIsDeleteConfirmOpen(false);
   };
 
 const loadBingoData = async (eventId: string) => {
@@ -191,16 +215,19 @@ const loadBingoData = async (eventId: string) => {
       startDate: selectedEvent.startDate?.substring(0, 16) || "",
       endDate: selectedEvent.endDate?.substring(0, 16) || "",
       maxParticipant: selectedEvent.maxParticipant || 0,
-      currentState: selectedEvent.currentState || "Upcoming",
     });
+    setEditFormMessage(null);
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
+    setEditFormMessage(null);
   };
 
   const handleSaveEdit = async () => {
     if (!selectedEvent) return;
+
+    setEditFormMessage(null);
 
     try {
       const token = localStorage.getItem("token");
@@ -209,38 +236,92 @@ const loadBingoData = async (eventId: string) => {
         return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/events/${selectedEvent._id}`, {
+      const name = editForm.name.trim();
+      const description = editForm.description.trim();
+      if (!name) {
+        setEditFormMessage({ type: "error", text: "Name must be a non-empty string." });
+        return;
+      }
+      if (!description) {
+        setEditFormMessage({ type: "error", text: "Description must be a non-empty string." });
+        return;
+      }
+
+      const eventId = selectedEvent._id;
+      const baseUrl = import.meta.env.VITE_API_URL;
+
+      const updateBody: Record<string, unknown> = {
+        name,
+        description,
+        startDate: new Date(editForm.startDate).toISOString(),
+        endDate: new Date(editForm.endDate).toISOString(),
+        maxParticipant: editForm.maxParticipant,
+      };
+
+      const response = await fetch(`${baseUrl}/events/${eventId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          name: editForm.name,
-          description: editForm.description,
-          startDate: new Date(editForm.startDate).toISOString(),
-          endDate: new Date(editForm.endDate).toISOString(),
-          maxParticipant: editForm.maxParticipant,
-          currentState: editForm.currentState,
-        }),
+        body: JSON.stringify(updateBody),
       });
 
       if (!response.ok) {
-        const txt = await response.text().catch(() => "");
-        throw new Error(`Failed to update event (status ${response.status}). ${txt ? txt.slice(0, 120) : ""}`.trim());
+        throw new Error(await readApiErrorMessage(response));
+      }
+
+      const list = await fetchUserEvents(undefined, { skipLoading: true });
+      setIsEditing(false);
+      if (list?.length) {
+        const updated = list.find((e) => e._id === eventId);
+        if (updated) setSelectedEvent(updated);
+      }
+
+      setEditFormMessage({ type: "success", text: "Event updated successfully." });
+    } catch (err: any) {
+      console.error("Error updating event:", err);
+      setEditFormMessage({
+        type: "error",
+        text: err?.message || "Failed to update event.",
+      });
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!selectedEvent || isDeletingEvent) return;
+    setDeleteEventMessage(null);
+
+    try {
+      setIsDeletingEvent(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/events/${selectedEvent._id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.msg || errorData?.error || "Failed to delete event");
       }
 
       await fetchUserEvents();
+      setSelectedEvent(null);
+      setSelectedIcebreaker(null);
       setIsEditing(false);
-
-      // reselect AFTER fetch (using fresh data)
-      setSelectedEvent(prev => {
-          if (!prev) return prev;
-          return events.find(e => e._id === prev._id) || prev;
-      });
+      setIsDeleteConfirmOpen(false);
+      setDeleteEventMessage({ type: "success", text: "Event deleted successfully." });
     } catch (err: any) {
-      console.error("Error updating event:", err);
-      alert(err?.message || "Failed to update event. The backend may not support updates yet.");
+      setDeleteEventMessage({ type: "error", text: err?.message || "Failed to delete event" });
+    } finally {
+      setIsDeletingEvent(false);
     }
   };
 
@@ -498,9 +579,82 @@ const loadBingoData = async (eventId: string) => {
                         >
                           Edit
                         </button>
+                        <button
+                          onClick={() => setIsDeleteConfirmOpen(true)}
+                          disabled={isDeletingEvent}
+                          className="px-4 py-2 rounded-lg font-body font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ backgroundColor: "rgba(239, 68, 68, 0.2)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#fca5a5" }}
+                        >
+                          Delete
+                        </button>
                       </div>
                     )}
                   </div>
+
+                  {isDeleteConfirmOpen && selectedEvent && (
+                    <div className="mb-4 p-4 rounded-lg border border-red-500/40 bg-red-500/10">
+                      <p className="text-sm font-body text-red-300 mb-3">
+                        Delete "{selectedEvent.name}"? This cannot be undone.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleDeleteEvent}
+                          disabled={isDeletingEvent}
+                          className="px-4 py-2 rounded-lg font-body font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ backgroundColor: "#ef4444", color: "#ffffff" }}
+                        >
+                          {isDeletingEvent ? "Deleting..." : "Yes, delete event"}
+                        </button>
+                        <button
+                          onClick={() => setIsDeleteConfirmOpen(false)}
+                          disabled={isDeletingEvent}
+                          className="px-4 py-2 rounded-lg font-body font-semibold text-sm bg-white/10 hover:bg-white/20 border border-white/30 text-white transition-all duration-200 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {deleteEventMessage && (
+                    <div
+                      className={`mb-4 px-4 py-3 rounded-lg font-body text-sm flex items-center justify-between ${
+                        deleteEventMessage.type === "success"
+                          ? "bg-green-500/20 border border-green-500/40 text-green-400"
+                          : "bg-red-500/20 border border-red-500/40 text-red-400"
+                      }`}
+                    >
+                      <span>{deleteEventMessage.text}</span>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteEventMessage(null)}
+                        className="text-white/60 hover:text-white ml-2"
+                        aria-label="Dismiss delete event message"
+                      >
+                        <XIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {editFormMessage && (
+                    <div
+                      className={`mb-4 px-4 py-3 rounded-lg font-body text-sm flex items-center justify-between ${
+                        editFormMessage.type === "success"
+                          ? "bg-green-500/20 border border-green-500/40 text-green-400"
+                          : "bg-red-500/20 border border-red-500/40 text-red-400"
+                      }`}
+                    >
+                      <span>{editFormMessage.text}</span>
+                      <button
+                        type="button"
+                        onClick={() => setEditFormMessage(null)}
+                        className="text-white/60 hover:text-white ml-2"
+                        aria-label="Dismiss event update message"
+                      >
+                        <XIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Edit Form */}
                   {isEditing ? (
@@ -556,19 +710,6 @@ const loadBingoData = async (eventId: string) => {
                           min="1"
                           className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
                         />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm text-white font-body mb-2">Event Status</label>
-                        <select
-                          value={editForm.currentState}
-                          onChange={(e) => setEditForm({ ...editForm, currentState: e.target.value })}
-                          className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
-                        >
-                          <option value="Upcoming">Upcoming</option>
-                          <option value="ongoing">Ongoing</option>
-                          <option value="completed">Completed</option>
-                        </select>
                       </div>
 
                       <div className="flex gap-3 pt-4">

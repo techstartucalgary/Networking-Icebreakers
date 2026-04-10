@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
-import { User } from "../models/user_model";
-import { hashPassword } from "../utils/password_hash";
+import { User } from "../models/user_model.js";
+import { Participant } from "../models/participant_model.js";
+import { Event } from "../models/event_model.js";
+import { hashPassword } from "../utils/password_hash.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -76,7 +78,14 @@ export const getUserEvents = async (req: Request, res: Response) => {
     }
 
     const user = await User.findById(userId)
-      .populate("eventHistoryIds", "name description joinCode startDate endDate currentState")
+      .populate({
+        path: "eventHistoryIds",
+        select: "name description joinCode startDate endDate currentState participantIds",
+        populate: {
+          path: "participantIds",
+          select: "name userId",
+        },
+      })
       .select("eventHistoryIds");
 
     if (!user) {
@@ -106,13 +115,15 @@ export const updateUser = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, error: "You can only update your own profile" });
     }
 
-    const { name, email, password, bio, profilePhoto, socialLinks } = req.body as {
+    const { name, email, password, bio, profilePhoto, socialLinks, organization, title } = req.body as {
       name?: string;
       email?: string;
       password?: string;
       bio?: string;
       profilePhoto?: string;
       socialLinks?: { linkedin?: string; github?: string; other?: string };
+      organization?: string;
+      title?: string;
     };
 
     const updateFields: Record<string, any> = {};
@@ -153,6 +164,8 @@ export const updateUser = async (req: Request, res: Response) => {
     if (bio !== undefined) updateFields.bio = bio;
     if (profilePhoto !== undefined) updateFields.profilePhoto = profilePhoto;
     if (socialLinks !== undefined) updateFields.socialLinks = socialLinks;
+    if (organization !== undefined) updateFields.organization = organization;
+    if (title !== undefined) updateFields.title = title;
 
     if (Object.keys(updateFields).length === 0) {
       return res.status(400).json({ success: false, error: "No fields to update" });
@@ -176,5 +189,70 @@ export const updateUser = async (req: Request, res: Response) => {
     }
     console.error("PUT /api/users/:userId error:", err);
     res.status(500).json({ success: false, error: "Failed to update user" });
+  }
+};
+
+/**
+ * GET /api/users/:userId/current-event
+ * Get the user's current active event (Upcoming or In Progress)
+ *
+ * @param req.params.userId - User ID (required)
+ * @param req.user.userId - Authenticated user ID (from access token)
+ *
+ * @returns 200 with active event details or hasActiveEvent: false
+ * @returns 403 if requesting another user's current event
+ */
+export const getCurrentEvent = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (req.user?.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: "You can only view your own current event",
+      });
+    }
+
+    const participantRecords = await Participant.find({ userId }).select("eventId").lean();
+    const eventIds = participantRecords.map((p) => p.eventId);
+
+    if (eventIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        hasActiveEvent: false,
+        event: null,
+      });
+    }
+
+    const activeEvent = await Event.findOne({
+      _id: { $in: eventIds },
+      currentState: { $in: ["Upcoming", "In Progress"] },
+    }).sort({ createdAt: -1 });
+
+    if (!activeEvent) {
+      return res.status(200).json({
+        success: true,
+        hasActiveEvent: false,
+        event: null,
+      });
+    }
+
+    const role = activeEvent.createdBy.toString() === userId ? "host" : "participant";
+
+    return res.status(200).json({
+      success: true,
+      hasActiveEvent: true,
+      event: {
+        _id: activeEvent._id,
+        eventName: activeEvent.name,
+        status: activeEvent.currentState,
+        joinCode: activeEvent.joinCode,
+        participantCount: activeEvent.participantIds.length,
+        role,
+      },
+    });
+  } catch (err: any) {
+    console.error("GET /api/users/:userId/current-event error:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 };

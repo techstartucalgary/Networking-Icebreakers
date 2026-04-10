@@ -8,7 +8,7 @@ const vh = (percent: number) => (height * percent) / 100;
 
 export const EventCardStyling = StyleSheet.create({
 	card: {
-		backgroundColor: colors.white,
+		backgroundColor: colors.lightGrey,
 		padding: 15,
 		borderRadius: 8,
 		marginBottom: 10,
@@ -29,17 +29,17 @@ export const EventCardStyling = StyleSheet.create({
 		width: "100%",
 		height: 150,
 		borderRadius: 10,
-		marginBottom: 10,
+		marginBottom: 5,
 	},
 	title: {
 		fontSize: 24,
 		fontWeight: "bold",
-		color: colors.darkBlue,
+		color: colors.darkNavy,
 		fontFamily: fonts.title,
 	},
 	date: {
 		fontSize: 14,
-		color: colors.darkNavy,
+		color: colors.black,
 		fontFamily: fonts.body,
 	},
 	expandedContent: {
@@ -58,7 +58,7 @@ export const EventCardStyling = StyleSheet.create({
 		position: "absolute",
 		top: 10,
 		right: 10,
-		backgroundColor: colors.darkNavy,
+		backgroundColor: colors.darkNavy2,
 		paddingHorizontal: 8,
 		paddingVertical: 4,
 		borderRadius: 6,
@@ -67,7 +67,7 @@ export const EventCardStyling = StyleSheet.create({
 		position: "absolute",
 		top: 10,
 		right: 10,
-		backgroundColor: colors.red,
+		backgroundColor: "#A8C8E8",
 		paddingHorizontal: 8,
 		paddingVertical: 4,
 		borderRadius: 6,
@@ -81,7 +81,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	upcomingButton: {
 		marginTop: 12,
-		backgroundColor: colors.lightBlue,
+		backgroundColor: colors.lightNavy,
 		paddingVertical: 10,
 		borderRadius: 8,
 		alignItems: "center",
@@ -93,7 +93,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	joinButton: {
 		marginTop: 12,
-		backgroundColor: colors.lightBlue,
+		backgroundColor: colors.lightNavy,
 		paddingVertical: 10,
 		borderRadius: 8,
 		alignItems: "center",
@@ -105,7 +105,7 @@ export const EventCardStyling = StyleSheet.create({
 	},
 	viewButton: {
 		marginTop: 12,
-		backgroundColor: colors.lightBlue,
+		backgroundColor: colors.lightNavy,
 		paddingVertical: 10,
 		borderRadius: 8,
 		alignItems: "center",
@@ -115,35 +115,17 @@ export const EventCardStyling = StyleSheet.create({
 		fontWeight: "bold",
 		fontSize: 15,
 	},
-	connectionsTitle: {
+	connectionsButton: {
 		marginTop: 12,
-		fontFamily: fonts.title,
-		fontSize: 14,
-		color: colors.darkNavy,
-		fontWeight: "bold",
-	},
-	item: {
-		fontSize: 12,
-		color: colors.darkNavy,
-	},
-	avatar: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
-		marginRight: 8,
-	},
-	itemWrapper: {
-		flexDirection: "row",
+		backgroundColor: colors.lightNavy2,
+		paddingVertical: 10,
+		borderRadius: 8,
 		alignItems: "center",
-		marginVertical: 2,
 	},
-	noConnectionsText: {
-		fontFamily: fonts.body,
-		fontSize: 14,
-		color: colors.lightGrey2,
-		fontStyle: "italic",
-		marginVertical: 8,
-		textAlign: "center",
+	connectionsButtonText: {
+		color: colors.white,
+		fontWeight: "bold",
+		fontSize: 15,
 	},
 	err: {
 		fontSize: 12,
