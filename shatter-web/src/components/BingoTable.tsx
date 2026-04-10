@@ -18,17 +18,21 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
     const [size, setSize] = useState(bingosize);
     const [bingoGrid, setBingoGrid] = useState(grid);
     const [bingoDescription, setBingoDescription] = useState("");
+    const [fetching, isFetching] = useState(false);
 
     const generateBingoQuestions = async () => {
         try {
             console.log("generating bingo questions");
+            isFetching(true)
             const result = await GenerateQuestions({ context: bingoDescription, n_rows: 3, n_cols: 3 });
             if (result && result.bingoGrid) {
                 console.log("got response: ", result.bingoGrid);
                 setBingoGrid(result.bingoGrid);
+                isFetching(false);
             }
         } catch (error) {
             console.error("Error generating bingo questions: ", error);
+            isFetching(false);
         }
     };
 
@@ -58,9 +62,9 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
                     e.currentTarget.style.backgroundColor = "#4DC4FF";
                     e.currentTarget.style.color = "#ffffff";
                 }}
-                disabled={false}
+                disabled={fetching}
             >
-                Generate Questions
+                {fetching ? "Generating..." : "Generate Questions"}
             </button>
 
             <label className="block text-sm text-white font-body mb-3">
