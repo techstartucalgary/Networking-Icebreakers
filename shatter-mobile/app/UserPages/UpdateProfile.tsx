@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/components/context/AuthContext";
 import { UpdateProfileStyling as styles } from "../../src/styling/UpdateProfile.styles";
+import { SocialLinks } from "@/src/interfaces/User";
 
 const AVATAR_URL_BASE = process.env.EXPO_PUBLIC_AVATAR_URL || "";
 
@@ -41,8 +42,8 @@ export default function UpdateProfile() {
 	const [bio, setBio] = useState(user?.bio || "");
 	const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || "");
 	const [socialLinks, setSocialLinks] = useState<
-		{ label: string; url: string }[]
-	>(user?.socialLinks || []);
+		SocialLinks
+	>(user?.socialLinks || {});
 	const [socialModalVisible, setSocialModalVisible] = useState(false);
 
 	useEffect(() => {

@@ -60,7 +60,7 @@ export default function LoginForm() {
 				_id: userResponse.userId,
 				name: userData.user.name,
 				email,
-				socialLinks: userData.user.socialLinks ?? [],
+				socialLinks: userData.user.socialLinks ?? {},
 				profilePhoto: userData.user.profilePhoto,
 				organization: userData.user.organization,
 				title: userData.user.title,
