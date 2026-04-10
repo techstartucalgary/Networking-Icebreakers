@@ -9,12 +9,13 @@ export interface BingoCell {
 interface BingoTableProps {
     grid: BingoCell[][];
     onChange: (row: number, col: number, value: BingoCell) => void;
+    bingosize: number; // 3 or 5 for now, but will be dynamic in the future
 }
 
 //This should probably use "UseState" for the columns and rows in the future when it becomes resizable. For now, it is just hard coded to 3x3/5x5
 
-export default function BingoTable({ grid, onChange }: BingoTableProps) {
-    const size = grid.length;
+export default function BingoTable({ grid, onChange, bingosize }: BingoTableProps) {
+    const [size, setSize] = useState(bingosize);
     const [bingoGrid, setBingoGrid] = useState(grid);
     const [bingoDescription, setBingoDescription] = useState("");
 

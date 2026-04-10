@@ -850,6 +850,7 @@ const loadBingoData = async (eventId: string) => {
                                     newGrid[row][col] = value;
                                     setBingoGrid(newGrid);
                                 }}
+                                bingosize={GRID_SIZE}
                             />
                             </div>
 

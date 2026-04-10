@@ -315,6 +315,7 @@ function CreateEventPage() {
                                         newGrid[row][col] = value;
                                         setBingoGrid(newGrid);
                                     }}
+                                    bingosize={3}
                                 />
                             </div>
                         )}
