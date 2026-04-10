@@ -92,14 +92,6 @@ export async function UserFetchApi(
 			{ headers: { Authorization: `Bearer ${token}` } },
 		);
 
-		//TODO: Remove profile photo assigning here
-		if (!response.data.user.profilePhoto) {
-			const encodedName = encodeURIComponent(
-				response.data.user.name ?? "Unknown",
-			);
-			response.data.user.profilePhoto = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedName}`;
-		}
-
 		return response.data;
 	} catch (error) {
 		const err = error as AxiosError;

@@ -22,16 +22,18 @@ export default function RootLayout() {
 	const [assetReady, setAssetReady] = useState(false);
 	const redirectTo = useRef<string>("/GetStarted");
 
+	//preload fonts
 	const [fontsLoaded] = useFonts({
 		"Poppins-SemiBold": Poppins_600SemiBold,
 		"WorkSans-Regular": WorkSans_400Regular,
 	});
 
-	// Preload background image
+	//preload background image
 	useEffect(() => {
 		Asset.loadAsync([BG_IMAGE]).finally(() => setAssetReady(true));
 	}, []);
 
+	//check if user is logged in
 	useEffect(() => {
 		const checkAuth = async () => {
 			try {
@@ -46,12 +48,14 @@ export default function RootLayout() {
 		checkAuth();
 	}, []);
 
+	//hold user if not loaded yet
 	useEffect(() => {
 		if (!fontsLoaded || !authReady || !assetReady) return;
 		router.replace(redirectTo.current as any);
 		SplashScreen.hideAsync();
 	}, [fontsLoaded, authReady, assetReady]);
 
+	//user isn't loaded yet
 	if (!fontsLoaded || !authReady || !assetReady) {
 		return (
 			<View
@@ -59,7 +63,7 @@ export default function RootLayout() {
 					flex: 1,
 					justifyContent: "center",
 					alignItems: "center",
-					backgroundColor: "#fff", // optional, can match your splash
+					backgroundColor: "#fff",
 				}}
 			>
 				<FullPageLoader message={"Ready to Shatter?"} />
