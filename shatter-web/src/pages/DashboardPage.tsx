@@ -186,12 +186,21 @@ const loadBingoData = async (eventId: string) => {
     const bingo = await getBingo(eventId);
 
     if (bingo) {
+
+        /*
       const formattedGrid = bingo.grid.map(row =>
         row.map(cell => ({
           question: cell.question || "",
           shortQuestion: cell.shortQuestion || "",
         }))
       );
+      */
+    const formattedGrid = createEmptyGrid(GRID_SIZE).map((row, i) =>
+       row.map((_, j) => ({
+           question: bingo.grid?.[i]?.[j]?.question || "",
+           shortQuestion: bingo.grid?.[i]?.[j]?.shortQuestion || "",
+       }))
+     );
 
       setBingoGrid(formattedGrid);
       setBingoDescription(bingo.description ?? "");

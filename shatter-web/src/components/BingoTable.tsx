@@ -18,21 +18,21 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
     const [size, setSize] = useState(bingosize);
     const [bingoGrid, setBingoGrid] = useState(grid);
     const [bingoDescription, setBingoDescription] = useState("");
-    const [fetching, isFetching] = useState(false);
+    const [fetching, setFetching] = useState(false);
 
     const generateBingoQuestions = async () => {
         try {
             console.log("generating bingo questions");
-            isFetching(true)
+            setFetching(true)
             const result = await GenerateQuestions({ context: bingoDescription, n_rows: 3, n_cols: 3 });
             if (result && result.bingoGrid) {
                 console.log("got response: ", result.bingoGrid);
                 setBingoGrid(result.bingoGrid);
-                isFetching(false);
+                setFetching(false);
             }
         } catch (error) {
             console.error("Error generating bingo questions: ", error);
-            isFetching(false);
+            setFetching(false);
         }
     };
 
