@@ -5,9 +5,10 @@ import { useState, useEffect } from "react";
 import QRCard from "../components/QRCard";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import EventSpotlight from "../components/EventSpotlight";
+import EventSpotlight, { type LeaderboardEntry } from "../components/EventSpotlight";
 import { CalendarIcon, ClipboardCopyIcon, XIcon } from "../components/icons";
 import type { BingoCell } from "../service/BingoGame";
+import { pusher } from "../libs/pusher_websocket";
 
 function normalizeBingoCell(cell: unknown): BingoCell {
   if (cell == null) return { question: "", shortQuestion: "" };
@@ -73,6 +74,7 @@ export default function EventPage() {
     grid: BingoCell[][];
   } | null>(null);
   const [selectedBingoCell, setSelectedBingoCell] = useState<BingoCell | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -108,6 +110,60 @@ export default function EventPage() {
       .catch(() => {
         // Bingo is optional – fail silently
       });
+  }, [eventId]);
+
+  // Fetch initial leaderboard (already sorted by backend).
+  useEffect(() => {
+    if (!eventId) return;
+    const authToken = localStorage.getItem("token");
+    if (!authToken) {
+      setLeaderboard([]);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const fetchLeaderboard = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/events/${eventId}/leaderboard`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+        if (!res.ok) return;
+        const data: unknown = await res.json();
+        if (isCancelled || !Array.isArray(data)) return;
+        setLeaderboard(data as LeaderboardEntry[]);
+      } catch {
+        if (!isCancelled) setLeaderboard([]);
+      }
+    };
+
+    fetchLeaderboard();
+    return () => {
+      isCancelled = true;
+    };
+  }, [eventId]);
+
+  // Realtime leaderboard updates: backend sends full list.
+  useEffect(() => {
+    if (!eventId) return;
+
+    const channelName = `event-${eventId}`;
+    const channel = pusher.subscribe(channelName);
+
+    const handleLeaderboardUpdated = (data: { participants?: LeaderboardEntry[] }) => {
+      if (Array.isArray(data?.participants)) {
+        setLeaderboard(data.participants);
+      }
+    };
+
+    channel.bind("leaderboard-updated", handleLeaderboardUpdated);
+
+    return () => {
+      channel.unbind("leaderboard-updated", handleLeaderboardUpdated);
+      pusher.unsubscribe(channelName);
+    };
   }, [eventId]);
 
   // loading event state
@@ -327,7 +383,11 @@ export default function EventPage() {
 
         {/* Live Activity Spotlight */}
         <div className="mb-12">
-          <EventSpotlight participants={participants} eventId={eventId} />
+          <EventSpotlight
+            participants={participants}
+            eventId={eventId}
+            leaderboardEntries={leaderboard}
+          />
         </div>
 
         {/* Main Content Grid */}
