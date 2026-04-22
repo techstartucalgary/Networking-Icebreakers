@@ -1,6 +1,6 @@
 import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 import { SocialLinksModal } from "@/src/components/general/SocialLinksModal";
-import { userUpdate } from "@/src/services/user.service";
+import { UserLinkedInLink, userUpdate } from "@/src/services/user.service";
 import { colors } from "@/src/styling/constants";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -48,6 +48,21 @@ export default function UpdateProfile() {
 	useEffect(() => {
 		if (!user) router.replace("/UserPages/Login");
 	}, [user]);
+
+	const handleLinkedInLink = async () => {
+		if (!user?._id) {
+			alert("Failed to link LinkedIn");
+			return;
+		}
+
+		try {
+			await UserLinkedInLink(user._id);
+			alert("LinkedIn link initiated");
+		} catch (e) {
+			console.log(e);
+			alert("Failed to link LinkedIn");
+		}
+	};
 
 	const handleSave = async () => {
 		if (!user || !user._id) return;
@@ -232,6 +247,13 @@ export default function UpdateProfile() {
 									</View>
 								</>
 							)}
+
+							<TouchableOpacity
+								style={[styles.addButton, { marginTop: 10 }]}
+								onPress={handleLinkedInLink}
+							>
+								<Text style={styles.buttonText}>Link LinkedIn</Text>
+							</TouchableOpacity>
 
 							{/* Social link modal */}
 							<TouchableOpacity
