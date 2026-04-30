@@ -1,6 +1,9 @@
 import { useState } from "react"; 
 import { GenerateQuestions } from "../service/GenerateQuestions";
+import useTagInput from "../hooks/useTag";
+import { TagField } from "./TagField"; 
 
+// Displays the bingo table and handles input/AI generation
 export interface BingoCell {
     question: string;
     shortQuestion: string;
@@ -19,6 +22,8 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
     const [bingoGrid, setBingoGrid] = useState(grid);
     const [bingoDescription, setBingoDescription] = useState("");
     const [fetching, setFetching] = useState(false);
+    const MAX_TAGS = 5;
+    const { tags, handleAddTag, handleRemoveTag } = useTagInput(MAX_TAGS);
 
     const generateBingoQuestions = async () => {
         try {
@@ -40,14 +45,22 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
 
         <div className="space-y-4">
             <div>
-                <label className="block text-sm text-white font-body mb-2">Bingo Description</label>
+                <label className="block text-sm text-white font-body mb-2">Bingo Prompt</label>
                 <input
                     type="text"
                     value={bingoDescription}
                     onChange={(e) => setBingoDescription(e.target.value)}
-                    placeholder="e.g., Find someone who..."
+                    placeholder="e.g., Software engineering event..."
                     className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
                 />
+                <label className="block text-sm text-white font-body mb-2">Bingo Tags</label>
+                <TagField
+                    tags={tags}
+                    addTag={handleAddTag}
+                    removeTag={handleRemoveTag}
+                    maxTags={MAX_TAGS}
+                />
+
             </div>
 
             <button
