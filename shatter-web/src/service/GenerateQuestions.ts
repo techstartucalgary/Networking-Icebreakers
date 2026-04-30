@@ -1,8 +1,8 @@
 export async function GenerateQuestions(Data: {
-    context: string;
+    event_description: string;
     n_rows: number;
     n_cols: number;
-    selectedCells?: { row: number; col: number }[];
+    tags: string[];
 }) {
     try {
         const apiUrl = `${import.meta.env.VITE_API_URL}/bingo/generateBingo`;

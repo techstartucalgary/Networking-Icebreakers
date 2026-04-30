@@ -13,14 +13,15 @@ interface BingoTableProps {
     bingoGrid: BingoCell[][];
     onChange: (row: number, col: number, value: BingoCell) => void;
     bingosize: number; // 3 or 5 for now, but will be dynamic in the future
-    setBingoGrid: any
+    setBingoGrid: React.Dispatch<React.SetStateAction<BingoCell[][]>>;
+    bingoDescription: string;
 }
 
 //This should probably use "UseState" for the columns and rows in the future when it becomes resizable. For now, it is just hard coded to 3x3/5x5
 
-export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGrid }: BingoTableProps) {
-    const [size, setSize] = useState(bingosize);
-    const [bingoDescription, setBingoDescription] = useState("");
+export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGrid, bingoDescription }: BingoTableProps) {
+    const size = bingosize;
+    //const [bingoDescription, setBingoDescription] = useState("");
     const [fetching, setFetching] = useState(false);
     const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
 
@@ -42,23 +43,6 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
         });
     };
 
-    //API call
-    /*const generateBingoQuestions = async () => {
-        try {
-            console.log("generating bingo questions");
-            setFetching(true)
-            const result = await GenerateQuestions({ context: bingoDescription, n_rows: 3, n_cols: 3 });
-            if (result && result.bingoGrid) {
-                console.log("got response: ", result.bingoGrid);
-                setBingoGrid(result.bingoGrid);
-                setFetching(false);
-            }
-        } catch (error) {
-            console.error("Error generating bingo questions: ", error);
-            setFetching(false);
-        }
-    };*/
-
     const generateBingoQuestions = async () => {
         try {
             setFetching(true);
@@ -70,17 +54,12 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
             });
 
             // Concatenating tags to create prompt
-            const tagString = tags.length > 0
-                ? ` Tags: ${tags.join(", ")}`
-                : "";
-
-            const fullPrompt = `${bingoDescription}${tagString}`;
 
             const result = await GenerateQuestions({
-                context: fullPrompt,
+                event_description: bingoDescription,
                 n_rows: size,
                 n_cols: size,
-                selectedCells: selected.length > 0 ? selected : undefined //if no cells are selected, acts as if we selected all of them
+                tags: tags,
             });
 
             if (result && result.bingoGrid) {
@@ -92,17 +71,20 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                 }
                 // Selected cells
                 else {
-                    const newGrid = bingoGrid.map(row => [...row]);
+                    setBingoGrid(prevGrid => {
+                        const newGrid = prevGrid.map(row => [...row]);
 
-                    selected.forEach(({ row, col }) => {
-                        const newCell = result.bingoGrid?.[row]?.[col]; //optional chaining
+                        selected.forEach(({ row, col }) => {
+                            const newCell = result.bingoGrid?.[row]?.[col];
 
-                        if (newCell && newCell.question && newCell.shortQuestion) {
-                            newGrid[row][col] = newCell;
-                        }
+                            if (newCell && newCell.question && newCell.shortQuestion) {
+                                newGrid[row][col] = newCell;
+                            }
+                        });
+
+                        return newGrid;
                     });
 
-                    setBingoGrid(newGrid);
                     setSelectedCells(new Set());
                 }
             }
@@ -118,6 +100,7 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
 
         <div className="space-y-4">
             <div>
+                {/* //old description input
                 <label className="block text-sm text-white font-body mb-2">Bingo Prompt</label>
                 <input
                     type="text"
@@ -126,6 +109,7 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                     placeholder="e.g., Software engineering event..."
                     className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
                 />
+                */}
                 <label className="block text-sm text-white font-body mb-2">Bingo Tags</label>
                 <TagField
                     tags={tags}
@@ -150,7 +134,8 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                 }}
                 disabled={fetching}
             >
-                {fetching ? "Generating..." : "Generate Questions"}
+                {fetching ? "Generating..." : selectedCells.size === 0 ? "Generate Questions" :
+                    selectedCells.size > 1 ? "Regenerate Selected Questions" : "Regenerate Selected Question"}
             </button>
 
             <label className="block text-sm text-white font-body mb-3">
@@ -163,12 +148,13 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                         <div
                             key={`${rowIndex}-${colIndex}`}
                             onClick={() => toggleCellSelection(rowIndex, colIndex)}
-                            className={`bg-white/5 p-2 rounded-lg border cursor-pointer ${selectedCells.has(`${rowIndex}-${colIndex}`)
+                            className={`bg-white/5 p-4 rounded-lg border cursor-pointer ${selectedCells.has(`${rowIndex}-${colIndex}`)
                                     ? "border-[#4DC4FF] bg-[#4DC4FF]/20"
                                     : "border-white/20"
                                 }`}
                         >
 
+                            <label className="block text-base text-white font-bold mb-2 text-center cursor-pointer">Cell {rowIndex * size + colIndex + 1}</label>
                             {/* LONG QUESTION */}
                             <input
                                 type="text"
@@ -202,6 +188,16 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                                 placeholder="Short version"
                                 className="w-full p-2 rounded bg-white/10 text-white text-xs"
                             />
+
+
+                                <div
+                                    key={`${rowIndex}-${colIndex}`}
+                                    onClick={() => toggleCellSelection(rowIndex, colIndex)}
+                                className={`bg-white/5 mt-2 mx-auto px-3 py-1 rounded-full border border-[#4DC4FF] text-[#4DC4FF] bg-[#4DC4FF]/20 text-sm text-center cursor-pointer w-fit
+                                    ${selectedCells.has(`${rowIndex}-${colIndex}`) ? "visible" : "invisible"}`}
+                                >
+                                    Regenerate
+                                </div>
                         </div>
                     ))
                 )}

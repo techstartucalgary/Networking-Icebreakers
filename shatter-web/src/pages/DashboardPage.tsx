@@ -108,8 +108,9 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
   }, [events, selectedEvent]);
 
   // Load bingo data whenever selected event changes (incl. auto-select)
-  useEffect(() => {
-    if (selectedEvent) {
+
+    useEffect(() => {
+    if (selectedEvent && selectedIcebreaker === "bingo") {
       loadBingoData(selectedEvent._id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -861,6 +862,7 @@ const loadBingoData = async (eventId: string) => {
                                 }}
                                 bingosize={GRID_SIZE}
                                 setBingoGrid={setBingoGrid}
+                                bingoDescription={selectedEvent.description}
                             />
                             </div>
 
