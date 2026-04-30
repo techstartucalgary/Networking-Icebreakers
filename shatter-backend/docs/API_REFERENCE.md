@@ -47,7 +47,7 @@
     - [GET `/api/bingo/getBingo/:eventId`](#get-apibingogetbingoeventid)
     - [PUT `/api/bingo/updateBingo`](#put-apibingoupdatebingo)
     - [POST `/api/bingo/generateBingo`](#post-apibingogeneratebingo)
-    - [POST `/api/bingo/generateBingo/single`](#post-apibingogeneratebingosingle)
+    - [POST `/api/bingo/generate/individual`](#post-apibingogenerateindividual)
   - [Participant Connections (`/api/participantConnections`)](#participant-connections-apiparticipantconnections)
     - [POST `/api/participantConnections/`](#post-apiparticipantconnections)
     - [POST `/api/participantConnections/by-emails`](#post-apiparticipantconnectionsby-emails)
@@ -1393,11 +1393,15 @@ Missing or invalid `n_rows` or `n_cols`:
 }
 ```
 
-### POST `/api/bingo/generateBingo/single`
+### POST `/api/bingo/generate/individual`
 
-Generate one new AI-powered bingo question to replace a target question in an existing bingo grid.
+Generate replacement AI-powered bingo questions for one or more target questions in an existing bingo grid.
 
-The New generated question should be different from the existing questions in the bingo grid while still matching the provided event context.
+The newly generated questions should:
+- Match the provided event context
+- Be different from the existing questions in the bingo grid
+- Be different from each other
+- Include both the full question and a short version
 
 - **Auth:** Not Protected
 
@@ -1405,28 +1409,45 @@ The New generated question should be different from the existing questions in th
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `event_description` | string | Yes | Event context used to generate the new bingo question. Cannot be empty |
+| `event_description` | string | Yes | Event context used to generate the new bingo questions. Cannot be empty |
 | `tags` | string[] | Yes | Types or roles of people attending the event. Can be an empty array |
 | `bingo_grid` | string[][] | Yes | Existing bingo grid containing the full question strings |
-| `bingo_question_target` | string | Yes | The question intended to be regenerated/replaced |
+| `bingo_question_target` | string[] | Yes | List of questions intended to be regenerated/replaced. Must be a non-empty array of non-empty strings with no duplicates |
 
 **Example Request:**
 
 ```json
 {
-  "event_description": "Software engineer networking event where developers meet, discuss tech stacks, exchange ideas, talk about startups, open source, AI, and career opportunities",
-  "tags": ["software engineers", "startup founders", "product managers", "designers"],
+  "event_description": "A networking event for software engineers, product managers, startup founders, designers, and AI researchers focused on building practical AI products.",
+  "tags": [
+    "software engineer",
+    "product manager",
+    "startup founder",
+    "designer",
+    "AI researcher"
+  ],
   "bingo_grid": [
     [
-      "Sketches architecture on a napkin",
-      "Shows a product demo on phone"
+      "Shows a demo on their phone",
+      "Mentions their team is hiring",
+      "Explains a project they built"
     ],
     [
-      "Explains their open-source contribution",
-      "Asks 'What's your current stack?'"
+      "Has stickers all over their laptop",
+      "Recently switched jobs",
+      "Sketches an idea while talking"
+    ],
+    [
+      "Arrives straight from work",
+      "Recognizes someone from LinkedIn",
+      "Talks about scaling an AI product"
     ]
   ],
-  "bingo_question_target": "Explains their open-source contribution"
+  "bingo_question_target": [
+    "Mentions their team is hiring",
+    "Recently switched jobs",
+    "Talks about scaling an AI product"
+  ]
 }
 ```
 
@@ -1435,46 +1456,20 @@ The New generated question should be different from the existing questions in th
 ```json
 {
   "status": true,
-  "question": "Shows a side project they built over the weekend",
-  "shortQuestion": "Weekend side project"
-}
-```
-
-**Validation Errors:**
-
-Missing or invalid `event_description`:
-
-```json
-{
-  "status": false,
-  "msg": "event_description is required and must be a non-empty string"
-}
-```
-
-Missing or invalid `tags`:
-
-```json
-{
-  "status": false,
-  "msg": "tags is required and must be an array of strings"
-}
-```
-
-Missing or invalid `bingo_grid`:
-
-```json
-{
-  "status": false,
-  "msg": "bingo_grid is required and must be a 2D array of strings"
-}
-```
-
-Missing or invalid `bingo_question_target`:
-
-```json
-{
-  "status": false,
-  "msg": "bingo_question_target is required and must be a non-empty string"
+  "new_questions": [
+    {
+      "question": "References a specific AI framework",
+      "shortQuestion": "AI Framework"
+    },
+    {
+      "question": "Wears apparel from their startup",
+      "shortQuestion": "Startup Merch"
+    },
+    {
+      "question": "Shows a code snippet on their phone",
+      "shortQuestion": "Code Snippet"
+    }
+  ]
 }
 ```
 
