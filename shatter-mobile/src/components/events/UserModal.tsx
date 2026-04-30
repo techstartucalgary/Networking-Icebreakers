@@ -1,7 +1,9 @@
 import { User } from "@/src/interfaces/User";
 import { Linking, Modal, Pressable, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { SvgUri } from "react-native-svg";
 import { UserModalStyling as styles } from "../../styling/UserModal.styles";
+import { LinkRow } from "../general/LinkRow";
 
 type UserModalProps = {
 	user: User;
@@ -42,52 +44,16 @@ const UserModal = ({ user, onRequestClose }: UserModalProps) => {
 
 					{user.socialLinks && (
 						<View>
-							{/* LinkedIn */}
 							{user.socialLinks.linkedin && (
-								<Pressable
-									onPress={() => {
-										Linking.openURL(user.socialLinks?.linkedin!).catch((err) =>
-											console.log("Failed to open URL:", err),
-										);
-									}}
-									style={{ marginBottom: 8 }}
-								>
-									<Text style={styles.linkLabel}>LinkedIn</Text>
-									<Text style={styles.link}>{user.socialLinks.linkedin}</Text>
-								</Pressable>
+								<LinkRow label="LinkedIn" url={user.socialLinks.linkedin} />
 							)}
 
-							{/* GitHub */}
 							{user.socialLinks.github && (
-								<Pressable
-									onPress={() => {
-										Linking.openURL(user.socialLinks?.github!).catch((err) =>
-											console.log("Failed to open URL:", err),
-										);
-									}}
-									style={{ marginBottom: 8 }}
-								>
-									<Text style={styles.linkLabel}>GitHub</Text>
-									<Text style={styles.link}>{user.socialLinks.github}</Text>
-								</Pressable>
+								<LinkRow label="GitHub" url={user.socialLinks.github} />
 							)}
 
-							{/* Other links */}
 							{user.socialLinks.other?.map((link, index) => (
-								<Pressable
-									key={index}
-									onPress={() => {
-										if (link.url) {
-											Linking.openURL(link.url).catch((err) =>
-												console.log("Failed to open URL:", err),
-											);
-										}
-									}}
-									style={{ marginBottom: 8 }}
-								>
-									<Text style={styles.linkLabel}>{link.label}</Text>
-									<Text style={styles.link}>{link.url}</Text>
-								</Pressable>
+								<LinkRow key={index} label={link.label} url={link.url} />
 							))}
 						</View>
 					)}
