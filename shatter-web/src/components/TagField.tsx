@@ -45,7 +45,7 @@ export const TagField = ({ tags, addTag, removeTag, maxTags }: iTag) => {
                         ? "Add a tag"
                         : `You can only enter max. of ${maxTags} tags`
                 }
-                className="w-full border border-gray-300 rounded-md px-4 py-2"
+                className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
                 onKeyDown={handleKeyPress}
                 onChange={handleInputChange}
                 value={userInput}
