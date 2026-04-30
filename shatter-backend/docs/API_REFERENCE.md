@@ -1290,7 +1290,7 @@ Update a bingo game.
 
 Generate an AI-powered bingo grid based on a given context.
 
-- **Auth:** Protected
+- **Auth:** Not Protected
 
 **Request Body:**
 
@@ -1345,7 +1345,7 @@ Generate one new AI-powered bingo question to replace a target question in an ex
 
 The New generated question should be different from the existing questions in the bingo grid while still matching the provided event context.
 
-- **Auth:** Protected
+- **Auth:** Not Protected
 
 **Request Body:**
 
