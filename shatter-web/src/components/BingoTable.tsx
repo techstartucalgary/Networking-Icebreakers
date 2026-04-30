@@ -71,16 +71,16 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
             });
 
             // Concatenating tags to create prompt
-            const tagString = tags.length > 0
-                ? ` Tags: ${tags.join(", ")}`
-                : "";
 
-            const fullPrompt = `${bingoDescription}${tagString}`;
+            //const tagString = tags.length > 0 ? ` Tags: ${tags.join(", ")}` : "";
+
+            //const fullPrompt = `${bingoDescription}${tagString}`;
 
             const result = await GenerateQuestions({
-                context: fullPrompt,
+                context: bingoDescription,
                 n_rows: size,
                 n_cols: size,
+                tags: tags,
                 selectedCells: selected.length > 0 ? selected : undefined //if no cells are selected, acts as if we selected all of them
             });
 

@@ -2,6 +2,7 @@ export async function GenerateQuestions(Data: {
     context: string;
     n_rows: number;
     n_cols: number;
+    tags: string[];
     selectedCells?: { row: number; col: number }[];
 }) {
     try {
