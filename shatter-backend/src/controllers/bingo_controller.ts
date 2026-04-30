@@ -342,31 +342,43 @@ function buildShapeExample(rows: number, cols: number): string {
 async function generateBingoGrid(
   n_rows: number,
   n_cols: number,
-  context: string,
+  event_description: string,
+  tags: string[],
 ): Promise<Record<string, string[]>> {
   const schema = buildSchema(n_rows, n_cols);
   const schemaJson = z.toJSONSchema(schema);
   const example = buildShapeExample(n_rows, n_cols);
 
-  const { GoogleGenAI } = await import("@google/genai");
-
   const basePrompt_structure =
     `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
     ${example}
+
     Rules:
     - Keys must be row1, row2, row3, etc.
     - Each row must contain ${n_cols} strings.
-    Return ONLY valid JSON.
-
-    You will be provided with additional context to inspire the content of the bingo squares. Use that context to generate relevant bingo square phrases.
+    - Return ONLY valid JSON.
+    - Each entry should be a full bingo question or bingo square phrase.
+    - Every entry must fit the provided event description.
+    - Use the tags as guidance for the types of professionals, roles, departments, or specializations attending the event.
+    - Tags can be empty. If no tags are provided, rely only on the event description.
+    - Avoid duplicate or near-duplicate entries.
+    - Avoid generic networking items unless they are made specific to the event context.
   `.trim();
-  const userContext = `Additional context for bingo content:\n${context}`;
+
+  const eventContext = `
+Event description:
+${event_description}
+
+Tags / attendee professional types:
+${tags.length > 0 ? tags.join(", ") : "No tags provided"}
+`.trim();
 
   const aiPrompt = new Prompt([
     basePrompt_structure,
-    userContext,
+    eventContext,
     aiShortVersionInstruction,
   ]);
+
   aiPrompt.generatePrompt();
   const prompt = aiPrompt.getPrompt();
 
@@ -486,7 +498,8 @@ function combine2DArrays(
  *
  * Generate an AI bingo grid.
  *
- * @param req.body.context - Context for bingo content (required)
+ * @param req.body.event_description - General event context for bingo content (required)
+ * @param req.body.tags - Types of professionals, roles, departments, or specializations attending the event (required, can be empty)
  * @param req.body.n_rows - Number of grid rows (1-5)
  * @param req.body.n_cols - Number of grid columns (1-5)
  *
@@ -495,12 +508,27 @@ function combine2DArrays(
  */
 export async function generateBingo(req: Request, res: Response) {
   try {
-    const { context, n_rows, n_cols } = req.body;
+    const { event_description, tags, n_rows, n_cols } = req.body;
 
-    if (!context) {
+    if (
+      !event_description ||
+      typeof event_description !== "string" ||
+      event_description.trim().length === 0
+    ) {
       return res.status(400).json({
         status: false,
-        msg: "context is required",
+        msg: "event_description is required and must be a non-empty string",
+      });
+    }
+
+    if (
+      tags === undefined ||
+      !Array.isArray(tags) ||
+      !tags.every((tag: any) => typeof tag === "string")
+    ) {
+      return res.status(400).json({
+        status: false,
+        msg: "tags is required and must be an array of strings",
       });
     }
 
@@ -518,15 +546,26 @@ export async function generateBingo(req: Request, res: Response) {
       });
     }
 
-    const bingo_questions = await generateBingoGrid(n_rows, n_cols, context);
+    const cleanedTags = tags.map((tag: string) => tag.trim()).filter(Boolean);
+
+    const bingo_questions = await generateBingoGrid(
+      n_rows,
+      n_cols,
+      event_description.trim(),
+      cleanedTags,
+    );
+
     const bingo_short_versions = await generateBingoGrid_shortVersions(
       n_rows,
       n_cols,
       JSON.stringify(bingo_questions),
     );
+
     const bingo_grid_questions: string[][] = process_ai_result(bingo_questions);
+
     const bingo_grid_short_versions: string[][] =
       process_ai_result(bingo_short_versions);
+
     const bingo_grid = combine2DArrays(
       bingo_grid_questions,
       bingo_grid_short_versions,
