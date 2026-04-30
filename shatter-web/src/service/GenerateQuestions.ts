@@ -3,7 +3,6 @@ export async function GenerateQuestions(Data: {
     n_rows: number;
     n_cols: number;
     tags: string[];
-    selectedCells?: { row: number; col: number }[];
 }) {
     try {
         const apiUrl = `${import.meta.env.VITE_API_URL}/bingo/generateBingo`;

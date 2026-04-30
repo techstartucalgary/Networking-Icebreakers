@@ -10,7 +10,7 @@ interface iTag {
 export const TagField = ({ tags, addTag, removeTag, maxTags }: iTag) => {
     // track the use input
 
-    const [userInput, setUserInput] = useState<string>(" ");
+    const [userInput, setUserInput] = useState<string>("");
 
     // Handle input onChange
 
@@ -26,10 +26,10 @@ export const TagField = ({ tags, addTag, removeTag, maxTags }: iTag) => {
 
             if (
                 userInput.trim() !== "" &&
-                userInput.length <= 12 &&
+                userInput.trim().length <= 18 &&
                 tags.length < maxTags
             ) {
-                addTag(userInput);
+                addTag(userInput.trim());
                 setUserInput(""); // Clear the input after adding a tag
             }
         }

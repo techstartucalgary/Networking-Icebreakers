@@ -81,7 +81,6 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                 n_rows: size,
                 n_cols: size,
                 tags: tags,
-                selectedCells: selected.length > 0 ? selected : undefined //if no cells are selected, acts as if we selected all of them
             });
 
             if (result && result.bingoGrid) {
