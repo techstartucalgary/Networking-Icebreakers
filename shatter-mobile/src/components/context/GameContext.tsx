@@ -58,14 +58,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
 	//create event hook for each event joined
 	useEffect(() => {
-		console.log("Event ID from pusher connection: ", gameState.eventId);
 		if (!gameState.eventId) return;
 
-		let channel: any;
-		let pusherClient: any;
+		let isActive = true;
+
+		let channel: any = null;
+		let pusherClient: any = null;
 
 		const setup = async () => {
 			pusherClient = await getPusherClient();
+
+			if (!isActive) return;
 
 			channel = await pusherClient.subscribe({
 				channelName: `event-${gameState.eventId}`,
@@ -73,7 +76,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 					if (event.eventName === "event") {
 						try {
 							const data = JSON.parse(event.data);
-							console.log("Received data:", data);
 
 							setGameProgress(data.status);
 							setGameParticipants(data.participantIds);
@@ -88,11 +90,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		setup();
 
 		return () => {
+			isActive = false;
+
 			if (channel) {
 				channel.unbind_all?.();
 			}
 
-			if (pusherClient) {
+			if (pusherClient && gameState.eventId) {
 				pusherClient.unsubscribe({
 					channelName: `event-${gameState.eventId}`,
 				});
@@ -129,8 +133,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		eventParticipants: Participant[],
 		initialData: any = {},
 	): Promise<void> => {
-		console.log("Event changed in initializeGame:", eventId);
-
 		setGameState({
 			gameType,
 			eventId,
