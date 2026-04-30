@@ -1,5 +1,6 @@
 import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 import { SocialLinksModal } from "@/src/components/general/SocialLinksModal";
+import { SocialLinks } from "@/src/interfaces/User";
 import { UserLinkedInLink, userUpdate } from "@/src/services/user.service";
 import { colors } from "@/src/styling/constants";
 import { useRouter } from "expo-router";
@@ -18,7 +19,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/components/context/AuthContext";
 import { UpdateProfileStyling as styles } from "../../src/styling/UpdateProfile.styles";
-import { SocialLinks } from "@/src/interfaces/User";
 
 const AVATAR_URL_BASE = process.env.EXPO_PUBLIC_AVATAR_URL || "";
 
@@ -41,9 +41,9 @@ export default function UpdateProfile() {
 	const [organization, setOrganization] = useState(user?.organization || "");
 	const [bio, setBio] = useState(user?.bio || "");
 	const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || "");
-	const [socialLinks, setSocialLinks] = useState<
-		SocialLinks
-	>(user?.socialLinks || {});
+	const [socialLinks, setSocialLinks] = useState<SocialLinks>(
+		user?.socialLinks || {},
+	);
 	const [socialModalVisible, setSocialModalVisible] = useState(false);
 
 	useEffect(() => {
@@ -249,12 +249,15 @@ export default function UpdateProfile() {
 								</>
 							)}
 
-							<TouchableOpacity
-								style={[styles.addButton, { marginTop: 10 }]}
-								onPress={handleLinkedInLink}
-							>
-								<Text style={styles.buttonText}>Link LinkedIn</Text>
-							</TouchableOpacity>
+							{/* Link LinkedIn to Account if Verified User and LinkedIn Not Set */}
+							{!user?.socialLinks?.linkedin && user?._id && (
+								<TouchableOpacity
+									style={[styles.addButton, { marginTop: 10 }]}
+									onPress={handleLinkedInLink}
+								>
+									<Text style={styles.buttonText}>Link LinkedIn</Text>
+								</TouchableOpacity>
+							)}
 
 							{/* Social link modal */}
 							<TouchableOpacity
