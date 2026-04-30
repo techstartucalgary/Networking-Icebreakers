@@ -1,5 +1,6 @@
 import { useState } from "react"; 
 import { GenerateQuestions } from "../service/GenerateQuestions";
+import { GenerateIndividualQuestions } from "../service/GenerateIndividualQuestions";
 import useTagInput from "../hooks/useTag";
 import { TagField } from "./TagField"; 
 
@@ -47,46 +48,47 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
         try {
             setFetching(true);
 
-            // Converting Set into array of {row, col}
             const selected = Array.from(selectedCells).map(key => {
                 const [row, col] = key.split("-").map(Number);
                 return { row, col };
             });
 
-            // Concatenating tags to create prompt
-
-            const result = await GenerateQuestions({
-                event_description: bingoDescription,
-                n_rows: size,
-                n_cols: size,
-                tags: tags,
-            });
-
-            if (result && result.bingoGrid) {
-                //console.log("got response: ", result.bingoGrid);
-
-                // No selection
-                if (selected.length === 0) {
+            if (selected.length === 0) { 
+                const result = await GenerateQuestions({
+                    event_description: bingoDescription,
+                    n_rows: size,
+                    n_cols: size,
+                    tags: tags,
+                });
+                if (result?.bingoGrid) {
                     setBingoGrid(result.bingoGrid);
                 }
-                // Selected cells
-                else {
-                    setBingoGrid(prevGrid => {
-                        const newGrid = prevGrid.map(row => [...row]);
+            } else {
+                const bingo_grid = bingoGrid.map(row => row.map(cell => cell.question));
+                const bingo_question_target = selected.map(({ row, col }) => bingoGrid[row][col].question);
 
-                        selected.forEach(({ row, col }) => {
-                            const newCell = result.bingoGrid?.[row]?.[col];
+                const results = await GenerateIndividualQuestions({
+                    event_description: bingoDescription,
+                    tags,
+                    bingo_grid,
+                    bingo_question_target,
+                });
 
-                            if (newCell && newCell.question && newCell.shortQuestion) {
-                                newGrid[row][col] = newCell;
-                            }
-                        });
-
-                        return newGrid;
+                setBingoGrid(prevGrid => {
+                    const newGrid = prevGrid.map(row => [...row]);
+                    selected.forEach(({ row, col }, index) => {
+                        const newCell = results[index];
+                        if (newCell?.question && newCell?.shortQuestion) {
+                            newGrid[row][col] = {
+                                question: newCell.question,
+                                shortQuestion: newCell.shortQuestion,
+                            };
+                        }
                     });
+                    return newGrid;
+                });
 
-                    setSelectedCells(new Set());
-                }
+                setSelectedCells(new Set());
             }
 
         } catch (error) {
