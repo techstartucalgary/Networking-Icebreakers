@@ -19,8 +19,8 @@ interface BingoTableProps {
 
 //This should probably use "UseState" for the columns and rows in the future when it becomes resizable. For now, it is just hard coded to 3x3/5x5
 
-export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGrid, bingoDescription }: BingoTableProps) {
-    const [size, setSize] = useState(bingosize);
+export default function BingoTable({ bingoGrid, bingosize, setBingoGrid, bingoDescription }: BingoTableProps) {
+    const size = bingosize;
     //const [bingoDescription, setBingoDescription] = useState("");
     const [fetching, setFetching] = useState(false);
     const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
@@ -92,17 +92,20 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                 }
                 // Selected cells
                 else {
-                    const newGrid = bingoGrid.map(row => [...row]);
+                    setBingoGrid(prevGrid => {
+                        const newGrid = prevGrid.map(row => [...row]);
 
-                    selected.forEach(({ row, col }) => {
-                        const newCell = result.bingoGrid?.[row]?.[col]; //optional chaining
+                        selected.forEach(({ row, col }) => {
+                            const newCell = result.bingoGrid?.[row]?.[col];
 
-                        if (newCell && newCell.question && newCell.shortQuestion) {
-                            newGrid[row][col] = newCell;
-                        }
+                            if (newCell && newCell.question && newCell.shortQuestion) {
+                                newGrid[row][col] = newCell;
+                            }
+                        });
+
+                        return newGrid;
                     });
 
-                    setBingoGrid(newGrid);
                     setSelectedCells(new Set());
                 }
             }
