@@ -17,7 +17,12 @@ interface Props {
 const API_URL = import.meta.env.VITE_API_URL as string;
 
 function sortLeaderboard(entries: LeaderboardEntry[]): LeaderboardEntry[] {
-  return [...entries].sort((a, b) => b.connectionsCount - a.connectionsCount);
+  return [...entries].sort((a, b) => {
+    if (a.completed !== b.completed) return a.completed ? -1 : 1;
+    if (a.linesCompleted !== b.linesCompleted)
+      return b.linesCompleted - a.linesCompleted;
+    return b.connectionsCount - a.connectionsCount;
+  });
 }
 
 export default function Leaderboard({ eventId }: Props) {
