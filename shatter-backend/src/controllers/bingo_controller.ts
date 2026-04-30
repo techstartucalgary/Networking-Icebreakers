@@ -362,12 +362,6 @@ async function generateBingoGrid(
   `.trim();
   const userContext = `Additional context for bingo content:\n${context}`;
 
-  // const promptPath = new URL(
-  //   "../ai/prompts/bingo_short_questions.txt",
-  //   import.meta.url,
-  // );
-  // const aiInstruction = fs.readFileSync(promptPath, "utf-8");
-
   const aiPrompt = new Prompt([
     basePrompt_structure,
     userContext,
@@ -541,6 +535,189 @@ export async function generateBingo(req: Request, res: Response) {
     return res.status(200).json({
       status: true,
       bingo_grid,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      status: false,
+      error: err.message,
+    });
+  }
+}
+
+function buildSingleBingoQuestionSchema() {
+  return z.object({
+    question: z
+      .string()
+      .min(1)
+      .describe("The full generated bingo question"),
+    shortQuestion: z
+      .string()
+      .min(1)
+      .describe("A max 3 word short version of the question"),
+  });
+}
+
+async function generateSingleBingoQuestionWithGemini({
+  event_description,
+  tags,
+  bingo_grid,
+  bingo_question_target,
+}: {
+  event_description: string;
+  tags: string[];
+  bingo_grid: string[][];
+  bingo_question_target: string;
+}): Promise<{ question: string; shortQuestion: string }> {
+  const schema = buildSingleBingoQuestionSchema();
+  const schemaJson = z.toJSONSchema(schema);
+
+  const basePrompt = `
+Generate one new bingo question for an event bingo game.
+
+Return JSON exactly matching this structure:
+{
+  "question": "Full bingo question here",
+  "shortQuestion": "Max 3 words"
+}
+
+Rules:
+- Return ONLY valid JSON.
+- Generate exactly one new question.
+- The new question must fit the event context.
+- The new question must be different from every existing question in the bingo grid.
+- The target question is being regenerated, but the replacement does NOT need to be about the same topic.
+- The replacement should be entirely new while still fitting the event.
+- The shortQuestion must be max 3 words.
+- The shortQuestion should describe what the full question is about.
+- Avoid generic networking questions.
+- Prefer observable, realistic, event-specific bingo moments.
+`.trim();
+
+  const eventContext = `
+Event description:
+${event_description}
+
+Tags / attendee roles:
+${tags.length > 0 ? tags.join(", ") : "No tags provided"}
+
+Existing bingo grid questions:
+${JSON.stringify(bingo_grid, null, 2)}
+
+Target question to replace:
+${bingo_question_target}
+`.trim();
+
+  const aiPrompt = new Prompt([
+    basePrompt,
+    eventContext,
+    aiShortVersionInstruction,
+  ]);
+
+  aiPrompt.generatePrompt();
+  const prompt = aiPrompt.getPrompt();
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseJsonSchema: schemaJson,
+      temperature: 0.8,
+    },
+  });
+
+  if (!response.text) {
+    throw new Error("Gemini returned empty response");
+  }
+
+  const parsed = JSON.parse(response.text);
+  const validated = schema.parse(parsed);
+
+  return validated;
+}
+
+
+/**
+ * POST /api/bingo/generate/single
+ *
+ * Generate one AI bingo question.
+ *
+ * @param req.body.event_description - Context for bingo content (required) - string
+ * @param req.body.tags - Tags for the type/roles of people attending the event - string[] can be empty
+ * @param req.body.bingo_grid - Existing bingo grid of full questions - string[][]
+ * @param req.body.bingo_question_target - Target question to regenerate - string
+ *
+ * @returns 200 with generated bingo question and short version
+ * @returns 400 if validation fails
+ */
+export async function generateSingleBingoQuestion(req: Request, res: Response) {
+  try {
+    const {
+      event_description,
+      tags,
+      bingo_grid,
+      bingo_question_target,
+    } = req.body;
+
+    if (
+      !event_description ||
+      typeof event_description !== "string" ||
+      event_description.trim().length === 0
+    ) {
+      return res.status(400).json({
+        status: false,
+        msg: "event_description is required and must be a non-empty string",
+      });
+    }
+
+    if (
+      tags === undefined ||
+      !Array.isArray(tags) ||
+      !tags.every((tag: any) => typeof tag === "string")
+    ) {
+      return res.status(400).json({
+        status: false,
+        msg: "tags is required and must be an array of strings",
+      });
+    }
+
+    if (
+      !Array.isArray(bingo_grid) ||
+      bingo_grid.length === 0 ||
+      !bingo_grid.every(
+        (row: any) =>
+          Array.isArray(row) &&
+          row.every((cell: any) => typeof cell === "string"),
+      )
+    ) {
+      return res.status(400).json({
+        status: false,
+        msg: "bingo_grid is required and must be a 2D array of strings",
+      });
+    }
+
+    if (
+      !bingo_question_target ||
+      typeof bingo_question_target !== "string" ||
+      bingo_question_target.trim().length === 0
+    ) {
+      return res.status(400).json({
+        status: false,
+        msg: "bingo_question_target is required and must be a non-empty string",
+      });
+    }
+
+    const generatedQuestion = await generateSingleBingoQuestionWithGemini({
+      event_description: event_description.trim(),
+      tags,
+      bingo_grid,
+      bingo_question_target: bingo_question_target.trim(),
+    });
+
+    return res.status(200).json({
+      status: true,
+      question: generatedQuestion.question,
+      shortQuestion: generatedQuestion.shortQuestion,
     });
   } catch (err: any) {
     return res.status(500).json({
