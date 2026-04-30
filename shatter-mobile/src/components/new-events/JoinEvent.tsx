@@ -46,7 +46,7 @@ export function useJoinEvent() {
 				//guest joining event
 				if (!user._id) {
 					//first time joining event
-					const guestInfo = await JoinEventIdGuest(event._id, user.name);
+					const guestInfo = await JoinEventIdGuest(event._id, user.name, user.socialLinks  ?? {}, user.organization ?? "");
 					user._id = guestInfo.userId;
 
 					setCurrentParticipantId(guestInfo.participant._id);
@@ -71,7 +71,7 @@ export function useJoinEvent() {
 			if (!event.gameType) {
 				event.gameType = GameType.NAME_BINGO;
 			}
-			initializeGame(event.gameType, event._id, event.currentState);
+			initializeGame(event.gameType, event._id, event.currentState, event.participantIds);
 		} catch (err: any) {
 			console.log(err);
 			throw new Error(err);

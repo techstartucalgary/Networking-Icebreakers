@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BingoTable from "../components/BingoTable";
 import { CreateEvent } from "../service/CreateEvent";
-import { createBingoGame } from "../service/BingoGame"; // ✅ NEW
 import { useNavigate } from "react-router-dom";
-
+import type { BingoCell } from "../types/BingoCell";
 function CreateEventPage() {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -16,10 +15,15 @@ function CreateEventPage() {
     );
 
     // ✅ NEW: Name Bingo selection
-    const createEmptyGrid = (size: number) => Array.from({ length: size }, () => Array(size).fill(""));
-    const [nameBingoSelected, setNameBingoSelected] = useState(false);
-    const [bingoGrid, setBingoGrid] = useState<string[][]>(createEmptyGrid(3));
-    const [bingoDescription, setBingoDescription] = useState("");
+    const createEmptyGrid = (size: number): BingoCell[][] =>
+        Array.from({ length: size }, () =>
+            Array.from({ length: size }, () => ({
+                question: "",
+                shortQuestion: "",
+            }))
+        );    const [nameBingoSelected, setNameBingoSelected] = useState(false);
+    const [bingoGrid, setBingoGrid] = useState<BingoCell[][]>(createEmptyGrid(3));
+    //const [bingoDescription, setBingoDescription] = useState("");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -36,17 +40,21 @@ function CreateEventPage() {
                 throw new Error("Please fill in all required fields.");
             }
 
+            
+
             // ✅ Validate bingo (if selected)
             if (nameBingoSelected) {
                 const hasEmptyCells = bingoGrid.some(row =>
-                    row.some(cell => !cell.trim())
+                    row.some(cell => !cell.question.trim() || !cell.shortQuestion.trim())
                 );
 
                 if (hasEmptyCells) {
                     throw new Error("Please fill in all bingo grid cells.");
                 }
 
-                if (!bingoDescription.trim()) {
+                console.log(description)
+
+                if (!description.trim()) {
                     throw new Error("Please add a bingo description.");
                 }
             }
@@ -73,7 +81,7 @@ function CreateEventPage() {
                     },
                     body: JSON.stringify({
                         _eventId: eventId,
-                        description: bingoDescription,
+                        description: description,
                         grid: bingoGrid,
                     }),
                 });
@@ -115,10 +123,12 @@ function CreateEventPage() {
         maxParticipant > 0;
 
     const token = localStorage.getItem("token");
-    if (!token) {
-        navigate("/login");
-        return;
-    }
+    useEffect(() => {
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+    }, [token, navigate])
     return (
         <div
             className="min-h-screen text-white"
@@ -290,6 +300,7 @@ function CreateEventPage() {
                 {/*Icebreaker Properties*/}
                                         {nameBingoSelected && (
                             <div className="mt-6 space-y-4">
+                            {/*
                                 <div>
                                     <label className="text-sm text-white mb-2 block">
                                         Bingo Description
@@ -300,14 +311,17 @@ function CreateEventPage() {
                                         className="w-full p-3 rounded bg-white border text-black"
                                     />
                                 </div>
-
+                            */}
                                 <BingoTable
-                                    grid={bingoGrid}
-                                    onChange={(row, col, value) => {
-                                        const newGrid = bingoGrid.map(r => [...r]); // ✅ deep copy
-                                        newGrid[row][col] = value;
-                                        setBingoGrid(newGrid);
-                                    }}
+                            bingoGrid={bingoGrid}
+                            onChange={(row, col, value) => {
+                                const newGrid = bingoGrid.map(r => [...r]);
+                                newGrid[row][col] = value;
+                                setBingoGrid(newGrid);
+                            }}
+                            setBingoGrid={setBingoGrid}
+                            bingosize={3}
+                            bingoDescription={description}
                                 />
                             </div>
                         )}

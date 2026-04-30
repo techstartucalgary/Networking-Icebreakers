@@ -1,7 +1,13 @@
-export type SocialLink = {
-	label: string;
-	url: string;
+export type SocialLinks = {
+  linkedin?: string;
+  github?: string;
+  other?: OtherLink[];
 };
+
+export type OtherLink = {
+	label: string,
+	url: string,
+}
 
 export type Connection = {
 	_id: string;
@@ -19,6 +25,8 @@ export type User = {
 	password?: string;
 	bio?: string;
 	profilePhoto?: string;
-	socialLinks: SocialLink[];
+	socialLinks?: SocialLinks;
+	title?: string;
+	organization?: string;
 	isGuest: boolean;
 };

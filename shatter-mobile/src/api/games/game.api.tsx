@@ -39,6 +39,18 @@ export async function GetParticipantsByEventIdApi(
 	}
 }
 
+export async function UpdateLeaderboardScoreApi(
+	eventId: string,
+	body: { linesCompleted?: number; completed?: boolean },
+	token: string,
+): Promise<void> {
+	await axios.put(
+		`${API_BASE_URL_EVENTS}/${eventId}/leaderboard/score`,
+		body,
+		{ headers: { Authorization: `Bearer ${token}` } },
+	);
+}
+
 export async function GetBingoCategoriesApi(
 	eventId: string,
 ): Promise<BingoCategoriesResponse> {

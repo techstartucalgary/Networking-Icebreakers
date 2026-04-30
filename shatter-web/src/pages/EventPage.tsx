@@ -5,8 +5,48 @@ import { useState, useEffect } from "react";
 import QRCard from "../components/QRCard";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import EventSpotlight from "../components/EventSpotlight";
-import { CalendarIcon, ClipboardCopyIcon } from "../components/icons";
+import EventSpotlight, { type LeaderboardEntry } from "../components/EventSpotlight";
+import { CalendarIcon, ClipboardCopyIcon, XIcon } from "../components/icons";
+import type { BingoCell } from "../service/BingoGame";
+import { pusher } from "../libs/pusher_websocket";
+import Leaderboard from "../components/Leaderboard";
+
+function normalizeBingoCell(cell: unknown): BingoCell {
+  if (cell == null) return { question: "", shortQuestion: "" };
+  if (typeof cell === "string") {
+    const s = cell.trim();
+    return { question: s, shortQuestion: s };
+  }
+  if (typeof cell === "object") {
+    const o = cell as Record<string, unknown>;
+    const q = typeof o.question === "string" ? o.question.trim() : "";
+    const sq = typeof o.shortQuestion === "string" ? o.shortQuestion.trim() : "";
+    if (q && sq) return { question: q, shortQuestion: sq };
+    if (q) return { question: q, shortQuestion: q };
+    if (sq) return { question: sq, shortQuestion: sq };
+  }
+  const s = String(cell).trim();
+  return { question: s, shortQuestion: s };
+}
+
+function normalizeBingoGrid(grid: unknown): BingoCell[][] {
+  if (!Array.isArray(grid)) return [];
+
+  return grid.map((row) => {
+    if (Array.isArray(row)) {
+      return row.map((c) => normalizeBingoCell(c));
+    }
+
+    if (row && typeof row === "object") {
+      return Object.keys(row as Record<string, unknown>)
+        .filter((key) => /^\d+$/.test(key))
+        .sort((a, b) => Number(a) - Number(b))
+        .map((key) => normalizeBingoCell((row as Record<string, unknown>)[key]));
+    }
+
+    return [];
+  });
+}
 
 export default function EventPage() {
   const { joinCode } = useParams<{ joinCode: string }>();
@@ -27,13 +67,23 @@ export default function EventPage() {
     initialParticipants
   );
 
-    // Bingo state
+  // Bingo state
   const [bingoGame, setBingoGame] = useState<{
     _id: string;
     _eventId: string;
     description: string;
-    grid: string[][];
+    grid: BingoCell[][];
   } | null>(null);
+  const [selectedBingoCell, setSelectedBingoCell] = useState<BingoCell | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedBingoCell(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Fetch bingo game for this event
   useEffect(() => {
@@ -42,23 +92,79 @@ export default function EventPage() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    fetch(
-      `https://techstart-shatter-backend.vercel.app/api/bingo/getBingo/${eventId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    const base = import.meta.env.VITE_API_URL ?? "https://techstart-shatter-backend.vercel.app/api";
+
+    fetch(`${base}/bingo/getBingo/${eventId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.bingo) {
-          setBingoGame(data.bingo);
+          setBingoGame({
+            ...data.bingo,
+            grid: normalizeBingoGrid(data.bingo.grid),
+          });
         }
       })
       .catch(() => {
         // Bingo is optional – fail silently
       });
+  }, [eventId]);
+
+  // Fetch initial leaderboard (already sorted by backend).
+  useEffect(() => {
+    if (!eventId) return;
+    const authToken = localStorage.getItem("token");
+    if (!authToken) {
+      setLeaderboard([]);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const fetchLeaderboard = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/events/${eventId}/leaderboard`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+        if (!res.ok) return;
+        const data: unknown = await res.json();
+        if (isCancelled || !Array.isArray(data)) return;
+        setLeaderboard(data as LeaderboardEntry[]);
+      } catch {
+        if (!isCancelled) setLeaderboard([]);
+      }
+    };
+
+    fetchLeaderboard();
+    return () => {
+      isCancelled = true;
+    };
+  }, [eventId]);
+
+  // Realtime leaderboard updates: backend sends full list.
+  useEffect(() => {
+    if (!eventId) return;
+
+    const channelName = `event-${eventId}`;
+    const channel = pusher.subscribe(channelName);
+
+    const handleLeaderboardUpdated = (data: { participants?: LeaderboardEntry[] }) => {
+      if (Array.isArray(data?.participants)) {
+        setLeaderboard(data.participants);
+      }
+    };
+
+    channel.bind("leaderboard-updated", handleLeaderboardUpdated);
+
+    return () => {
+      channel.unbind("leaderboard-updated", handleLeaderboardUpdated);
+      pusher.unsubscribe(channelName);
+    };
   }, [eventId]);
 
   // loading event state
@@ -278,12 +384,7 @@ export default function EventPage() {
 
         {/* Live Activity Spotlight */}
         <div className="mb-12">
-          <EventSpotlight
-            participants={participants}
-            eventId={eventId}
-            useDemoConnections={false}
-            useDemoActivity={true}
-          />
+          <Leaderboard  eventId={eventId} />
         </div>
 
         {/* Main Content Grid */}
@@ -451,7 +552,7 @@ export default function EventPage() {
             </h2>
 
             <p className="text-white/70 font-body text-sm mb-6">
-              Bingo game associated with this event.
+              Tap a square to see the full prompt. Squares show a short label.
             </p>
 
             <div
@@ -462,18 +563,67 @@ export default function EventPage() {
                 aspectRatio: "1",
               }}
             >
-              {bingoGame.grid.flat().map((cell, index) => (
-                <div
-                  key={index}
-                  className="aspect-square flex items-center justify-center
-                             border border-white/20 rounded-lg
-                             font-body font-semibold text-sm text-white p-2"
-                  style={{ backgroundColor: "rgba(27, 37, 58, 0.6)" }}
-                >
-                  <span className="truncate text-center">{cell}</span>
-                </div>
-              ))}
+              {bingoGame.grid.flat().map((cell, index) => {
+                const preview =
+                  (cell.shortQuestion && cell.shortQuestion.trim()) ||
+                  (cell.question && cell.question.trim()) ||
+                  "—";
+                const hasFull =
+                  !!(cell.question && cell.question.trim()) &&
+                  cell.question.trim() !== preview.trim();
+                return (
+                  <button
+                    type="button"
+                    key={index}
+                    onClick={() => setSelectedBingoCell(cell)}
+                    className="aspect-square flex items-center justify-center
+                               border border-white/20 rounded-lg
+                               font-body font-semibold text-sm text-white p-2
+                               cursor-pointer hover:border-[#4DC4FF]/60 hover:bg-white/5
+                               transition-colors text-center"
+                    style={{ backgroundColor: "rgba(27, 37, 58, 0.6)" }}
+                    title={hasFull ? "Show full question" : undefined}
+                  >
+                    <span className="line-clamp-3 break-words hyphens-auto">{preview}</span>
+                  </button>
+                );
+              })}
             </div>
+
+            {selectedBingoCell && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="bingo-question-title"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setSelectedBingoCell(null);
+                }}
+              >
+                <div
+                  className="relative max-w-lg w-full rounded-2xl border border-white/20 p-6 shadow-xl"
+                  style={{ backgroundColor: "rgba(27, 37, 58, 0.95)" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBingoCell(null)}
+                    className="absolute top-4 right-4 text-white/60 hover:text-white p-1 rounded-lg hover:bg-white/10"
+                    aria-label="Close"
+                  >
+                    <XIcon className="w-5 h-5" />
+                  </button>
+                  <h3 id="bingo-question-title" className="text-lg font-heading font-semibold text-white mb-3 pr-10">
+                    Full question
+                  </h3>
+                  <p className="text-white/90 font-body leading-relaxed whitespace-pre-wrap">
+                    {(selectedBingoCell.question && selectedBingoCell.question.trim()) ||
+                      selectedBingoCell.shortQuestion ||
+                      "No details for this square."}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

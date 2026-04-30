@@ -37,6 +37,20 @@ export const GuestStyling = StyleSheet.create({
 		letterSpacing: 1,
 		textAlign: "center",
 	},
+	confirmTitle: {
+		fontSize: vw(5),
+		fontWeight: "700",
+		letterSpacing: 0.5,
+		color: colors.darkNavy,
+		textAlign: "center",
+	},
+	confirmSubtitle: {
+		fontSize: vw(5),
+		fontWeight: "500",
+		color: colors.darkGrey,
+		textAlign: "center",
+		margin: 10,
+	},
 	container: {
 		position: "absolute",
 		top: vh(15),
@@ -45,10 +59,10 @@ export const GuestStyling = StyleSheet.create({
 		backgroundColor: colors.lightGrey,
 		borderTopLeftRadius: 8,
 		borderTopRightRadius: 8,
-		padding: 20,
+		padding: 30,
 	},
 	label: {
-		fontFamily: fonts.body,
+		fontFamily: fonts.title,
 		fontWeight: "600",
 		marginTop: 12,
 		marginBottom: 4,
@@ -82,14 +96,20 @@ export const GuestStyling = StyleSheet.create({
 	},
 	primaryButton: {
 		backgroundColor: colors.darkNavy,
-		padding: 14,
-		borderRadius: 8,
+		padding: 12,
+		borderRadius: 50,
 		alignItems: "center",
 		marginTop: 24,
 	},
 	secondaryButton: {
 		backgroundColor: colors.lightGrey2,
-		padding: 14,
+		padding: 12,
+		borderRadius: 50,
+		alignItems: "center",
+		marginTop: 10,
+	},
+	secondaryButtonNoBack: {
+		padding: 12,
 		borderRadius: 8,
 		alignItems: "center",
 		marginTop: 10,
@@ -97,7 +117,13 @@ export const GuestStyling = StyleSheet.create({
 	buttonText: {
 		color: colors.white,
 		fontWeight: "700",
-		fontFamily: fonts.body,
+		fontFamily: fonts.title,
 		fontSize: 16,
+	},
+	buttonTextWarning: {
+		color: colors.lightGrey2,
+		fontWeight: "900",
+		fontFamily: fonts.body,
+		fontSize: vw(4),
 	},
 });

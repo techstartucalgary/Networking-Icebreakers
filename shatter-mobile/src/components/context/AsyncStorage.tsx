@@ -1,4 +1,4 @@
-import { SocialLink } from "@/src/interfaces/User";
+import { SocialLinks } from "@/src/interfaces/User";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const STORAGE_KEY = "AUTH_DATA";
@@ -7,7 +7,7 @@ export type AuthDataStorage = {
 	userId: string | null;
 	accessToken: string;
 	isGuest: boolean;
-	guestInfo: { name: string; socialLinks: SocialLink[] };
+	guestInfo: { name: string; socialLinks?: SocialLinks, organization?: string };
 };
 
 export const getStoredAuth = async (): Promise<AuthDataStorage> => {
@@ -18,7 +18,7 @@ export const getStoredAuth = async (): Promise<AuthDataStorage> => {
 				userId: "",
 				accessToken: "",
 				isGuest: false,
-				guestInfo: { name: "", socialLinks: [] },
+				guestInfo: { name: "", socialLinks: {} },
 			};
 };
 

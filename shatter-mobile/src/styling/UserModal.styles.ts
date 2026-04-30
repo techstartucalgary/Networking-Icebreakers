@@ -45,27 +45,19 @@ export const UserModalStyling = StyleSheet.create({
 		color: colors.darkNavy,
 		fontWeight: "bold",
 	},
+	userOrganization: {
+		fontFamily: fonts.title,
+		fontSize: 16,
+		color: colors.darkNavy,
+		marginBottom: 12,
+		lineHeight: 22,
+	},
 	userBio: {
 		fontFamily: fonts.body,
 		fontSize: 15,
 		color: colors.darkNavy,
 		marginBottom: 12,
 		lineHeight: 22,
-	},
-
-	linkLabel: {
-		fontFamily: fonts.title,
-		fontSize: 14,
-		color: colors.darkNavy,
-		fontWeight: "bold",
-		marginTop: 6,
-	},
-
-	link: {
-		fontFamily: fonts.body,
-		fontSize: 14,
-		color: colors.darkBlue,
-		marginBottom: 10,
 	},
 
 	leaveUserButton: {

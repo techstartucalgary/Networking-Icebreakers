@@ -1,51 +1,35 @@
+import { useGame } from "@/src/components/context/GameContext";
 import { EventState } from "@/src/interfaces/Event";
-import { getEventById } from "@/src/services/event.service";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EventLobbyStyling as styles } from "../../src/styling/EventLobby.styles";
 
-const POLL_INTERVAL = 3000; //3 seconds
-
 export default function EventLobby() {
 	const { eventId } = useLocalSearchParams<{ eventId: string }>(); //avoid race conditions with initializeGame
-	const [status, setStatus] = useState(EventState.UPCOMING);
+	const { gameState } = useGame();
 
-	//TODO: Websocket for game loading
 	useEffect(() => {
-		if (!eventId) return; //don't start polling until eventId is set
+		if (!eventId) return;
+		if (gameState.progress !== EventState.IN_PROGRESS) return;
 
-		const interval = setInterval(async () => {
-			const res = await getEventById(eventId);
-			const event = res?.event;
-			if (!event) return;
+		console.log(gameState);
 
-			setStatus(event.currentState);
-
-			if (event.currentState === EventState.IN_PROGRESS) {
-				clearInterval(interval);
-
-				router.replace({
-					pathname: "/GamePages/Game",
-				});
-			}
-		}, POLL_INTERVAL);
-
-		return () => clearInterval(interval);
-	}, [eventId]);
+		router.replace({
+			pathname: "/GamePages/Game",
+			params: { eventId },
+		});
+	}, [gameState.progress, eventId]);
 
 	return (
 		<SafeAreaView style={styles.safe}>
 			<View style={styles.container}>
 				<Text style={styles.title}>Successfully Joined!</Text>
-
-				{status === EventState.UPCOMING && (
-					<>
-						<Text style={styles.text}>Waiting for the event to start...</Text>
-						<ActivityIndicator size="large" style={styles.indicator} />
-					</>
-				)}
+				<>
+					<Text style={styles.text}>Waiting for the event to start...</Text>
+					<ActivityIndicator size="large" style={styles.indicator} />
+				</>
 
 				{/* Leave Game Button */}
 				<TouchableOpacity

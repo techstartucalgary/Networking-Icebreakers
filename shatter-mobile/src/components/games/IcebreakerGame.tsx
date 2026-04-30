@@ -10,42 +10,22 @@ import { useAuth } from "../context/AuthContext";
 import { useGame } from "../context/GameContext";
 import NameBingo from "./NameBingo";
 
-const POLL_INTERVAL = 4000; //4 seconds
-
 type IcebreakerGameProps = {
 	event: EventIB;
 };
 
 const IcebreakerGame = ({ event }: IcebreakerGameProps) => {
 	const { user } = useAuth();
-	const { setGameProgress } = useGame();
 	const { gameState, currentParticipantId } = useGame();
 	const router = useRouter();
 
-	//TODO: Websocket for event progress
 	useEffect(() => {
 		if (!event._id) return;
+		if (gameState.progress !== EventState.COMPLETED) return;
+		if (!gameState.viewingGame) return; //if user is looking at game from Events page
 
-		const interval = setInterval(async () => {
-			try {
-				const res = await getEventById(event._id);
-
-				if (res.event.currentState) {
-					setGameProgress(res.event.currentState);
-				}
-
-				//when game is finised
-				if (res?.event.currentState === EventState.COMPLETED) {
-					clearInterval(interval);
-					router.push("/EventPages/EventComplete");
-				}
-			} catch (err) {
-				console.log("Polling error:", err);
-			}
-		}, POLL_INTERVAL);
-
-		return () => clearInterval(interval);
-	}, [event._id]);
+		router.push("/EventPages/EventComplete");
+	}, [gameState.progress, event._id]);
 
 	//Pick game-specific component
 	const renderGame = () => {

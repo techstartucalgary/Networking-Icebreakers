@@ -92,14 +92,6 @@ export async function UserFetchApi(
 			{ headers: { Authorization: `Bearer ${token}` } },
 		);
 
-		//TODO: Remove profile photo assigning here
-		if (!response.data.user.profilePhoto) {
-			const encodedName = encodeURIComponent(
-				response.data.user.name ?? "Unknown",
-			);
-			response.data.user.profilePhoto = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedName}`;
-		}
-
 		return response.data;
 	} catch (error) {
 		const err = error as AxiosError;
@@ -290,6 +282,8 @@ export async function UserUpdateApi(
 			bio: updates.bio,
 			profilePhoto: updates.profilePhoto,
 			socialLinks: updates.socialLinks,
+			organization: updates.organization,
+			title: updates.title,
 		};
 
 		const response: AxiosResponse<UserInfoUpdateResponse> = await axios.put(
@@ -344,6 +338,39 @@ export async function ExchangeLinkedInCodeApi(
 					throw new Error("Auth code is required.");
 				case 401:
 					throw new Error("Invalid or expired auth code.");
+				case 500:
+					throw new Error("Server error. Please try again later.");
+				default:
+					throw new Error("Authentication failed.");
+			}
+		}
+
+		throw new Error("Network error. Check your connection.");
+	}
+}
+
+export async function UserLinkedInLinkApi(
+	userId: string,
+): Promise<UserLoginResponse> {
+	try {
+		const response: AxiosResponse<UserLoginResponse> = await axios.post(
+			`${API_BASE_URL_AUTH}/linkedin/link`,
+			{ userId },
+		);
+		return response.data;
+	} catch (error) {
+		const err = error as AxiosError;
+
+		if (err.response) {
+			switch (err.response.status) {
+				case 400:
+					throw new Error("Authentication required.");
+				case 401:
+					throw new Error("User not found. Please try again later.");
+				case 403:
+					throw new Error("This account is already a LinkedIn account.");
+				case 409: 
+					throw new Error("This account is already linked to LinkedIn!");
 				case 500:
 					throw new Error("Server error. Please try again later.");
 				default:

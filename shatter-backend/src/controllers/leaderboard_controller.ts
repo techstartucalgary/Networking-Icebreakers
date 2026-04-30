@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { Participant } from "../models/participant_model.js";
 import { ParticipantConnection } from "../models/participant_connection_model.js";
-import { pusher } from "../utils/pusher_websocket.js";
+import { emitLeaderboardUpdate } from "../utils/leaderboard_pusher.js";
 
 /**
  * GET /api/events/:eventId/leaderboard
@@ -134,8 +134,10 @@ export async function updateScore(req: Request, res: Response) {
       });
     }
 
-    // Compute connections count for the Pusher payload
     const participantId = (participant._id as Types.ObjectId).toString();
+
+    await emitLeaderboardUpdate(eventId, participant._id as Types.ObjectId);
+
     const connections = await ParticipantConnection.find({
       _eventId: new Types.ObjectId(eventId),
       $or: [
@@ -154,15 +156,6 @@ export async function updateScore(req: Request, res: Response) {
           : conn.primaryParticipantId.toString();
       uniquePartners.add(otherId);
     }
-
-    // Trigger live update
-    await pusher.trigger(`event-${eventId}`, "leaderboard-updated", {
-      participantId,
-      name: participant.name,
-      linesCompleted: participant.linesCompleted,
-      connectionsCount: uniquePartners.size,
-      completed: participant.completed,
-    });
 
     return res.status(200).json({
       participantId,
