@@ -22,10 +22,28 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
     const [bingoGrid, setBingoGrid] = useState(grid);
     const [bingoDescription, setBingoDescription] = useState("");
     const [fetching, setFetching] = useState(false);
+    const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+
     const MAX_TAGS = 5;
     const { tags, handleAddTag, handleRemoveTag } = useTagInput(MAX_TAGS);
 
-    const generateBingoQuestions = async () => {
+
+    //Handling cell selection
+    const toggleCellSelection = (row: number, col: number) => {
+        const key = `${row}-${col}`;
+        setSelectedCells(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(key)) {
+                newSet.delete(key);
+            } else {
+                newSet.add(key);
+            }
+            return newSet;
+        });
+    };
+
+    //API call
+    /*const generateBingoQuestions = async () => {
         try {
             console.log("generating bingo questions");
             setFetching(true)
@@ -37,6 +55,57 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
             }
         } catch (error) {
             console.error("Error generating bingo questions: ", error);
+            setFetching(false);
+        }
+    };*/
+
+    const generateBingoQuestions = async () => {
+        try {
+            setFetching(true);
+
+            // Converting Set into array of {row, col}
+            const selected = Array.from(selectedCells).map(key => {
+                const [row, col] = key.split("-").map(Number);
+                return { row, col };
+            });
+
+            // Concatenating tags to create prompt
+            const tagString = tags.length > 0
+                ? ` Tags: ${tags.join(", ")}`
+                : "";
+
+            const fullPrompt = `${bingoDescription}${tagString}`;
+
+            const result = await GenerateQuestions({
+                context: fullPrompt,
+                n_rows: size,
+                n_cols: size,
+                selectedCells: selected.length > 0 ? selected : undefined //if no cells are selected, acts as if we selected all of them
+            });
+
+            if (result && result.bingoGrid) {
+                //console.log("got response: ", result.bingoGrid);
+
+                // No selection
+                if (selected.length === 0) {
+                    setBingoGrid(result.bingoGrid);
+                }
+                // Selected cells
+                else {
+                    const newGrid = bingoGrid.map(row => [...row]);
+
+                    selected.forEach(({ row, col }) => {
+                        newGrid[row][col] = result.bingoGrid[row][col];
+                    });
+
+                    setBingoGrid(newGrid);
+                    setSelectedCells(new Set());
+                }
+            }
+
+        } catch (error) {
+            console.error("Error generating bingo questions: ", error);
+        } finally {
             setFetching(false);
         }
     };
@@ -87,12 +156,20 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
             <div className={`grid gap-3 ${size === 3 ? "grid-cols-3" : "grid-cols-5"}`}>
                 {bingoGrid.map((row, rowIndex) =>
                     row.map((cell, colIndex) => (
-                        <div key={`${rowIndex}-${colIndex}`} className="bg-white/5 p-2 rounded-lg border border-white/20">
+                        <div
+                            key={`${rowIndex}-${colIndex}`}
+                            onClick={() => toggleCellSelection(rowIndex, colIndex)}
+                            className={`bg-white/5 p-2 rounded-lg border cursor-pointer ${selectedCells.has(`${rowIndex}-${colIndex}`)
+                                    ? "border-[#4DC4FF] bg-[#4DC4FF]/20"
+                                    : "border-white/20"
+                                }`}
+                        >
 
                             {/* LONG QUESTION */}
                             <input
                                 type="text"
                                 value={cell.question}
+                                onClick={(e) => e.stopPropagation()}
                                 onChange={(e) =>
                                     onChange(rowIndex, colIndex, {
                                         ...cell,
@@ -107,6 +184,7 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
                             <input
                                 type="text"
                                 value={cell.shortQuestion}
+                                onClick={(e) => e.stopPropagation()} // Prevent cell selection when clicking on short question input
                                 onChange={(e) =>
                                     onChange(rowIndex, colIndex, {
                                         ...cell,

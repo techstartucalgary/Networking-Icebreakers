@@ -2,6 +2,7 @@ export async function GenerateQuestions(Data: {
     context: string;
     n_rows: number;
     n_cols: number;
+    selectedCells?: { row: number; col: number }[];
 }) {
     try {
         const apiUrl = `${import.meta.env.VITE_API_URL}/bingo/generateBingo`;
