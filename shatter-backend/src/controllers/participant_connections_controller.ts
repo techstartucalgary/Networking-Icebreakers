@@ -105,7 +105,48 @@ export async function createParticipantConnection(req: Request, res: Response) {
       description,
     });
 
-    await pusher.trigger(`event-${_eventId}`, "leaderboard-updated", {});
+    // Count connections for each participant after the new one was created
+    const eventObjectId = new Types.ObjectId(_eventId);
+
+    for (const participantId of [
+      primaryParticipantId,
+      secondaryParticipantId,
+    ]) {
+      const [connections, participant] = await Promise.all([
+        ParticipantConnection.find({
+          _eventId: eventObjectId,
+          $or: [
+            { primaryParticipantId: participantId },
+            { secondaryParticipantId: participantId },
+          ],
+        }).lean(),
+        Participant.findById(participantId)
+          .populate("userId", "name profilePhoto")
+          .lean(),
+      ]);
+
+      const uniquePartners = new Set(
+        connections.map((c) =>
+          c.primaryParticipantId.toString() === participantId
+            ? c.secondaryParticipantId.toString()
+            : c.primaryParticipantId.toString(),
+        ),
+      );
+
+      const user = participant?.userId as {
+        name?: string;
+        profilePhoto?: string;
+      } | null;
+
+      await pusher.trigger(`event-${_eventId}`, "leaderboard-updated", {
+        participantId,
+        name: user?.name || participant?.name,
+        profilePhoto: user?.profilePhoto || null,
+        linesCompleted: participant?.linesCompleted || 0,
+        completed: participant?.completed || false,
+        connectionsCount: uniquePartners.size,
+      });
+    }
 
     return res.status(201).json(newConnection);
   } catch (_error) {
@@ -441,7 +482,10 @@ export async function getConnectedUsersInfo(req: Request, res: Response) {
       _id: { $in: participantIds },
     })
       .select("userId name")
-      .populate("userId", "name email linkedinUrl bio profilePhoto socialLinks");
+      .populate(
+        "userId",
+        "name email linkedinUrl bio profilePhoto socialLinks",
+      );
 
     const participantMap = new Map(
       participants.map((p) => [(p._id as Types.ObjectId).toString(), p]),
