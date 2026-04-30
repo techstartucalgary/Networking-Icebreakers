@@ -154,7 +154,7 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                                 }`}
                         >
 
-                            <label className="block text-base text-white font-body mb-2 text-center cursor-pointer">Cell {rowIndex * size + colIndex + 1}</label>
+                            <label className="block text-base text-white font-bold mb-2 text-center cursor-pointer">Cell {rowIndex * size + colIndex + 1}</label>
                             {/* LONG QUESTION */}
                             <input
                                 type="text"
@@ -190,15 +190,14 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                             />
 
 
-                            {selectedCells.has(`${rowIndex}-${colIndex}`) && (
                                 <div
                                     key={`${rowIndex}-${colIndex}`}
                                     onClick={() => toggleCellSelection(rowIndex, colIndex)}
-                                    className={`bg-white/5 mt-2 px-3 py-1 rounded-2x1 border border-[#4DC4FF] bg-[#4DC4FF]/20 text-sm text-center cursor-pointer`}
+                                className={`bg-white/5 mt-2 mx-auto px-3 py-1 rounded-full border border-[#4DC4FF] bg-[#4DC4FF]/20 text-sm text-center cursor-pointer w-fit
+                                    ${selectedCells.has(`${rowIndex}-${colIndex}`) ? "visible" : "invisible"}`}
                                 >
                                     Regenerate
                                 </div>
-                            )}
                         </div>
                     ))
                 )}
