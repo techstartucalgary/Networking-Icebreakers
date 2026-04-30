@@ -11,9 +11,9 @@ export interface BingoCell {
 
 interface BingoTableProps {
     bingoGrid: BingoCell[][];
-    onChange: (row: number, col: number, value: BingoCell) => void;
+    //onChange: (row: number, col: number, value: BingoCell) => void;
     bingosize: number; // 3 or 5 for now, but will be dynamic in the future
-    setBingoGrid: any;
+    setBingoGrid: React.Dispatch<React.SetStateAction<BingoCell[][]>>;
     bingoDescription: string;
 }
 
