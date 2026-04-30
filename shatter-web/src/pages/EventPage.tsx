@@ -9,6 +9,7 @@ import EventSpotlight, { type LeaderboardEntry } from "../components/EventSpotli
 import { CalendarIcon, ClipboardCopyIcon, XIcon } from "../components/icons";
 import type { BingoCell } from "../service/BingoGame";
 import { pusher } from "../libs/pusher_websocket";
+import Leaderboard from "../components/Leaderboard";
 
 function normalizeBingoCell(cell: unknown): BingoCell {
   if (cell == null) return { question: "", shortQuestion: "" };
@@ -383,11 +384,7 @@ export default function EventPage() {
 
         {/* Live Activity Spotlight */}
         <div className="mb-12">
-          <EventSpotlight
-            participants={participants}
-            eventId={eventId}
-            leaderboardEntries={leaderboard}
-          />
+          <Leaderboard  eventId={eventId} />
         </div>
 
         {/* Main Content Grid */}
