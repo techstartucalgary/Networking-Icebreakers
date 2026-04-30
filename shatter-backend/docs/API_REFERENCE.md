@@ -18,6 +18,7 @@
     - [POST `/api/auth/signup`](#post-apiauthsignup)
     - [POST `/api/auth/login`](#post-apiauthlogin)
     - [GET `/api/auth/linkedin`](#get-apiauthlinkedin)
+    - [GET `/api/auth/linkedin/link`](#get-apiauthlinkedinlink)
     - [GET `/api/auth/linkedin/callback`](#get-apiauthlinkedincallback)
     - [POST `/api/auth/exchange`](#post-apiauthexchange)
   - [Users (`/api/users`)](#users-apiusers)
@@ -74,6 +75,7 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | POST | `/api/auth/signup` | Public | Create new user account |
 | POST | `/api/auth/login` | Public | Log in with email + password |
 | GET | `/api/auth/linkedin` | Public | Initiate LinkedIn OAuth flow |
+| GET | `/api/auth/linkedin/link` | Protected | Link LinkedIn to existing account (guest or local) |
 | GET | `/api/auth/linkedin/callback` | Public | LinkedIn OAuth callback (not called directly) |
 | POST | `/api/auth/exchange` | Public | Exchange OAuth auth code for JWT |
 | GET | `/api/users` | Public | List all users |
@@ -243,12 +245,32 @@ Initiate LinkedIn OAuth flow. Redirects the browser to LinkedIn's authorization 
 
 ---
 
+### GET `/api/auth/linkedin/link`
+
+Initiate LinkedIn OAuth flow for linking a LinkedIn account to an existing user. Redirects to LinkedIn's authorization page with the user's identity encoded in the state token.
+
+- **Auth:** Protected (guest or local users only)
+- **Response:** 302 redirect to LinkedIn
+
+**Error Responses:**
+
+| Status | Condition |
+|--------|-----------|
+| 401 | Missing or invalid JWT |
+| 403 | Account is already a LinkedIn account |
+| 404 | User not found |
+| 409 | LinkedIn account already linked |
+
+**Flow:** After LinkedIn authorization, the callback detects the linking context from the state token and attaches the LinkedIn profile to the existing user. Guest users get upgraded to `authProvider: 'linkedin'`. Local users keep `authProvider: 'local'` (preserves password login) and gain LinkedIn profile data.
+
+---
+
 ### GET `/api/auth/linkedin/callback`
 
-LinkedIn OAuth callback. Not called directly by frontend — LinkedIn redirects here after user authorization.
+LinkedIn OAuth callback. Not called directly by frontend - LinkedIn redirects here after user authorization.
 
 - **Auth:** Public (called by LinkedIn)
-- **Flow:** Verifies CSRF state → exchanges code for access token → fetches LinkedIn profile → upserts user → creates single-use auth code → redirects to frontend with `?code=<authCode>`
+- **Flow:** Verifies CSRF state -> exchanges code for access token -> fetches LinkedIn profile -> upserts user (or links to guest account) -> creates single-use auth code -> redirects to frontend with `?code=<authCode>`
 
 **Redirect on success:** `{FRONTEND_URL}/auth/callback?code=<authCode>`
 **Redirect on error:** `{FRONTEND_URL}/auth/error?message=<error>`
@@ -537,7 +559,7 @@ Update a user's profile. Users can only update their own profile.
 | `password`     | string | Minimum 8 characters |
 | `bio`          | string | |
 | `profilePhoto` | string | URL |
-| `socialLinks`  | object | `{ linkedin?, github?, other? }` |
+| `socialLinks`  | object | `{ linkedin?: string, github?: string, other?: string[] }` — `other` replaces the whole array on update |
 | `organization` | string | Where the user works/studies |
 | `title`        | string | Job title or role |
 
@@ -831,7 +853,7 @@ Join an event as a guest (no account required).
 | `socialLinks` | object | No* | Social links |
 | `socialLinks.linkedin` | string | No | LinkedIn URL |
 | `socialLinks.github` | string | No | GitHub URL |
-| `socialLinks.other` | string | No | Other URL |
+| `socialLinks.other` | string[] | No | Array of additional social/profile URLs |
 | `organization` | string | No* | Where the guest works/studies |
 | `title` | string | No | Job title or role |
 

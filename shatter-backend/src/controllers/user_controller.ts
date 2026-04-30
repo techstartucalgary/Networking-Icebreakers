@@ -121,7 +121,7 @@ export const updateUser = async (req: Request, res: Response) => {
       password?: string;
       bio?: string;
       profilePhoto?: string;
-      socialLinks?: { linkedin?: string; github?: string; other?: string };
+      socialLinks?: { linkedin?: string; github?: string; other?: string[] };
       organization?: string;
       title?: string;
     };
