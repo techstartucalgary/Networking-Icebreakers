@@ -43,7 +43,7 @@ export const TagField = ({ tags, addTag, removeTag, maxTags }: iTag) => {
                 placeholder={
                     tags.length < maxTags
                         ? "Add a tag"
-                        : `You can only enter max. of ${maxTags} tags`
+                        : `You may only enter a maximum of ${maxTags} tags.`
                 }
                 className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
                 onKeyDown={handleKeyPress}
@@ -52,7 +52,7 @@ export const TagField = ({ tags, addTag, removeTag, maxTags }: iTag) => {
                 disabled={tags.length === maxTags}
             />
 
-            {/* ===== Render the tags here ===== */}
+            {/*  Render tags */}
 
             <div className="flex flex-row flex-wrap gap-3 mt-4">
                 {tags.map((tag: string, index: number) => (
