@@ -12,6 +12,7 @@ export const barStyles = {
 		shadowOpacity: 0.2,
 		shadowRadius: 4,
 	},
+	tabBarHideOnKeyboard: true,
 	tabBarActiveTintColor: colors.white,
 	tabBarInactiveTintColor: colors.lightNavy,
 };
