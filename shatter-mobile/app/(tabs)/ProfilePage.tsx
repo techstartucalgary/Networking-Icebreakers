@@ -13,6 +13,7 @@ import { SvgUri } from "react-native-svg";
 import { useAuth } from "../../src/components/context/AuthContext";
 import AnimatedTab from "../../src/components/general/AnimatedTab";
 import { ProfilePageStyling as styles } from "../../src/styling/ProfilePage.styles";
+import { LinkRow } from "@/src/components/general/LinkRow";
 
 export default function Profile() {
 	const { user, logout } = useAuth();
@@ -70,29 +71,22 @@ export default function Profile() {
 									</Text>
 								)}
 
-								{/* LinkedIn */}
-								{social?.linkedin && (
-									<View style={styles.linkContainer}>
-										<Text style={styles.linkLabel}>LinkedIn</Text>
-										<Text style={styles.linkUrl}>{social.linkedin}</Text>
+								{/* Social Links */}
+								{user.socialLinks && (
+									<View>
+										{social?.linkedin && (
+											<LinkRow label="LinkedIn" url={social.linkedin} />
+										)}
+			
+										{social?.github && (
+											<LinkRow label="GitHub" url={social.github} />
+										)}
+			
+										{social?.other?.map((link, index) => (
+											<LinkRow key={index} label={link.label} url={link.url} />
+										))}
 									</View>
 								)}
-
-								{/* GitHub */}
-								{social?.github && (
-									<View style={styles.linkContainer}>
-										<Text style={styles.linkLabel}>GitHub</Text>
-										<Text style={styles.linkUrl}>{social.github}</Text>
-									</View>
-								)}
-
-								{/* Other Links */}
-								{social?.other?.map((link, index) => (
-									<View key={index} style={styles.linkContainer}>
-										<Text style={styles.linkLabel}>{link.label}</Text>
-										<Text style={styles.linkUrl}>{link.url}</Text>
-									</View>
-								))}
 
 								<TouchableOpacity
 									style={styles.editButton}

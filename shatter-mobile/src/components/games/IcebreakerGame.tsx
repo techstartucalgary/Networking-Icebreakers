@@ -10,8 +10,6 @@ import { useAuth } from "../context/AuthContext";
 import { useGame } from "../context/GameContext";
 import NameBingo from "./NameBingo";
 
-const POLL_INTERVAL = 4000; //4 seconds
-
 type IcebreakerGameProps = {
 	event: EventIB;
 };
