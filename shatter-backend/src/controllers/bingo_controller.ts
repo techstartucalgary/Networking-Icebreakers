@@ -583,20 +583,66 @@ export async function generateBingo(req: Request, res: Response) {
   }
 }
 
-function buildSingleBingoQuestionSchema() {
-  return z.object({
-    question: z
-      .string()
-      .min(1)
-      .describe("The full generated bingo question"),
-    shortQuestion: z
-      .string()
-      .min(1)
-      .describe("A max 3 word short version of the question"),
-  });
+function buildIndividualBingoGameQuestionsSchema(questionCount: number) {
+  return z
+    .array(
+      z.object({
+        question: z
+          .string()
+          .min(1)
+          .describe("The full generated bingo question"),
+        shortQuestion: z
+          .string()
+          .min(1)
+          .describe("A max 3 word short version of the question"),
+      }),
+    )
+    .length(questionCount)
+    .describe("The regenerated bingo questions");
 }
 
-async function generateSingleBingoQuestionWithGemini({
+function normalizeQuestion(question: string): string {
+  return question.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function hasDuplicateQuestions(
+  generatedQuestions: { question: string; shortQuestion: string }[],
+): boolean {
+  const seenQuestions = new Set<string>();
+  const seenShortQuestions = new Set<string>();
+
+  for (const generatedQuestion of generatedQuestions) {
+    const question = normalizeQuestion(generatedQuestion.question);
+    const shortQuestion = normalizeQuestion(generatedQuestion.shortQuestion);
+
+    if (seenQuestions.has(question) || seenShortQuestions.has(shortQuestion)) {
+      return true;
+    }
+
+    seenQuestions.add(question);
+    seenShortQuestions.add(shortQuestion);
+  }
+
+  return false;
+}
+
+function hasSourceQuestionCollision(
+  generatedQuestions: { question: string; shortQuestion: string }[],
+  bingo_grid: string[][],
+  bingo_question_target: string[],
+): boolean {
+  const existingQuestions = new Set(
+    [...bingo_grid.flat(), ...bingo_question_target].map((question) =>
+      normalizeQuestion(question),
+    ),
+  );
+
+  return generatedQuestions.some((generatedQuestion) =>
+    existingQuestions.has(normalizeQuestion(generatedQuestion.question)),
+  );
+}
+
+async function generateIndividualBingoGameQuestionsWithGemini({
   event_description,
   tags,
   bingo_grid,
@@ -605,29 +651,38 @@ async function generateSingleBingoQuestionWithGemini({
   event_description: string;
   tags: string[];
   bingo_grid: string[][];
-  bingo_question_target: string;
-}): Promise<{ question: string; shortQuestion: string }> {
-  const schema = buildSingleBingoQuestionSchema();
+  bingo_question_target: string[];
+}): Promise<{ question: string; shortQuestion: string }[]> {
+  const schema = buildIndividualBingoGameQuestionsSchema(
+    bingo_question_target.length,
+  );
   const schemaJson = z.toJSONSchema(schema);
 
   const basePrompt = `
-Generate one new bingo question for an event bingo game.
+Generate ${bingo_question_target.length} new bingo questions for an event bingo game.
 
 Return JSON exactly matching this structure:
-{
-  "question": "Full bingo question here",
-  "shortQuestion": "Max 3 words"
-}
+[
+  {
+    "question": "Full bingo question here",
+    "shortQuestion": "Max 3 words"
+  }
+]
 
 Rules:
 - Return ONLY valid JSON.
-- Generate exactly one new question.
-- The new question must fit the event context.
-- The new question must be different from every existing question in the bingo grid.
-- The target question is being regenerated, but the replacement does NOT need to be about the same topic.
-- The replacement should be entirely new while still fitting the event.
-- The shortQuestion must be max 3 words.
-- The shortQuestion should describe what the full question is about.
+- Generate exactly ${bingo_question_target.length} new question objects.
+- The response must be a JSON array, not an object.
+- Preserve the same order as the target questions list: one replacement per target question.
+- Each new question must fit the event context.
+- Every new question must be different from every existing question in the bingo grid.
+- Every new question must be different from every other newly generated question.
+- Avoid near-duplicates, reworded duplicates, or questions with the same meaning.
+- The target questions are being regenerated, but each replacement does NOT need to be about the same topic as its target.
+- Each replacement should be entirely new while still fitting the event.
+- Each shortQuestion must be max 3 words.
+- Each shortQuestion should describe what its full question is about.
+- The shortQuestion values must also be different from each other.
 - Avoid generic networking questions.
 - Prefer observable, realistic, event-specific bingo moments.
 `.trim();
@@ -642,8 +697,8 @@ ${tags.length > 0 ? tags.join(", ") : "No tags provided"}
 Existing bingo grid questions:
 ${JSON.stringify(bingo_grid, null, 2)}
 
-Target question to replace:
-${bingo_question_target}
+Target questions to replace:
+${JSON.stringify(bingo_question_target, null, 2)}
 `.trim();
 
   const aiPrompt = new Prompt([
@@ -672,6 +727,16 @@ ${bingo_question_target}
   const parsed = JSON.parse(response.text);
   const validated = schema.parse(parsed);
 
+  if (hasDuplicateQuestions(validated)) {
+    throw new Error("Gemini returned duplicate generated questions");
+  }
+
+  if (hasSourceQuestionCollision(validated, bingo_grid, bingo_question_target)) {
+    throw new Error(
+      "Gemini returned a generated question that already exists in the bingo grid or target questions",
+    );
+  }
+
   return validated;
 }
 
@@ -679,17 +744,20 @@ ${bingo_question_target}
 /**
  * POST /api/bingo/generate/single
  *
- * Generate one AI bingo question.
+ * Generate replacement AI bingo questions.
  *
  * @param req.body.event_description - Context for bingo content (required) - string
  * @param req.body.tags - Tags for the type/roles of people attending the event - string[] can be empty
  * @param req.body.bingo_grid - Existing bingo grid of full questions - string[][]
- * @param req.body.bingo_question_target - Target question to regenerate - string
+ * @param req.body.bingo_question_target - Target questions to regenerate - string[]
  *
- * @returns 200 with generated bingo question and short version
+ * @returns 200 with a list of generated bingo questions and short versions
  * @returns 400 if validation fails
  */
-export async function generateSingleBingoQuestion(req: Request, res: Response) {
+export async function generateIndividualBingoGameQuestions(
+  req: Request,
+  res: Response,
+) {
   try {
     const {
       event_description,
@@ -736,28 +804,46 @@ export async function generateSingleBingoQuestion(req: Request, res: Response) {
     }
 
     if (
-      !bingo_question_target ||
-      typeof bingo_question_target !== "string" ||
-      bingo_question_target.trim().length === 0
+      !Array.isArray(bingo_question_target) ||
+      bingo_question_target.length === 0 ||
+      !bingo_question_target.every(
+        (question: any) =>
+          typeof question === "string" && question.trim().length > 0,
+      )
     ) {
       return res.status(400).json({
         status: false,
-        msg: "bingo_question_target is required and must be a non-empty string",
+        msg: "bingo_question_target is required and must be a non-empty array of non-empty strings",
       });
     }
 
-    const generatedQuestion = await generateSingleBingoQuestionWithGemini({
+    const cleanedTags = tags.map((tag: string) => tag.trim()).filter(Boolean);
+    const cleanedTargetQuestions = bingo_question_target.map((question: string) =>
+      question.trim(),
+    );
+    const uniqueTargetQuestions = new Set(
+      cleanedTargetQuestions.map((question: string) => normalizeQuestion(question)),
+    );
+
+    if (uniqueTargetQuestions.size !== cleanedTargetQuestions.length) {
+      return res.status(400).json({
+        status: false,
+        msg: "bingo_question_target must not contain duplicate questions",
+      });
+    }
+
+    const generatedQuestions = await generateIndividualBingoGameQuestionsWithGemini({
       event_description: event_description.trim(),
-      tags,
+      tags: cleanedTags,
       bingo_grid,
-      bingo_question_target: bingo_question_target.trim(),
+      bingo_question_target: cleanedTargetQuestions,
     });
 
     return res.status(200).json({
       status: true,
-      question: generatedQuestion.question,
-      shortQuestion: generatedQuestion.shortQuestion,
+      new_questions: generatedQuestions,
     });
+    
   } catch (err: any) {
     return res.status(500).json({
       status: false,
