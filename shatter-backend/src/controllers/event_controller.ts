@@ -498,8 +498,7 @@ export async function updateEventStatus(req: Request, res: Response) {
     const updatedEvent = await event.save();
 
     // Emit Pusher events for real-time updates
-    const pusherEvent = status === 'In Progress' ? 'event-started' : 'event-ended';
-    await pusher.trigger(`event-${eventId}`, pusherEvent, {
+    await pusher.trigger(`event-${eventId}`, 'event', {
       status,
     });
 
