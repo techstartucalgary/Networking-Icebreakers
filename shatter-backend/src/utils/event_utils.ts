@@ -9,10 +9,10 @@ export function generateEventId(): string {
 }
 
 /**
- * Generates a random 8-digit number string for joinCode
- * Example: "48392017"
+ * Generates a random 4-digit number string for joinCode
+ * Example: "4132"
  */
 export function generateJoinCode(): string {
-  const code = Math.floor(10000000 + Math.random() * 90000000);
+  const code = Math.floor(1000 + Math.random() * 9000); 
   return code.toString();
 }
