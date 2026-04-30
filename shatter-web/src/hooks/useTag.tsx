@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const useTagInput = (maxTags = 5) => {
+const useTagInput = (maxTags = 6) => {
     const [tags, setTags] = useState<string[]>([]);
 
     const handleAddTag = (newTag: string) => {
