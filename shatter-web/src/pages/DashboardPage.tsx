@@ -145,7 +145,7 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
         signal,
       });
 
-      if (!response.ok) {
+      if (!response.ok && response.status != 404) {
         const text = await response.text().catch(() => "");
         throw new Error(
           `Failed to fetch events (status ${response.status}). ${text ? text.slice(0, 120) : ""}`.trim()
@@ -155,7 +155,7 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
       const data = await response.json();
 
       if (!data?.success) {
-        throw new Error(data?.message || "Backend did not return success.");
+        return []
       }
 
       const list = Array.isArray(data.events) ? data.events : [];
@@ -853,13 +853,14 @@ const loadBingoData = async (eventId: string) => {
 
                             <div>
                             <BingoTable
-                              grid={bingoGrid}
+                                bingoGrid={bingoGrid}
                                 onChange={(row, col, value) => {
                                     const newGrid = bingoGrid.map(r => [...r]);
                                     newGrid[row][col] = value;
                                     setBingoGrid(newGrid);
                                 }}
                                 bingosize={GRID_SIZE}
+                                setBingoGrid={setBingoGrid}
                             />
                             </div>
 

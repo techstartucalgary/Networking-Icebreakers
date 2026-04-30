@@ -40,6 +40,8 @@ function CreateEventPage() {
                 throw new Error("Please fill in all required fields.");
             }
 
+            
+
             // ✅ Validate bingo (if selected)
             if (nameBingoSelected) {
                 const hasEmptyCells = bingoGrid.some(row =>
@@ -50,7 +52,9 @@ function CreateEventPage() {
                     throw new Error("Please fill in all bingo grid cells.");
                 }
 
-                if (!bingoDescription.trim()) {
+                console.log(description)
+
+                if (!description.trim()) {
                     throw new Error("Please add a bingo description.");
                 }
             }
@@ -309,12 +313,13 @@ function CreateEventPage() {
                                 </div>
                             */}
                                 <BingoTable
-                                    grid={bingoGrid}
+                                    bingoGrid={bingoGrid}
                                     onChange={(row, col, value) => {
                                         const newGrid = bingoGrid.map(r => [...r]);
                                         newGrid[row][col] = value;
                                         setBingoGrid(newGrid);
                                     }}
+                                    setBingoGrid={setBingoGrid}
                                     bingosize={3}
                                 />
                             </div>
