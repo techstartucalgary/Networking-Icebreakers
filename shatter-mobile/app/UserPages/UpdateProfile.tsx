@@ -171,7 +171,7 @@ export default function UpdateProfile() {
 									</View>
 								</View>
 							)}
-							
+
 							{/* Name */}
 							<Text style={styles.label}>Name</Text>
 							<TextInput
@@ -250,11 +250,11 @@ export default function UpdateProfile() {
 										placeholder="Short bio"
 										placeholderTextColor={colors.lightGrey2}
 										multiline
-									/>	
+									/>
 								</>
 							)}
 
-							{/* Link LinkedIn to Account if Verified User and LinkedIn Not Set */}
+							{/* TODO: Link LinkedIn to Account if Verified User and LinkedIn Not Set 
 							{!user?.socialLinks?.linkedin && user?._id && (
 								<TouchableOpacity
 									style={[styles.addButton, { marginTop: 10 }]}
@@ -263,6 +263,7 @@ export default function UpdateProfile() {
 									<Text style={styles.buttonText}>Link LinkedIn</Text>
 								</TouchableOpacity>
 							)}
+							*/}
 
 							{/* Social link modal */}
 							<TouchableOpacity
