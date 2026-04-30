@@ -1,5 +1,4 @@
 import SocialSpinner from "@/src/components/login-signup/SocialSpinner";
-import { SocialLink } from "@/src/interfaces/User";
 import { colors } from "@/src/styling/constants";
 import { GuestStyling as styles } from "@/src/styling/Guest.styles";
 import { Stack, useRouter } from "expo-router";
@@ -12,37 +11,74 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { FontAwesome, Feather, Entypo } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/components/context/AuthContext";
+import { SocialLinks } from "@/src/interfaces/User";
 
 export default function GuestPage() {
 	const { continueAsGuest } = useAuth();
 	const [name, setName] = useState("");
-	const [contactLink, setContactLink] = useState("");
+	const [selectedType, setSelectedType] = useState<"linkedin" | "github" | "other" | null>(null);
+	const [linkedin, setLinkedin] = useState("");
+	const [github, setGithub] = useState("");
+	const [other, setOther] = useState("");
 	const [showConfirmModal, setShowConfirmModal] = useState(false);
 	const [error, setError] = useState("");
 	const router = useRouter();
 
 	const handleContinue = async () => {
-		//need name and social link
-		if (!name.trim() || !contactLink.trim()) {
-			setError("Name and Social Link Cannot Be Empty");
+		if (!name.trim()) {
+			setError("Name cannot be empty");
 			return;
 		}
 
-		let socialLink: SocialLink | null = null;
-
-		try {
-			const validUrl = new URL(contactLink); //throws if invalid
-			socialLink = { label: "Contact Link", url: validUrl.href };
-		} catch {
-			console.log("Invalid URL:", contactLink);
-			setError("Please enter a valid contact link.");
+		//ensure at least one link exists
+		if (!linkedin.trim() && !github.trim() && !other.trim()) {
+			setError("Please provide at least one contact link.");
 			return;
+		}
+
+		const validateUrl = (url: string) => {
+			try {
+				return new URL(url).href;
+			} catch {
+				return null;
+			}
+		};
+
+		const socialLinks: SocialLinks = {};
+
+		if (linkedin.trim()) {
+			const valid = validateUrl(linkedin);
+			if (!valid) {
+				setError("Invalid LinkedIn URL");
+				return;
+			}
+			socialLinks.linkedin = valid;
+		}
+
+		if (github.trim()) {
+			const valid = validateUrl(github);
+			if (!valid) {
+				setError("Invalid GitHub URL");
+				return;
+			}
+			socialLinks.github = valid;
+		}
+
+		if (other.trim()) {
+			const valid = validateUrl(other);
+			if (!valid) {
+				setError("Invalid Other URL");
+				return;
+			}
+			socialLinks.other?.push({ label: "Contact Link", url: valid });
 		}
 
 		setError("");
-		await continueAsGuest(name.trim(), socialLink, ""); //no organization on this page, handled on GuestConfirm
+
+		await continueAsGuest(name.trim(), socialLinks, "");
 		router.replace("/JoinEventPage");
 	};
 
@@ -71,18 +107,80 @@ export default function GuestPage() {
 						/>
 
 						<Text style={styles.label}>Contact Link</Text>
-						<TextInput
-							style={styles.input}
-							placeholder="LinkedIn, portfolio, etc."
-							placeholderTextColor={colors.lightGrey2}
-							value={contactLink}
-							onChangeText={setContactLink}
-							autoCapitalize="none"
-							keyboardType="url"
-						/>
+
+						<View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+							<TouchableOpacity
+								onPress={() => setSelectedType("linkedin")}
+								style={{
+									padding: 12,
+									borderRadius: 12,
+									backgroundColor: selectedType === "linkedin" ? "#0A66C2" : colors.lightGrey2,
+									flex: 1,
+									marginRight: 8,
+									alignItems: "center",
+								}}
+							>
+								<FontAwesome name="linkedin" size={22} color="white" />
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								onPress={() => setSelectedType("github")}
+								style={{
+									padding: 12,
+									borderRadius: 12,
+									backgroundColor: selectedType === "github" ? "#24292e" : colors.lightGrey2,
+									flex: 1,
+									marginRight: 8,
+									alignItems: "center",
+								}}
+							>
+								<FontAwesome name="github" size={22} color="white" />
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								onPress={() => setSelectedType("other")}
+								style={{
+									padding: 12,
+									borderRadius: 12,
+									backgroundColor: selectedType === "other" ? "#6c63ff" : colors.lightGrey2,
+									flex: 1,
+									alignItems: "center",
+								}}
+							>
+								<Feather name="link" size={22} color="white" />
+							</TouchableOpacity>
+						</View>
+
+						{selectedType && (
+							<TextInput
+								style={styles.input}
+								placeholder={
+									selectedType === "linkedin"
+										? "LinkedIn URL"
+										: selectedType === "github"
+										? "GitHub URL"
+										: "Portfolio / Other URL"
+								}
+								placeholderTextColor={colors.lightGrey2}
+								value={
+									selectedType === "linkedin"
+										? linkedin
+										: selectedType === "github"
+										? github
+										: other
+								}
+								onChangeText={(text) => {
+									if (selectedType === "linkedin") setLinkedin(text);
+									else if (selectedType === "github") setGithub(text);
+									else setOther(text);
+								}}
+								autoCapitalize="none"
+								keyboardType="url"
+							/>
+						)}
+
 						<Text style={styles.inputInfo}>
-							Your contact link can be your LinkedIn profile URL, a portfolio
-							link, or another relevant personal link.
+							Select a platform above, then enter your profile link.
 						</Text>
 
 						{error ? <Text style={styles.error}>{error}</Text> : null}

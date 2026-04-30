@@ -80,7 +80,7 @@ export default function SignUpForm() {
 				_id: userResponse.userId,
 				name,
 				email,
-				socialLinks: [],
+				socialLinks: {},
 				profilePhoto: profilePhoto,
 				isGuest: false,
 			};

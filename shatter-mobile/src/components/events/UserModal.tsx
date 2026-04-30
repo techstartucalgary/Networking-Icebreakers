@@ -40,9 +40,40 @@ const UserModal = ({ user, onRequestClose }: UserModalProps) => {
 
 					{user.bio && <Text style={styles.userBio}>{user.bio}</Text>}
 
-					{user.socialLinks && user.socialLinks?.length > 0 && (
+					{user.socialLinks && (
 						<View>
-							{user.socialLinks?.map((link, index) => (
+							{/* LinkedIn */}
+							{user.socialLinks.linkedin && (
+								<Pressable
+									onPress={() => {
+										Linking.openURL(user.socialLinks?.linkedin!).catch((err) =>
+											console.log("Failed to open URL:", err),
+										);
+									}}
+									style={{ marginBottom: 8 }}
+								>
+									<Text style={styles.linkLabel}>LinkedIn</Text>
+									<Text style={styles.link}>{user.socialLinks.linkedin}</Text>
+								</Pressable>
+							)}
+
+							{/* GitHub */}
+							{user.socialLinks.github && (
+								<Pressable
+									onPress={() => {
+										Linking.openURL(user.socialLinks?.github!).catch((err) =>
+											console.log("Failed to open URL:", err),
+										);
+									}}
+									style={{ marginBottom: 8 }}
+								>
+									<Text style={styles.linkLabel}>GitHub</Text>
+									<Text style={styles.link}>{user.socialLinks.github}</Text>
+								</Pressable>
+							)}
+
+							{/* Other links */}
+							{user.socialLinks.other?.map((link, index) => (
 								<Pressable
 									key={index}
 									onPress={() => {

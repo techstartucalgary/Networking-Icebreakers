@@ -8,6 +8,7 @@ import { GetUserEventsApi } from "../api/users/user.api";
 import EventResponse from "../interfaces/responses/GetEventResponse";
 import UserEventsResponse from "../interfaces/responses/GetUserEventsResponse";
 import EventJoinIdResponse from "../interfaces/responses/JoinEventIdResponse";
+import { SocialLinks } from "../interfaces/User";
 
 export async function getEventByCode(
 	joinCode: string,
@@ -40,6 +41,8 @@ export async function JoinEventIdUser(
 export async function JoinEventIdGuest(
 	eventId: string,
 	name: string,
+	socialLinks: SocialLinks,
+	organization: string,
 ): Promise<EventJoinIdResponse> {
-	return await JoinEventByIdGuestApi(eventId, name);
+	return await JoinEventByIdGuestApi(eventId, name, socialLinks, organization);
 }
