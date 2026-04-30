@@ -4,11 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BingoTable from "../components/BingoTable";
 import { getBingo } from "../service/BingoGame";
-
-export interface BingoCell {
-    question: string;
-    shortQuestion: string;
-}
+import type { BingoCell } from "../types/BingoCell";
 
 import {
     CalendarIcon,
@@ -83,9 +79,11 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
       question: "",
       shortQuestion: "",
     }))
-  );  const [selectedIcebreaker, setSelectedIcebreaker] = useState<string | null>(null);
+  );  
+  const [selectedIcebreaker, setSelectedIcebreaker] = useState<string | null>(null);
   const GRID_SIZE = 3;
-  const [bingoGrid, setBingoGrid] = useState<BingoCell[][]>(createEmptyGrid(GRID_SIZE));  const [bingoDescription, setBingoDescription] = useState("");
+  const [bingoGrid, setBingoGrid] = useState<BingoCell[][]>(createEmptyGrid(GRID_SIZE));
+  const [bingoDescription, setBingoDescription] = useState("");
   const [isSavingBingo, setIsSavingBingo] = useState(false);
   const [bingoSaveMessage, setBingoSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isDeletingEvent, setIsDeletingEvent] = useState(false);
@@ -147,7 +145,7 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
         signal,
       });
 
-      if (!response.ok) {
+      if (!response.ok && response.status != 404) {
         const text = await response.text().catch(() => "");
         throw new Error(
           `Failed to fetch events (status ${response.status}). ${text ? text.slice(0, 120) : ""}`.trim()
@@ -157,7 +155,7 @@ const createEmptyGrid = (size: number): BingoCell[][] =>
       const data = await response.json();
 
       if (!data?.success) {
-        throw new Error(data?.message || "Backend did not return success.");
+        return []
       }
 
       const list = Array.isArray(data.events) ? data.events : [];
@@ -188,12 +186,21 @@ const loadBingoData = async (eventId: string) => {
     const bingo = await getBingo(eventId);
 
     if (bingo) {
+
+        /*
       const formattedGrid = bingo.grid.map(row =>
         row.map(cell => ({
           question: cell.question || "",
           shortQuestion: cell.shortQuestion || "",
         }))
       );
+      */
+    const formattedGrid = createEmptyGrid(GRID_SIZE).map((row, i) =>
+       row.map((_, j) => ({
+           question: bingo.grid?.[i]?.[j]?.question || "",
+           shortQuestion: bingo.grid?.[i]?.[j]?.shortQuestion || "",
+       }))
+     );
 
       setBingoGrid(formattedGrid);
       setBingoDescription(bingo.description ?? "");
@@ -843,25 +850,17 @@ const loadBingoData = async (eventId: string) => {
                               </button>
                             </div>
 
-                            <div>
-                              <label className="block text-sm text-white font-body mb-2">Bingo Description</label>
-                              <input
-                                type="text"
-                                value={bingoDescription}
-                                onChange={(e) => setBingoDescription(e.target.value)}
-                                placeholder="e.g., Find someone who..."
-                                className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
-                              />
-                            </div>
 
                             <div>
                             <BingoTable
-                              grid={bingoGrid}
+                                bingoGrid={bingoGrid}
                                 onChange={(row, col, value) => {
                                     const newGrid = bingoGrid.map(r => [...r]);
                                     newGrid[row][col] = value;
                                     setBingoGrid(newGrid);
                                 }}
+                                bingosize={GRID_SIZE}
+                                setBingoGrid={setBingoGrid}
                             />
                             </div>
 

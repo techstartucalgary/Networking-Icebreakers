@@ -4,10 +4,7 @@ import Footer from "../components/Footer";
 import BingoTable from "../components/BingoTable";
 import { CreateEvent } from "../service/CreateEvent";
 import { useNavigate } from "react-router-dom";
-export interface BingoCell {
-    question: string;
-    shortQuestion: string;
-}
+import type { BingoCell } from "../types/BingoCell";
 function CreateEventPage() {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -43,6 +40,8 @@ function CreateEventPage() {
                 throw new Error("Please fill in all required fields.");
             }
 
+            
+
             // ✅ Validate bingo (if selected)
             if (nameBingoSelected) {
                 const hasEmptyCells = bingoGrid.some(row =>
@@ -53,7 +52,9 @@ function CreateEventPage() {
                     throw new Error("Please fill in all bingo grid cells.");
                 }
 
-                if (!bingoDescription.trim()) {
+                console.log(description)
+
+                if (!description.trim()) {
                     throw new Error("Please add a bingo description.");
                 }
             }
@@ -299,6 +300,7 @@ function CreateEventPage() {
                 {/*Icebreaker Properties*/}
                                         {nameBingoSelected && (
                             <div className="mt-6 space-y-4">
+                            {/*
                                 <div>
                                     <label className="text-sm text-white mb-2 block">
                                         Bingo Description
@@ -309,14 +311,16 @@ function CreateEventPage() {
                                         className="w-full p-3 rounded bg-white border text-black"
                                     />
                                 </div>
-
+                            */}
                                 <BingoTable
-                                    grid={bingoGrid}
+                                    bingoGrid={bingoGrid}
                                     onChange={(row, col, value) => {
                                         const newGrid = bingoGrid.map(r => [...r]);
                                         newGrid[row][col] = value;
                                         setBingoGrid(newGrid);
                                     }}
+                                    setBingoGrid={setBingoGrid}
+                                    bingosize={3}
                                 />
                             </div>
                         )}
