@@ -56,7 +56,7 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
             // Concatenating tags to create prompt
 
             const result = await GenerateQuestions({
-                context: bingoDescription,
+                event_description: bingoDescription,
                 n_rows: size,
                 n_cols: size,
                 tags: tags,
