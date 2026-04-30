@@ -1,11 +1,11 @@
-export async function GenerateQuestions(Data: {
+export async function GenerateIndividualQuestions(Data: {
     event_description: string;
-    n_rows: number;
-    n_cols: number;
+    bingo_grid: string[][];
     tags: string[];
+    bingo_question_target: string[];
 }) {
     try {
-        const apiUrl = `${import.meta.env.VITE_API_URL}/bingo/generateBingo`;
+        const apiUrl = `${import.meta.env.VITE_API_URL}/bingo/generateBingo/individual`;
         const token = localStorage.getItem('token');
 
         const response = await fetch(apiUrl,
@@ -28,9 +28,7 @@ export async function GenerateQuestions(Data: {
             throw new Error(`API responded with an error: ${responseData.msg}`);
         }
         // The bingo grid is filled with 2d arrays, where each entry is an array of objects. Each object represents a row
-        return {
-            bingoGrid: responseData.bingo_grid
-        };
+        return responseData.new_questions;
 
     } catch (error) {
         console.error("Generating questions failed with error ", error);
