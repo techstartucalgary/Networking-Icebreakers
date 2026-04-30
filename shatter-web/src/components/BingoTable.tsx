@@ -43,23 +43,6 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
         });
     };
 
-    //API call
-    /*const generateBingoQuestions = async () => {
-        try {
-            console.log("generating bingo questions");
-            setFetching(true)
-            const result = await GenerateQuestions({ context: bingoDescription, n_rows: 3, n_cols: 3 });
-            if (result && result.bingoGrid) {
-                console.log("got response: ", result.bingoGrid);
-                setBingoGrid(result.bingoGrid);
-                setFetching(false);
-            }
-        } catch (error) {
-            console.error("Error generating bingo questions: ", error);
-            setFetching(false);
-        }
-    };*/
-
     const generateBingoQuestions = async () => {
         try {
             setFetching(true);
@@ -71,10 +54,6 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
             });
 
             // Concatenating tags to create prompt
-
-            //const tagString = tags.length > 0 ? ` Tags: ${tags.join(", ")}` : "";
-
-            //const fullPrompt = `${bingoDescription}${tagString}`;
 
             const result = await GenerateQuestions({
                 context: bingoDescription,
