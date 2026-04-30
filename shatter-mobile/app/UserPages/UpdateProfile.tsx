@@ -116,6 +116,46 @@ export default function UpdateProfile() {
 							showsVerticalScrollIndicator={false}
 							contentContainerStyle={{ paddingBottom: 40 }}
 						>
+							{/* Profile Photo Section */}
+							{!user?.isGuest && (
+								<View>
+									<Text style={styles.label}>Profile Photo</Text>
+
+									{/* Preview */}
+									{profilePhoto && profilePhoto.length > 0 ? (
+										<Image
+											source={{ uri: profilePhoto }}
+											style={styles.avatarPreview}
+										/>
+									) : (
+										<View style={styles.avatarPlaceholder}>
+											<Text style={styles.avatarPlaceholderText}>
+												No photo selected
+											</Text>
+										</View>
+									)}
+
+									{/* Avatar grid */}
+									<View style={styles.avatarGrid}>
+										{AVATAR_OPTIONS.filter(Boolean).map((url) => (
+											<TouchableOpacity
+												key={url}
+												onPress={() => setProfilePhoto(url)}
+												style={[
+													styles.avatarOption,
+													profilePhoto === url && styles.avatarOptionSelected,
+												]}
+											>
+												<Image
+													source={{ uri: url }}
+													style={styles.avatarOptionImage}
+												/>
+											</TouchableOpacity>
+										))}
+									</View>
+								</View>
+							)}
+							
 							{/* Name */}
 							<Text style={styles.label}>Name</Text>
 							<TextInput
@@ -194,42 +234,7 @@ export default function UpdateProfile() {
 										placeholder="Short bio"
 										placeholderTextColor={colors.lightGrey2}
 										multiline
-									/>
-
-									<Text style={styles.label}>Profile Photo</Text>
-
-									{/* Current selection preview */}
-									{profilePhoto && profilePhoto.length > 0 ? (
-										<Image
-											source={{ uri: profilePhoto }}
-											style={styles.avatarPreview}
-										/>
-									) : (
-										<View style={styles.avatarPlaceholder}>
-											<Text style={styles.avatarPlaceholderText}>
-												No photo selected
-											</Text>
-										</View>
-									)}
-
-									{/* Avatar grid */}
-									<View style={styles.avatarGrid}>
-										{AVATAR_OPTIONS.filter(Boolean).map((url) => (
-											<TouchableOpacity
-												key={url}
-												onPress={() => setProfilePhoto(url)}
-												style={[
-													styles.avatarOption,
-													profilePhoto === url && styles.avatarOptionSelected,
-												]}
-											>
-												<Image
-													source={{ uri: url }}
-													style={styles.avatarOptionImage}
-												/>
-											</TouchableOpacity>
-										))}
-									</View>
+									/>	
 								</>
 							)}
 
