@@ -7,6 +7,7 @@ import { check_req_fields } from "../utils/requests_utils.js";
 import { User } from "../models/user_model.js";
 import { Participant } from "../models/participant_model.js";
 import { ParticipantConnection } from "../models/participant_connection_model.js";
+import { pusher } from "../utils/pusher_websocket.js";
 
 /**
  * POST /api/participantConnections
@@ -103,6 +104,8 @@ export async function createParticipantConnection(req: Request, res: Response) {
       secondaryParticipantId,
       description,
     });
+
+    await pusher.trigger(`event-${_eventId}`, "leaderboard-updated", {});
 
     return res.status(201).json(newConnection);
   } catch (_error) {
@@ -229,6 +232,8 @@ export async function createParticipantConnectionByEmails(
       description,
     });
 
+    await pusher.trigger(`event-${_eventId}`, "leaderboard-updated", {});
+
     return res.status(201).json(newConnection);
   } catch (_error) {
     return res.status(500).json({ error: "Internal server error" });
@@ -270,6 +275,8 @@ export async function deleteParticipantConnection(req: Request, res: Response) {
         .status(404)
         .json({ error: "ParticipantConnection not found for this event" });
     }
+
+    await pusher.trigger(`event-${eventId}`, "leaderboard-updated", {});
 
     return res.status(200).json({
       message: "ParticipantConnection deleted successfully",

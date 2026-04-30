@@ -38,6 +38,9 @@
     - [POST `/api/events/:eventId/leave`](#post-apieventseventidleave)
     - [DELETE `/api/events/:eventId`](#delete-apieventseventid)
     - [GET `/api/events/createdEvents/user/:userId`](#get-apieventscreatedeventsuseruserid)
+    - [PUT `/api/events/:eventId`](#put-apieventseventid)
+    - [GET `/api/events/:eventId/leaderboard`](#get-apieventseventidleaderboard)
+    - [PUT `/api/events/:eventId/leaderboard/score`](#put-apieventseventidleaderboardscore)
   - [Bingo (`/api/bingo`)](#bingo-apibingo)
     - [POST `/api/bingo/createBingo`](#post-apibingocreatebingo)
     - [GET `/api/bingo/getBingo/:eventId`](#get-apibingogetbingoeventid)
@@ -89,6 +92,8 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | POST | `/api/events/:eventId/leave` | Protected | Leave event as participant |
 | DELETE | `/api/events/:eventId` | Protected | Delete/cancel event (host-only) |
 | GET | `/api/events/createdEvents/user/:userId` | Protected | Get events created by user |
+| GET | `/api/events/:eventId/leaderboard` | Protected | Get bingo leaderboard for event |
+| PUT | `/api/events/:eventId/leaderboard/score` | Protected | Update own bingo score |
 | POST | `/api/bingo/createBingo` | Protected | Create bingo game for event |
 | GET | `/api/bingo/getBingo/:eventId` | Public | Get bingo by event ID |
 | PUT | `/api/bingo/updateBingo` | Protected | Update bingo game |
@@ -981,6 +986,173 @@ Get all events created by a specific user.
 | Status | Error |
 |--------|-------|
 | 404    | `"No events found for this user"` |
+---
+### PUT `/api/events/:eventId`
+
+Update an existing event's basic information (host only). Only the fields provided in the request body will be updated. To change event status, use `PUT /api/events/:eventId/status` instead.
+
+- **Auth:** Protected (Bearer Token required)
+
+---
+
+**URL Params:**
+
+| Param     | Type     | Required |
+|-----------|----------|----------|
+| `eventId` | ObjectId | Yes      |
+
+---
+
+**Request Body (all fields optional):**
+
+| Field            | Type     | Description                              |
+|------------------|----------|------------------------------------------|
+| `name`           | string   | Updated event name (cannot be empty)     |
+| `description`    | string   | Updated event description (cannot be empty) |
+| `startDate`      | Date     | Updated start date (ISO string)          |
+| `endDate`        | Date     | Updated end date (ISO string)            |
+| `maxParticipant` | number   | Updated max participants (positive integer, >= current count) |
+| `gameType`       | string   | `"Name Bingo"`                           |
+| `eventImg`       | string   | URL of event image                       |
+
+---
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Event updated successfully",
+  "data": {
+    "_id": "665a...",
+    "name": "Updated Event Name",
+    "description": "New description",
+    "startDate": "2026-05-01T10:00:00.000Z",
+    "endDate": "2026-05-02T10:00:00.000Z",
+    "maxParticipant": 50,
+    "currentState": "Upcoming",
+    "gameType": "Name Bingo",
+    "createdBy": "664f..."
+  }
+}
+```
+
+---
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 400    | `"Missing eventId"` |
+| 400    | `"Invalid eventId"` |
+| 400    | `"No fields provided to update"` |
+| 400    | `"Name must be a non-empty string"` |
+| 400    | `"Description must be a non-empty string"` |
+| 400    | `"Invalid startDate"` |
+| 400    | `"Invalid endDate"` |
+| 400    | `"endDate must be after startDate"` |
+| 400    | `"maxParticipant must be a positive integer"` |
+| 400    | `"maxParticipant cannot be less than the current number of participants ({count})"` |
+| 400    | `"Invalid gameType. Must be one of: Name Bingo"` |
+| 400    | `"eventImg must be a string"` |
+| 400    | `"Cannot update a completed event"` |
+| 401    | `"Unauthorized: missing authenticated user"` |
+| 403    | `"Only the event creator can update this event"` |
+| 404    | `"Event not found"` |
+
+---
+
+**Notes:**
+
+- Only the event creator (`createdBy`) can update the event.
+- Fields not included in the request body will remain unchanged.
+- `currentState` cannot be changed through this endpoint — use `PUT /api/events/:eventId/status`.
+- `startDate` and `endDate` must be valid ISO date strings, and `endDate` must be after `startDate`.
+- `maxParticipant` cannot be set below the current number of participants in the event.
+
+---
+
+### GET `/api/events/:eventId/leaderboard`
+
+Get the bingo leaderboard for an event. Returns participants sorted by completion status and lines completed. Connections count is computed from ParticipantConnection records (unique connected partners).
+
+- **Auth:** Protected
+
+**URL Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `eventId` | ObjectId | Yes | The event ID |
+
+**Response (200):**
+
+```json
+[
+  {
+    "participantId": "abc123",
+    "name": "Jane Doe",
+    "profilePhoto": "https://example.com/photo.jpg",
+    "connectionsCount": 5,
+    "linesCompleted": 3,
+    "completed": true
+  }
+]
+```
+
+**Sort order:** `completed` desc (completed first), then `linesCompleted` desc, then `connectionsCount` desc.
+
+**Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `participantId` | string | Participant document ID |
+| `name` | string | User's display name |
+| `profilePhoto` | string \| null | User's profile photo URL |
+| `connectionsCount` | number | Number of unique people connected with (from ParticipantConnection records) |
+| `linesCompleted` | number | Completed bingo lines (vertical, horizontal, diagonal) |
+| `completed` | boolean | Whether the entire bingo sheet is filled |
+
+---
+
+### PUT `/api/events/:eventId/leaderboard/score`
+
+Update the authenticated user's bingo score for an event. Triggers a Pusher `leaderboard-updated` event on channel `event-{eventId}`.
+
+- **Auth:** Protected
+
+**URL Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `eventId` | ObjectId | Yes | The event ID |
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `linesCompleted` | number | No | Number of completed bingo lines |
+| `completed` | boolean | No | Whether the entire bingo sheet is filled |
+
+At least one field must be provided.
+
+**Response (200):**
+
+```json
+{
+  "participantId": "abc123",
+  "name": "Jane Doe",
+  "linesCompleted": 3,
+  "completed": false,
+  "connectionsCount": 2
+}
+```
+
+**Error Responses:**
+
+| Status | Description |
+|--------|-------------|
+| 400 | Invalid eventId or no valid fields provided |
+| 404 | Participant not found for this event |
 
 ---
 

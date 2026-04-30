@@ -684,3 +684,216 @@ export async function deleteEvent(req: Request, res: Response) {
     return res.status(500).json({ success: false, error: err.message });
   }
 }
+
+
+/**
+ * PUT /api/events/:eventId
+ * Update an event's basic information (host only).
+ * Does NOT allow changing currentState — use PUT /:eventId/status for that.
+ *
+ * @param req.params.eventId - Event ID to update (required)
+ * @param req.user.userId - Authenticated user ID (from access token)
+ *
+ * @param req.body.name - Updated event name (optional)
+ * @param req.body.description - Updated event description (optional)
+ * @param req.body.startDate - Updated event start date (optional)
+ * @param req.body.endDate - Updated event end date (optional)
+ * @param req.body.maxParticipant - Updated maximum number of participants (optional)
+ * @param req.body.gameType - Updated game type of the event (optional)
+ * @param req.body.eventImg - Updated event image URL (optional)
+ *
+ * @returns 200 on success
+ * @returns 400 if event is completed or validation fails
+ * @returns 403 if user is not the host
+ * @returns 404 if event not found
+ */
+type UpdateEventBody = {
+  name?: string;
+  description?: string;
+  startDate?: string | Date;
+  endDate?: string | Date;
+  maxParticipant?: number;
+  gameType?: "Name Bingo";
+  eventImg?: string;
+};
+
+export async function updateEvent(req: Request<{ eventId: string }, {}, UpdateEventBody>, res: Response) {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user?.userId;
+
+    if (!eventId) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing eventId",
+      });
+    }
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized: missing authenticated user",
+      });
+    }
+
+    if (!Types.ObjectId.isValid(eventId)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid eventId",
+      });
+    }
+
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        error: "Event not found",
+      });
+    }
+
+    // Verify authenticated user is the creator/host
+    if (event.createdBy.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: "Only the event creator can update this event",
+      });
+    }
+
+    if (event.currentState === "Completed") {
+      return res.status(400).json({
+        success: false,
+        error: "Cannot update a completed event",
+      });
+    }
+
+    const {
+      name,
+      description,
+      startDate,
+      endDate,
+      maxParticipant,
+      gameType,
+      eventImg,
+    } = req.body;
+
+    const updateData: Partial<{
+      name: string;
+      description: string;
+      startDate: Date;
+      endDate: Date;
+      maxParticipant: number;
+      gameType: "Name Bingo";
+      eventImg: string;
+    }> = {};
+
+    // Validate and set name
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({ success: false, error: "Name must be a non-empty string" });
+      }
+      updateData.name = name;
+    }
+
+    // Validate and set description
+    if (description !== undefined) {
+      if (typeof description !== "string" || !description.trim()) {
+        return res.status(400).json({ success: false, error: "Description must be a non-empty string" });
+      }
+      updateData.description = description;
+    }
+
+    // Validate and set startDate
+    if (startDate !== undefined) {
+      if (startDate === null || typeof startDate === "boolean") {
+        return res.status(400).json({ success: false, error: "Invalid startDate" });
+      }
+      const parsed = new Date(startDate);
+      if (isNaN(parsed.getTime())) {
+        return res.status(400).json({ success: false, error: "Invalid startDate" });
+      }
+      updateData.startDate = parsed;
+    }
+
+    // Validate and set endDate
+    if (endDate !== undefined) {
+      if (endDate === null || typeof endDate === "boolean") {
+        return res.status(400).json({ success: false, error: "Invalid endDate" });
+      }
+      const parsed = new Date(endDate);
+      if (isNaN(parsed.getTime())) {
+        return res.status(400).json({ success: false, error: "Invalid endDate" });
+      }
+      updateData.endDate = parsed;
+    }
+
+    // Validate and set maxParticipant
+    if (maxParticipant !== undefined) {
+      if (maxParticipant === null || !Number.isInteger(maxParticipant) || maxParticipant <= 0) {
+        return res.status(400).json({ success: false, error: "maxParticipant must be a positive integer" });
+      }
+      if (maxParticipant < event.participantIds.length) {
+        return res.status(400).json({
+          success: false,
+          error: `maxParticipant cannot be less than the current number of participants (${event.participantIds.length})`,
+        });
+      }
+      updateData.maxParticipant = maxParticipant;
+    }
+
+    // Validate and set gameType
+    if (gameType !== undefined) {
+      const validGameTypes = ["Name Bingo"];
+      if (typeof gameType !== "string" || !validGameTypes.includes(gameType)) {
+        return res.status(400).json({ success: false, error: `Invalid gameType. Must be one of: ${validGameTypes.join(", ")}` });
+      }
+      updateData.gameType = gameType;
+    }
+
+    if (eventImg !== undefined) {
+      if (typeof eventImg !== "string") {
+        return res.status(400).json({ success: false, error: "eventImg must be a string" });
+      }
+      updateData.eventImg = eventImg;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "No fields provided to update",
+      });
+    }
+
+    // Validate date ordering (compare updated dates against existing ones)
+    const finalStartDate = updateData.startDate ?? event.startDate;
+    const finalEndDate = updateData.endDate ?? event.endDate;
+
+    if (finalEndDate <= finalStartDate) {
+      return res.status(400).json({
+        success: false,
+        error: "endDate must be after startDate",
+      });
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(
+      eventId,
+      { $set: updateData },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Event updated successfully",
+      data: updatedEvent,
+    });
+  } catch (err: any) {
+    console.error("UPDATE EVENT ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Internal server error",
+    });
+  }
+}
