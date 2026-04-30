@@ -161,8 +161,8 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 				const categoriesData = await getBingoCategories(eventId);
 				setCategories(categoriesData.tiles);
 
-				const participantsData = await getParticipantsByEventId(eventId);
-				setParticipants(participantsData?.participants || []);
+				const participantsData = gameState.participants;
+				setParticipants(participantsData || []);
 
 				const hasSaved = await loadSavedCards();
 				if (!hasSaved) {

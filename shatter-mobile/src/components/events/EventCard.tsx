@@ -84,7 +84,7 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 								if (!event.gameType) {
 									event.gameType = GameType.NAME_BINGO;
 								}
-								initializeGame(event.gameType, event._id, event.currentState);
+								initializeGame(event.gameType, event._id, event.currentState, event.participantIds);
 								router.push({
 									pathname: "/EventPages/EventLobby",
 									params: { eventId: event._id },
@@ -103,7 +103,7 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 								if (!event.gameType) {
 									event.gameType = GameType.NAME_BINGO;
 								}
-								initializeGame(event.gameType, event._id, event.currentState);
+								initializeGame(event.gameType, event._id, event.currentState, event.participantIds);
 								router.push({
 									pathname: "/GamePages/Game",
 									params: { eventId: event._id },
@@ -122,7 +122,7 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 								if (!event.gameType) {
 									event.gameType = GameType.NAME_BINGO;
 								}
-								initializeGame(event.gameType, event._id, event.currentState);
+								initializeGame(event.gameType, event._id, event.currentState, event.participantIds);
 								router.push({
 									pathname: "/GamePages/Game",
 									params: { eventId: event._id },
