@@ -193,7 +193,7 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                                 <div
                                     key={`${rowIndex}-${colIndex}`}
                                     onClick={() => toggleCellSelection(rowIndex, colIndex)}
-                                className={`bg-white/5 mt-2 mx-auto px-3 py-1 rounded-full border border-[#4DC4FF] bg-[#4DC4FF]/20 text-sm text-center cursor-pointer w-fit
+                                className={`bg-white/5 mt-2 mx-auto px-3 py-1 rounded-full border border-[#4DC4FF] text-[#4DC4FF] bg-[#4DC4FF]/20 text-sm text-center cursor-pointer w-fit
                                     ${selectedCells.has(`${rowIndex}-${colIndex}`) ? "visible" : "invisible"}`}
                                 >
                                     Regenerate

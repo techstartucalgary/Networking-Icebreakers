@@ -1,5 +1,5 @@
 export async function GenerateQuestions(Data: {
-    context: string;
+    event_description: string;
     n_rows: number;
     n_cols: number;
     tags: string[];
