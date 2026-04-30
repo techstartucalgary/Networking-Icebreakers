@@ -147,7 +147,7 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                         <div
                             key={`${rowIndex}-${colIndex}`}
                             onClick={() => toggleCellSelection(rowIndex, colIndex)}
-                            className={`bg-white/5 p-2 rounded-lg border cursor-pointer ${selectedCells.has(`${rowIndex}-${colIndex}`)
+                            className={`bg-white/5 p-4 rounded-lg border cursor-pointer ${selectedCells.has(`${rowIndex}-${colIndex}`)
                                     ? "border-[#4DC4FF] bg-[#4DC4FF]/20"
                                     : "border-white/20"
                                 }`}
