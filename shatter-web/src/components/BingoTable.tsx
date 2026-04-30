@@ -95,7 +95,11 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                     const newGrid = bingoGrid.map(row => [...row]);
 
                     selected.forEach(({ row, col }) => {
-                        newGrid[row][col] = result.bingoGrid[row][col];
+                        const newCell = result.bingoGrid?.[row]?.[col]; //optional chaining
+
+                        if (newCell && newCell.question && newCell.shortQuestion) {
+                            newGrid[row][col] = newCell;
+                        }
                     });
 
                     setBingoGrid(newGrid);
