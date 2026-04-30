@@ -13,14 +13,15 @@ interface BingoTableProps {
     bingoGrid: BingoCell[][];
     onChange: (row: number, col: number, value: BingoCell) => void;
     bingosize: number; // 3 or 5 for now, but will be dynamic in the future
-    setBingoGrid: any
+    setBingoGrid: any;
+    bingoDescription: string;
 }
 
 //This should probably use "UseState" for the columns and rows in the future when it becomes resizable. For now, it is just hard coded to 3x3/5x5
 
-export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGrid }: BingoTableProps) {
+export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGrid, bingoDescription }: BingoTableProps) {
     const [size, setSize] = useState(bingosize);
-    const [bingoDescription, setBingoDescription] = useState("");
+    //const [bingoDescription, setBingoDescription] = useState("");
     const [fetching, setFetching] = useState(false);
     const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
 
@@ -118,6 +119,7 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
 
         <div className="space-y-4">
             <div>
+                {/* //old description input
                 <label className="block text-sm text-white font-body mb-2">Bingo Prompt</label>
                 <input
                     type="text"
@@ -126,6 +128,7 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                     placeholder="e.g., Software engineering event..."
                     className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-[#4DC4FF] transition-colors font-body"
                 />
+                */}
                 <label className="block text-sm text-white font-body mb-2">Bingo Tags</label>
                 <TagField
                     tags={tags}

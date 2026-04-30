@@ -861,6 +861,7 @@ const loadBingoData = async (eventId: string) => {
                                 }}
                                 bingosize={GRID_SIZE}
                                 setBingoGrid={setBingoGrid}
+                                bingoDescription={bingoDescription}
                             />
                             </div>
 

@@ -23,7 +23,7 @@ function CreateEventPage() {
             }))
         );    const [nameBingoSelected, setNameBingoSelected] = useState(false);
     const [bingoGrid, setBingoGrid] = useState<BingoCell[][]>(createEmptyGrid(3));
-    const [bingoDescription, setBingoDescription] = useState("");
+    //const [bingoDescription, setBingoDescription] = useState("");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -81,7 +81,7 @@ function CreateEventPage() {
                     },
                     body: JSON.stringify({
                         _eventId: eventId,
-                        description: bingoDescription,
+                        description: description,
                         grid: bingoGrid,
                     }),
                 });
@@ -313,14 +313,15 @@ function CreateEventPage() {
                                 </div>
                             */}
                                 <BingoTable
-                                    bingoGrid={bingoGrid}
-                                    onChange={(row, col, value) => {
-                                        const newGrid = bingoGrid.map(r => [...r]);
-                                        newGrid[row][col] = value;
-                                        setBingoGrid(newGrid);
-                                    }}
-                                    setBingoGrid={setBingoGrid}
-                                    bingosize={3}
+                            bingoGrid={bingoGrid}
+                            onChange={(row, col, value) => {
+                                const newGrid = bingoGrid.map(r => [...r]);
+                                newGrid[row][col] = value;
+                                setBingoGrid(newGrid);
+                            }}
+                            setBingoGrid={setBingoGrid}
+                            bingosize={3}
+                            bingoDescription={description}
                                 />
                             </div>
                         )}
