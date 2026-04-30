@@ -1,4 +1,4 @@
-import { EventState, GameType } from "@/src/interfaces/Event";
+import { EventState, GameType, Participant } from "@/src/interfaces/Event";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
 	createContext,
@@ -7,6 +7,7 @@ import {
 	useEffect,
 	useState,
 } from "react";
+import { getPusherClient } from "./PusherClient";
 
 export type GameState = {
 	gameType: GameType; //"Game Bingo"
@@ -15,6 +16,7 @@ export type GameState = {
 	data: any; //generic, can hold cards, prompts, scores
 	status: string | null; //"Bingo!", "Completed"
 	progress: EventState;
+	participants: Participant[];
 };
 
 type GameContextType = {
@@ -40,6 +42,7 @@ const defaultGameState: GameState = {
 	data: "",
 	status: null,
 	progress: EventState.UPCOMING,
+	participants: [],
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -52,6 +55,54 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
 	const storageKey = (eventId: string, gameType: GameType) =>
 		`game-${gameType}-${eventId}`;
+
+	//create event hook for each event joined
+	useEffect(() => {
+		if (!gameState.eventId) return;
+
+		let isActive = true;
+
+		let channel: any = null;
+		let pusherClient: any = null;
+
+		const setup = async () => {
+			pusherClient = await getPusherClient();
+
+			if (!isActive) return;
+
+			channel = await pusherClient.subscribe({
+				channelName: `event-${gameState.eventId}`,
+				onEvent: (event: any) => {
+					if (event.eventName === "event") {
+						try {
+							const data = JSON.parse(event.data);
+
+							setGameProgress(data.status);
+							setGameParticipants(data.participantIds);
+						} catch (err) {
+							console.error("Failed to parse event data", err);
+						}
+					}
+				},
+			});
+		};
+
+		setup();
+
+		return () => {
+			isActive = false;
+
+			if (channel) {
+				channel.unbind_all?.();
+			}
+
+			if (pusherClient && gameState.eventId) {
+				pusherClient.unsubscribe({
+					channelName: `event-${gameState.eventId}`,
+				});
+			}
+		};
+	}, [gameState.eventId]);
 
 	//load participantId on app start
 	useEffect(() => {
@@ -79,36 +130,18 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		gameType: GameType,
 		eventId: string,
 		eventProgress: EventState,
+		eventParticipants: Participant[],
 		initialData: any = {},
 	): Promise<void> => {
 		setGameState({
 			gameType,
 			eventId,
-			loading: true,
+			loading: false,
 			data: initialData,
 			status: null,
 			progress: eventProgress,
+			participants: eventParticipants,
 		});
-
-		setGameType(GameType.NAME_BINGO); //TODO: Remove Hard Coded Game Type / change return of getEventById to include gameType
-
-		//Load persisted state if exists
-		try {
-			const saved = await AsyncStorage.getItem(storageKey(eventId, gameType));
-			if (saved) {
-				const parsed = JSON.parse(saved);
-
-				setGameState((prev) => ({
-					...prev,
-					...parsed,
-					progress: eventProgress, //always fetch live update for game progress
-				}));
-			}
-		} catch (err) {
-			console.log("Failed to load game state:", err);
-		} finally {
-			setGameState((prev) => ({ ...prev, loading: false }));
-		}
 	};
 
 	const setGameData = async (data: any) => {
@@ -167,7 +200,22 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 				JSON.stringify(newState),
 			);
 		} catch (err) {
-			console.log("Failed to save game progress:", err);
+			console.log("Failed to save game type:", err);
+		}
+	};
+
+	const setGameParticipants = async (participants: Participant[]) => {
+		if (!gameState) return;
+		const newState = { ...gameState, participants };
+		setGameState(newState);
+
+		try {
+			await AsyncStorage.setItem(
+				storageKey(gameState.eventId, gameState.gameType),
+				JSON.stringify(newState),
+			);
+		} catch (err) {
+			console.log("Failed to save game participants:", err);
 		}
 	};
 

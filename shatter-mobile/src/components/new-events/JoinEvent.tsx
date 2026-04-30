@@ -71,7 +71,7 @@ export function useJoinEvent() {
 			if (!event.gameType) {
 				event.gameType = GameType.NAME_BINGO;
 			}
-			initializeGame(event.gameType, event._id, event.currentState);
+			initializeGame(event.gameType, event._id, event.currentState, event.participantIds);
 		} catch (err: any) {
 			console.log(err);
 			throw new Error(err);
