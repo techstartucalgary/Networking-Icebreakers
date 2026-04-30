@@ -19,7 +19,7 @@ export interface IUser {
   socialLinks?: {
     linkedin?: string;
     github?: string;
-    other?: string[];
+    other?: { label: string; url: string }[];
   };
   authProvider: 'local' | 'linkedin' | 'guest';
   lastLogin?: Date;
@@ -85,7 +85,18 @@ const UserSchema = new Schema<IUser>(
     socialLinks: {
       linkedin: { type: String },
       github: { type: String },
-      other: { type: [String], default: undefined },
+      other: {
+        type: [
+          new Schema(
+            {
+              label: { type: String, required: true, trim: true },
+              url: { type: String, required: true, trim: true },
+            },
+            { _id: false },
+          ),
+        ],
+        default: undefined,
+      },
     },
     authProvider: {
       type: String,

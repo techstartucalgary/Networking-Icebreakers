@@ -559,7 +559,7 @@ Update a user's profile. Users can only update their own profile.
 | `password`     | string | Minimum 8 characters |
 | `bio`          | string | |
 | `profilePhoto` | string | URL |
-| `socialLinks`  | object | `{ linkedin?: string, github?: string, other?: string[] }` — `other` replaces the whole array on update |
+| `socialLinks`  | object | `{ linkedin?: string, github?: string, other?: Array<{ label: string, url: string }> }` — each `other` entry has a required `label` and `url`; the array fully replaces the previous one on update |
 | `organization` | string | Where the user works/studies |
 | `title`        | string | Job title or role |
 
@@ -853,7 +853,7 @@ Join an event as a guest (no account required).
 | `socialLinks` | object | No* | Social links |
 | `socialLinks.linkedin` | string | No | LinkedIn URL |
 | `socialLinks.github` | string | No | GitHub URL |
-| `socialLinks.other` | string[] | No | Array of additional social/profile URLs |
+| `socialLinks.other` | `Array<{label, url}>` | No | Additional labeled social/profile links. Each entry requires both `label` (display name) and `url`. |
 | `organization` | string | No* | Where the guest works/studies |
 | `title` | string | No | Job title or role |
 
