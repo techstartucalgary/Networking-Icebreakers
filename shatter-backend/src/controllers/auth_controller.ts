@@ -285,7 +285,12 @@ export const linkedinCallback = async (req: Request, res: Response) => {
 	let statePayload: { linking?: boolean; userId?: string };
 	try {
 	    statePayload = jwt.verify(state, JWT_SECRET) as { linking?: boolean; userId?: string };
-	} catch {
+	} catch (e: any) {
+	    console.error('LinkedIn state verify failed:', {
+		name: e?.name,
+		message: e?.message,
+		stateLen: state?.length,
+	    });
 	    return res.status(401).json({ error: 'Invalid state parameter' });
 	}
 
