@@ -277,7 +277,7 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     const { name, email, socialLinks, organization, title } = req.body as {
       name?: string;
       email?: string;
-      socialLinks?: { linkedin?: string; github?: string; other?: string };
+      socialLinks?: { linkedin?: string; github?: string; other?: string[] };
       organization?: string;
       title?: string;
     };
@@ -295,7 +295,7 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     const hasSocialLink = socialLinks && (
       socialLinks.linkedin?.trim() ||
       socialLinks.github?.trim() ||
-      socialLinks.other?.trim()
+      socialLinks.other?.some((s) => s.trim())
     );
     const hasOrganization = organization && organization.trim();
 
