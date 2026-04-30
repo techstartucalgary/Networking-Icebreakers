@@ -17,6 +17,7 @@ export type GameState = {
 	status: string | null; //"Bingo!", "Completed"
 	progress: EventState;
 	participants: Participant[];
+	viewingGame: boolean;
 };
 
 type GameContextType = {
@@ -32,6 +33,8 @@ type GameContextType = {
 	setGameData: (data: any) => void;
 	setGameStatus: (status: string | null) => void;
 	setGameProgress: (progress: EventState) => void;
+	setGameParticipants: (participants: Participant[]) => void;
+	setGameViewing: (gameView: boolean) => void;
 	resetGame: () => void;
 };
 
@@ -43,6 +46,7 @@ const defaultGameState: GameState = {
 	status: null,
 	progress: EventState.UPCOMING,
 	participants: [],
+	viewingGame: false,
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -141,6 +145,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 			status: null,
 			progress: eventProgress,
 			participants: eventParticipants,
+			viewingGame: false,
 		});
 	};
 
@@ -189,9 +194,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		}
 	};
 
-	const setGameType = async (gameType: GameType) => {
+	const setGameViewing = async (viewGame: boolean) => {
 		if (!gameState) return;
-		const newState = { ...gameState, gameType };
+		const newState = { ...gameState, viewGame };
 		setGameState(newState);
 
 		try {
@@ -200,7 +205,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 				JSON.stringify(newState),
 			);
 		} catch (err) {
-			console.log("Failed to save game type:", err);
+			console.log("Failed to save game viewing status:", err);
 		}
 	};
 
@@ -240,6 +245,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 				setGameData,
 				setGameStatus,
 				setGameProgress,
+				setGameParticipants, 
+				setGameViewing,
 				resetGame,
 			}}
 		>

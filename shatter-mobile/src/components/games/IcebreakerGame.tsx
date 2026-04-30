@@ -24,6 +24,7 @@ const IcebreakerGame = ({ event }: IcebreakerGameProps) => {
 	useEffect(() => {
 		if (!event._id) return;
 		if (gameState.progress !== EventState.COMPLETED) return;
+		if (!gameState.viewingGame) return; //if user is looking at game from Events page
 
 		router.push("/EventPages/EventComplete");
 	}, [gameState.progress, event._id]);
