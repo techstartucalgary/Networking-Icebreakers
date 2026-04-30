@@ -26,6 +26,7 @@
     - [GET `/api/users/me`](#get-apiusersme)
     - [GET `/api/users/:userId`](#get-apiusersuserid)
     - [GET `/api/users/:userId/events`](#get-apiusersuseridevents)
+    - [GET `/api/users/:userId/current-event`](#get-apiusersuseridcurrent-event)
     - [PUT `/api/users/:userId`](#put-apiusersuserid)
   - [Events (`/api/events`)](#events-apievents)
     - [POST `/api/events/createEvent`](#post-apieventscreateevent)
@@ -34,7 +35,12 @@
     - [PUT `/api/events/:eventId/status`](#put-apieventseventidstatus)
     - [POST `/api/events/:eventId/join/user`](#post-apieventseventidjoinuser)
     - [POST `/api/events/:eventId/join/guest`](#post-apieventseventidjoinguest)
+    - [POST `/api/events/:eventId/leave`](#post-apieventseventidleave)
+    - [DELETE `/api/events/:eventId`](#delete-apieventseventid)
     - [GET `/api/events/createdEvents/user/:userId`](#get-apieventscreatedeventsuseruserid)
+    - [PUT `/api/events/:eventId`](#put-apieventseventid)
+    - [GET `/api/events/:eventId/leaderboard`](#get-apieventseventidleaderboard)
+    - [PUT `/api/events/:eventId/leaderboard/score`](#put-apieventseventidleaderboardscore)
   - [Bingo (`/api/bingo`)](#bingo-apibingo)
     - [POST `/api/bingo/createBingo`](#post-apibingocreatebingo)
     - [GET `/api/bingo/getBingo/:eventId`](#get-apibingogetbingoeventid)
@@ -75,6 +81,7 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | GET | `/api/users/me` | Protected | Get current user's profile |
 | GET | `/api/users/:userId` | Protected | Get user by ID |
 | GET | `/api/users/:userId/events` | Protected | Get user's joined events |
+| GET | `/api/users/:userId/current-event` | Protected | Get user's current active event (self-only) |
 | PUT | `/api/users/:userId` | Protected | Update user profile (self-only) |
 | POST | `/api/events/createEvent` | Protected | Create a new event |
 | GET | `/api/events/event/:joinCode` | Public | Get event by join code |
@@ -82,7 +89,11 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | PUT | `/api/events/:eventId/status` | Protected | Update event lifecycle status (host-only) |
 | POST | `/api/events/:eventId/join/user` | Protected | Join event as authenticated user |
 | POST | `/api/events/:eventId/join/guest` | Public | Join event as guest |
+| POST | `/api/events/:eventId/leave` | Protected | Leave event as participant |
+| DELETE | `/api/events/:eventId` | Protected | Delete/cancel event (host-only) |
 | GET | `/api/events/createdEvents/user/:userId` | Protected | Get events created by user |
+| GET | `/api/events/:eventId/leaderboard` | Protected | Get bingo leaderboard for event |
+| PUT | `/api/events/:eventId/leaderboard/score` | Protected | Update own bingo score |
 | POST | `/api/bingo/createBingo` | Protected | Create bingo game for event |
 | GET | `/api/bingo/getBingo/:eventId` | Public | Get bingo by event ID |
 | PUT | `/api/bingo/updateBingo` | Protected | Update bingo game |
@@ -454,6 +465,57 @@ Get all events a user has joined (populates event details).
 
 ---
 
+### GET `/api/users/:userId/current-event`
+
+Get the user's current active event (status is `Upcoming` or `In Progress`).
+
+- **Auth:** Protected (self-only)
+
+**URL Params:**
+
+| Param    | Type     | Required |
+|----------|----------|----------|
+| `userId` | ObjectId | Yes      |
+
+**Success Response (200) — active event exists:**
+
+```json
+{
+  "success": true,
+  "hasActiveEvent": true,
+  "event": {
+    "_id": "665a...",
+    "eventName": "Tech Meetup",
+    "status": "In Progress",
+    "joinCode": "48291037",
+    "participantCount": 25,
+    "role": "participant"
+  }
+}
+```
+
+**Success Response (200) — no active event:**
+
+```json
+{
+  "success": true,
+  "hasActiveEvent": false,
+  "event": null
+}
+```
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 403    | `"You can only view your own current event"` |
+
+**Notes:**
+- Returns the most recent active event if the user is in multiple
+- `role` is `"host"` if `event.createdBy` matches the user, otherwise `"participant"`
+
+---
+
 ### PUT `/api/users/:userId`
 
 Update a user's profile. Users can only update their own profile.
@@ -811,6 +873,84 @@ Join an event as a guest (no account required).
 
 ---
 
+### POST `/api/events/:eventId/leave`
+
+Leave an event as a participant.
+
+- **Auth:** Protected
+
+**URL Params:**
+
+| Param     | Type     | Required |
+|-----------|----------|----------|
+| `eventId` | ObjectId | Yes      |
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "msg": "Successfully left the event"
+}
+```
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 400    | `"Cannot leave a completed event"` |
+| 403    | `"Host cannot leave their own event. Use delete instead."` |
+| 404    | `"Event not found"` |
+| 404    | `"You are not a participant in this event"` |
+
+**Side Effects:**
+- Removes participant from event's `participantIds` array
+- Deletes the Participant document
+- Removes event from user's `eventHistoryIds` array
+- Deletes all ParticipantConnection records involving this participant in this event
+- Emits Pusher event `participant-left` on channel `event-{eventId}` with payload `{ participantId, name }`
+
+---
+
+### DELETE `/api/events/:eventId`
+
+Delete/cancel an event. Only the event host can delete, and only if the event is not completed.
+
+- **Auth:** Protected (host-only — `event.createdBy` must match authenticated user)
+
+**URL Params:**
+
+| Param     | Type     | Required |
+|-----------|----------|----------|
+| `eventId` | ObjectId | Yes      |
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "msg": "Event deleted successfully"
+}
+```
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 400    | `"Cannot delete a completed event"` |
+| 403    | `"Only the event host can delete this event"` |
+| 404    | `"Event not found"` |
+
+**Side Effects:**
+- Deletes all Participant documents for the event
+- Deletes Bingo document(s) for the event
+- Deletes all ParticipantConnection records for the event
+- Removes event from all participants' `eventHistoryIds` arrays
+- Deletes the Event document
+- Emits Pusher event `event-deleted` on channel `event-{eventId}` with payload `{ eventId, message }`
+
+---
+
 ### GET `/api/events/createdEvents/user/:userId`
 
 Get all events created by a specific user.
@@ -846,6 +986,173 @@ Get all events created by a specific user.
 | Status | Error |
 |--------|-------|
 | 404    | `"No events found for this user"` |
+---
+### PUT `/api/events/:eventId`
+
+Update an existing event's basic information (host only). Only the fields provided in the request body will be updated. To change event status, use `PUT /api/events/:eventId/status` instead.
+
+- **Auth:** Protected (Bearer Token required)
+
+---
+
+**URL Params:**
+
+| Param     | Type     | Required |
+|-----------|----------|----------|
+| `eventId` | ObjectId | Yes      |
+
+---
+
+**Request Body (all fields optional):**
+
+| Field            | Type     | Description                              |
+|------------------|----------|------------------------------------------|
+| `name`           | string   | Updated event name (cannot be empty)     |
+| `description`    | string   | Updated event description (cannot be empty) |
+| `startDate`      | Date     | Updated start date (ISO string)          |
+| `endDate`        | Date     | Updated end date (ISO string)            |
+| `maxParticipant` | number   | Updated max participants (positive integer, >= current count) |
+| `gameType`       | string   | `"Name Bingo"`                           |
+| `eventImg`       | string   | URL of event image                       |
+
+---
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Event updated successfully",
+  "data": {
+    "_id": "665a...",
+    "name": "Updated Event Name",
+    "description": "New description",
+    "startDate": "2026-05-01T10:00:00.000Z",
+    "endDate": "2026-05-02T10:00:00.000Z",
+    "maxParticipant": 50,
+    "currentState": "Upcoming",
+    "gameType": "Name Bingo",
+    "createdBy": "664f..."
+  }
+}
+```
+
+---
+
+**Error Responses:**
+
+| Status | Error |
+|--------|-------|
+| 400    | `"Missing eventId"` |
+| 400    | `"Invalid eventId"` |
+| 400    | `"No fields provided to update"` |
+| 400    | `"Name must be a non-empty string"` |
+| 400    | `"Description must be a non-empty string"` |
+| 400    | `"Invalid startDate"` |
+| 400    | `"Invalid endDate"` |
+| 400    | `"endDate must be after startDate"` |
+| 400    | `"maxParticipant must be a positive integer"` |
+| 400    | `"maxParticipant cannot be less than the current number of participants ({count})"` |
+| 400    | `"Invalid gameType. Must be one of: Name Bingo"` |
+| 400    | `"eventImg must be a string"` |
+| 400    | `"Cannot update a completed event"` |
+| 401    | `"Unauthorized: missing authenticated user"` |
+| 403    | `"Only the event creator can update this event"` |
+| 404    | `"Event not found"` |
+
+---
+
+**Notes:**
+
+- Only the event creator (`createdBy`) can update the event.
+- Fields not included in the request body will remain unchanged.
+- `currentState` cannot be changed through this endpoint — use `PUT /api/events/:eventId/status`.
+- `startDate` and `endDate` must be valid ISO date strings, and `endDate` must be after `startDate`.
+- `maxParticipant` cannot be set below the current number of participants in the event.
+
+---
+
+### GET `/api/events/:eventId/leaderboard`
+
+Get the bingo leaderboard for an event. Returns participants sorted by completion status and lines completed. Connections count is computed from ParticipantConnection records (unique connected partners).
+
+- **Auth:** Protected
+
+**URL Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `eventId` | ObjectId | Yes | The event ID |
+
+**Response (200):**
+
+```json
+[
+  {
+    "participantId": "abc123",
+    "name": "Jane Doe",
+    "profilePhoto": "https://example.com/photo.jpg",
+    "connectionsCount": 5,
+    "linesCompleted": 3,
+    "completed": true
+  }
+]
+```
+
+**Sort order:** `completed` desc (completed first), then `linesCompleted` desc, then `connectionsCount` desc.
+
+**Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `participantId` | string | Participant document ID |
+| `name` | string | User's display name |
+| `profilePhoto` | string \| null | User's profile photo URL |
+| `connectionsCount` | number | Number of unique people connected with (from ParticipantConnection records) |
+| `linesCompleted` | number | Completed bingo lines (vertical, horizontal, diagonal) |
+| `completed` | boolean | Whether the entire bingo sheet is filled |
+
+---
+
+### PUT `/api/events/:eventId/leaderboard/score`
+
+Update the authenticated user's bingo score for an event. Triggers a Pusher `leaderboard-updated` event on channel `event-{eventId}`.
+
+- **Auth:** Protected
+
+**URL Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `eventId` | ObjectId | Yes | The event ID |
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `linesCompleted` | number | No | Number of completed bingo lines |
+| `completed` | boolean | No | Whether the entire bingo sheet is filled |
+
+At least one field must be provided.
+
+**Response (200):**
+
+```json
+{
+  "participantId": "abc123",
+  "name": "Jane Doe",
+  "linesCompleted": 3,
+  "completed": false,
+  "connectionsCount": 2
+}
+```
+
+**Error Responses:**
+
+| Status | Description |
+|--------|-------------|
+| 400 | Invalid eventId or no valid fields provided |
+| 404 | Participant not found for this event |
 
 ---
 
@@ -978,7 +1285,7 @@ Update a bingo game.
 
 ---
 
-### POST `/api/bingo/generate`
+### POST `/api/bingo/generateBingo`
 
 Generate an AI-powered bingo grid based on a given context.
 

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getUsers, createUser, getUserById, getUserEvents, updateUser } from '../controllers/user_controller.js';
+import { getUsers, createUser, getUserById, getUserEvents, updateUser, getCurrentEvent } from '../controllers/user_controller.js';
 import { authMiddleware } from '../middleware/auth_middleware.js';
 import { User } from '../models/user_model.js';
 
@@ -24,6 +24,9 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
 
 // Get all events a user has joined - must come before /:userId to avoid route conflict
 router.get('/:userId/events', authMiddleware, getUserEvents);
+
+// Get user's current active event - must come before /:userId to avoid route conflict
+router.get('/:userId/current-event', authMiddleware, getCurrentEvent);
 
 // Update user profile (protected, self only)
 router.put('/:userId', authMiddleware, updateUser);
