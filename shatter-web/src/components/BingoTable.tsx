@@ -170,12 +170,14 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
                                 type="text"
                                 value={cell.question}
                                 onClick={(e) => e.stopPropagation()}
-                                onChange={(e) =>
-                                    onChange(rowIndex, colIndex, {
+                                onChange={(e) => {
+                                    const newGrid = bingoGrid.map(r => [...r]);
+                                    newGrid[rowIndex][colIndex] = {
                                         ...cell,
                                         question: e.target.value,
-                                    })
-                                }
+                                    };
+                                    setBingoGrid(newGrid);
+                                }}
                                 placeholder="Full question"
                                 className="w-full mb-2 p-2 rounded bg-white/10 text-white text-sm resize-none"
                             />
@@ -185,12 +187,14 @@ export default function BingoTable({ grid, onChange, bingosize }: BingoTableProp
                                 type="text"
                                 value={cell.shortQuestion}
                                 onClick={(e) => e.stopPropagation()} // Prevent cell selection when clicking on short question input
-                                onChange={(e) =>
-                                    onChange(rowIndex, colIndex, {
+                                onChange={(e) => {
+                                    const newGrid = bingoGrid.map(r => [...r]);
+                                    newGrid[rowIndex][colIndex] = {
                                         ...cell,
                                         shortQuestion: e.target.value,
-                                    })
-                                }
+                                    };
+                                    setBingoGrid(newGrid);
+                                }}
                                 placeholder="Short version"
                                 className="w-full p-2 rounded bg-white/10 text-white text-xs"
                             />
