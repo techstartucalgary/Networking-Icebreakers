@@ -134,7 +134,8 @@ export default function BingoTable({ bingoGrid, onChange, bingosize, setBingoGri
                 }}
                 disabled={fetching}
             >
-                {fetching ? "Generating..." : selectedCells.size === 0 ?"Generate Questions" : "Regenerate Selected Questions"}
+                {fetching ? "Generating..." : selectedCells.size === 0 ? "Generate Questions" :
+                    selectedCells.size > 1 ? "Regenerate Selected Questions" : "Regenerate Selected Question"}
             </button>
 
             <label className="block text-sm text-white font-body mb-3">
