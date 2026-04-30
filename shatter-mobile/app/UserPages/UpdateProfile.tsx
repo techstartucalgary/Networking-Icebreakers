@@ -1,5 +1,7 @@
 import { getStoredAuth } from "@/src/components/context/AsyncStorage";
-import { userUpdate } from "@/src/services/user.service";
+import { SocialLinksModal } from "@/src/components/general/SocialLinksModal";
+import { SocialLinks } from "@/src/interfaces/User";
+import { UserLinkedInLink, userUpdate } from "@/src/services/user.service";
 import { colors } from "@/src/styling/constants";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -35,31 +37,33 @@ export default function UpdateProfile() {
 	const [name, setName] = useState(user?.name || "");
 	const [email, setEmail] = useState(user?.email || "");
 	const [password, setPassword] = useState("");
+	const [title, setTitle] = useState(user?.title || "");
+	const [organization, setOrganization] = useState(user?.organization || "");
 	const [bio, setBio] = useState(user?.bio || "");
 	const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || "");
-	const [socialLinks, setSocialLinks] = useState<
-		{ label: string; url: string }[]
-	>(user?.socialLinks || []);
+	const [socialLinks, setSocialLinks] = useState<SocialLinks>(
+		user?.socialLinks || {},
+	);
+	const [socialModalVisible, setSocialModalVisible] = useState(false);
 
 	useEffect(() => {
 		if (!user) router.replace("/UserPages/Login");
 	}, [user]);
 
-	const handleLinkChange = (
-		index: number,
-		field: "label" | "url",
-		value: string,
-	) => {
-		const updated = [...socialLinks];
-		updated[index] = { ...updated[index], [field]: value };
-		setSocialLinks(updated);
+	const handleLinkedInLink = async () => {
+		if (!user?._id) {
+			alert("Failed to link LinkedIn");
+			return;
+		}
+
+		try {
+			await UserLinkedInLink(user._id);
+			alert("LinkedIn link initiated");
+		} catch (e) {
+			console.log(e);
+			alert("Failed to link LinkedIn");
+		}
 	};
-
-	const addNewLink = () =>
-		setSocialLinks([...socialLinks, { label: "", url: "" }]);
-
-	const removeLink = (index: number) =>
-		setSocialLinks(socialLinks.filter((_, i) => i !== index));
 
 	const handleSave = async () => {
 		if (!user || !user._id) return;
@@ -90,10 +94,12 @@ export default function UpdateProfile() {
 			bio,
 			profilePhoto,
 			socialLinks,
+			organization,
+			title,
 		}); //local update
 		const res = await userUpdate(
 			user._id,
-			{ name, email, bio, profilePhoto, socialLinks },
+			{ name, email, bio, profilePhoto, socialLinks, organization, title },
 			stored.accessToken,
 		); //remote update
 
@@ -126,6 +132,46 @@ export default function UpdateProfile() {
 							showsVerticalScrollIndicator={false}
 							contentContainerStyle={{ paddingBottom: 40 }}
 						>
+							{/* Profile Photo Section */}
+							{!user?.isGuest && (
+								<View>
+									<Text style={styles.label}>Profile Photo</Text>
+
+									{/* Preview */}
+									{profilePhoto && profilePhoto.length > 0 ? (
+										<Image
+											source={{ uri: profilePhoto }}
+											style={styles.avatarPreview}
+										/>
+									) : (
+										<View style={styles.avatarPlaceholder}>
+											<Text style={styles.avatarPlaceholderText}>
+												No photo selected
+											</Text>
+										</View>
+									)}
+
+									{/* Avatar grid */}
+									<View style={styles.avatarGrid}>
+										{AVATAR_OPTIONS.filter(Boolean).map((url) => (
+											<TouchableOpacity
+												key={url}
+												onPress={() => setProfilePhoto(url)}
+												style={[
+													styles.avatarOption,
+													profilePhoto === url && styles.avatarOptionSelected,
+												]}
+											>
+												<Image
+													source={{ uri: url }}
+													style={styles.avatarOptionImage}
+												/>
+											</TouchableOpacity>
+										))}
+									</View>
+								</View>
+							)}
+
 							{/* Name */}
 							<Text style={styles.label}>Name</Text>
 							<TextInput
@@ -167,6 +213,29 @@ export default function UpdateProfile() {
 								Password must be at least 8 characters
 							</Text>
 
+							{/* Title */}
+							<Text style={styles.label}>Title</Text>
+							<TextInput
+								style={styles.input}
+								value={title}
+								onChangeText={setTitle}
+								placeholder="Your Title"
+								placeholderTextColor={colors.lightGrey2}
+							/>
+							<Text style={styles.inputInfo}>
+								Your title at your organization, like Project Manager
+							</Text>
+
+							{/* Organization */}
+							<Text style={styles.label}>Organization</Text>
+							<TextInput
+								style={styles.input}
+								value={organization}
+								onChangeText={setOrganization}
+								placeholder="Your Organization"
+								placeholderTextColor={colors.lightGrey2}
+							/>
+
 							{/* Non-guest only */}
 							{!user?.isGuest && (
 								<>
@@ -182,80 +251,34 @@ export default function UpdateProfile() {
 										placeholderTextColor={colors.lightGrey2}
 										multiline
 									/>
-
-									<Text style={styles.label}>Profile Photo</Text>
-
-									{/* Current selection preview */}
-									{profilePhoto && profilePhoto.length > 0 ? (
-										<Image
-											source={{ uri: profilePhoto }}
-											style={styles.avatarPreview}
-										/>
-									) : (
-										<View style={styles.avatarPlaceholder}>
-											<Text style={styles.avatarPlaceholderText}>
-												No photo selected
-											</Text>
-										</View>
-									)}
-
-									{/* Avatar grid */}
-									<View style={styles.avatarGrid}>
-										{AVATAR_OPTIONS.filter(Boolean).map((url) => (
-											<TouchableOpacity
-												key={url}
-												onPress={() => setProfilePhoto(url)}
-												style={[
-													styles.avatarOption,
-													profilePhoto === url && styles.avatarOptionSelected,
-												]}
-											>
-												<Image
-													source={{ uri: url }}
-													style={styles.avatarOptionImage}
-												/>
-											</TouchableOpacity>
-										))}
-									</View>
 								</>
 							)}
 
-							{/* Social Links */}
-							<Text style={[styles.label, { marginTop: 20 }]}>
-								Social Links
-							</Text>
-							{socialLinks.map((link, index) => (
-								<View key={index} style={styles.linkContainer}>
-									<TextInput
-										style={styles.input}
-										placeholder="Label (e.g. LinkedIn)"
-										placeholderTextColor={colors.lightGrey2}
-										value={link.label}
-										onChangeText={(text) =>
-											handleLinkChange(index, "label", text)
-										}
-									/>
-									<TextInput
-										style={styles.input}
-										placeholder="URL"
-										placeholderTextColor={colors.lightGrey2}
-										value={link.url}
-										onChangeText={(text) =>
-											handleLinkChange(index, "url", text)
-										}
-									/>
-									<TouchableOpacity
-										style={styles.removeButton}
-										onPress={() => removeLink(index)}
-									>
-										<Text style={styles.buttonText}>Remove</Text>
-									</TouchableOpacity>
-								</View>
-							))}
+							{/* TODO: Link LinkedIn to Account if Verified User and LinkedIn Not Set 
+							{!user?.socialLinks?.linkedin && user?._id && (
+								<TouchableOpacity
+									style={[styles.addButton, { marginTop: 10 }]}
+									onPress={handleLinkedInLink}
+								>
+									<Text style={styles.buttonText}>Link LinkedIn</Text>
+								</TouchableOpacity>
+							)}
+							*/}
 
-							<TouchableOpacity style={styles.addButton} onPress={addNewLink}>
-								<Text style={styles.buttonText}>+ Add Social Link</Text>
+							{/* Social link modal */}
+							<TouchableOpacity
+								style={[styles.addButton, { marginTop: 20 }]}
+								onPress={() => setSocialModalVisible(true)}
+							>
+								<Text style={styles.buttonText}>Manage Social Links</Text>
 							</TouchableOpacity>
+
+							<SocialLinksModal
+								socialModalVisible={socialModalVisible}
+								setSocialModalVisible={setSocialModalVisible}
+								socialLinks={socialLinks}
+								setSocialLinks={setSocialLinks}
+							/>
 
 							<TouchableOpacity style={styles.saveButton} onPress={handleSave}>
 								<Text style={styles.buttonText}>Save Changes</Text>

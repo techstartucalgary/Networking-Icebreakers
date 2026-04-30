@@ -1,4 +1,4 @@
-import { SocialLink, User } from "@/src/interfaces/User";
+import { SocialLinks, User } from "@/src/interfaces/User";
 import { userFetch } from "@/src/services/user.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -12,7 +12,11 @@ type AuthContextType = {
 		accessToken: string,
 		isGuest: boolean,
 	) => Promise<void>;
-	continueAsGuest: (name: string, socialLink: SocialLink) => Promise<void>;
+	continueAsGuest: (
+		name: string,
+		socialLinks: SocialLinks,
+		organization: string,
+	) => Promise<void>;
 	logout: () => Promise<void>;
 	updateUser: (updates: Partial<User>) => User | undefined;
 };
@@ -24,7 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		userId: "",
 		accessToken: "",
 		isGuest: true,
-		guestInfo: { name: "", socialLinks: [] },
+		guestInfo: { name: "", socialLinks: {}, organization: "" },
 	});
 
 	const [user, setUser] = useState<User | undefined>(undefined);
@@ -44,6 +48,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 						email: res.user.email,
 						isGuest: res.user.isGuest,
 						socialLinks: res.user.socialLinks,
+						organization: res.user.organization,
+						title: res.user.title,
 						profilePhoto: res.user.profilePhoto,
 					};
 
@@ -59,6 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 						email: "",
 						isGuest: savedData.isGuest,
 						socialLinks: savedData.guestInfo.socialLinks,
+						organization: savedData.guestInfo.organization,
 					};
 					setUser(mappedUser);
 				}
@@ -79,18 +86,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			userId: user?._id,
 			accessToken,
 			isGuest: isGuest,
-			guestInfo: { name: user.name, socialLinks: user.socialLinks },
+			guestInfo: {
+				name: user.name,
+				socialLinks: user.socialLinks || {},
+				organization: user.organization,
+			},
 		};
 		setAuthStorage(storageData);
 		await saveStoredAuth(storageData);
 	};
 
 	//when user initially creates a guest account
-	const continueAsGuest = async (name: string, socialLink: SocialLink) => {
+	const continueAsGuest = async (
+		name: string,
+		socialLink: SocialLinks,
+		organization: string,
+	) => {
+		const encodedName = encodeURIComponent(name ?? "Unknown");
+		const profilePhoto = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedName}`;
+
 		const guestUser: User = {
 			_id: null,
 			name: name,
-			socialLinks: [{ label: socialLink.label, url: socialLink.url }],
+			socialLinks: { linkedin: socialLink.linkedin, github: socialLink.github, other: socialLink.other },
+			organization: organization,
+			profilePhoto: profilePhoto,
 			isGuest: true,
 		};
 
@@ -100,7 +120,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			userId: guestUser._id,
 			accessToken: "",
 			isGuest: true,
-			guestInfo: { name: guestUser.name, socialLinks: guestUser.socialLinks },
+			guestInfo: {
+				name: name,
+				socialLinks: guestUser.socialLinks || {},
+				organization: organization || "",
+			},
 		};
 
 		setAuthStorage(storageData);
@@ -113,7 +137,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			userId: "",
 			accessToken: "",
 			isGuest: true,
-			guestInfo: { name: "", socialLinks: [] },
+			guestInfo: { name: "", socialLinks: {}, organization: "" },
 		});
 		await AsyncStorage.clear();
 	};

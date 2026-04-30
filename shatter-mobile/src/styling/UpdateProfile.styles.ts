@@ -140,7 +140,7 @@ export const UpdateProfileStyling = StyleSheet.create({
 		padding: 14,
 		borderRadius: 8,
 		alignItems: "center",
-		marginTop: 20,
+		marginTop: 10,
 	},
 	cancelButton: {
 		backgroundColor: colors.lightGrey2,

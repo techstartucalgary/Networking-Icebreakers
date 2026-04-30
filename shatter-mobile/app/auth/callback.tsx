@@ -28,7 +28,7 @@ export default function AuthCallback() {
                     _id: response.userId,
                     name: userData.user.name,
                     email: userData.user.email,
-                    socialLinks: userData.user.socialLinks ?? [],
+                    socialLinks: userData.user.socialLinks ?? {},
                     profilePhoto: userData.user.profilePhoto,
                     isGuest: false,
                 };
