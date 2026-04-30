@@ -46,7 +46,8 @@
     - [POST `/api/bingo/createBingo`](#post-apibingocreatebingo)
     - [GET `/api/bingo/getBingo/:eventId`](#get-apibingogetbingoeventid)
     - [PUT `/api/bingo/updateBingo`](#put-apibingoupdatebingo)
-    - [POST `/api/bingo/generate`](#post-apibingogenerate)
+    - [POST `/api/bingo/generateBingo`](#post-apibingogeneratebingo)
+    - [POST `/api/bingo/generateBingo/single`](#post-apibingogeneratebingosingle)
   - [Participant Connections (`/api/participantConnections`)](#participant-connections-apiparticipantconnections)
     - [POST `/api/participantConnections/`](#post-apiparticipantconnections)
     - [POST `/api/participantConnections/by-emails`](#post-apiparticipantconnectionsby-emails)
@@ -1309,30 +1310,33 @@ Update a bingo game.
 
 ### POST `/api/bingo/generateBingo`
 
-Generate an AI-powered bingo grid based on a given context.
+Generate an AI-powered bingo grid based on a given event description and attendee tags.
 
-- **Auth:** Protected
+- **Auth:** Not Protected
 
 **Request Body:**
 
-| Field     | Type   | Required | Notes |
-|-----------|--------|----------|-------|
-| `context` | string | Yes      | Context used to generate bingo content |
-| `n_rows`  | number | Yes      | Number of rows (1–5) |
-| `n_cols`  | number | Yes      | Number of columns (1–5) |
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `event_description` | string | Yes | General information about what the event is about. Cannot be empty |
+| `tags` | string[] | Yes | List of professional types, roles, job titles, specializations, or departments attending the event. Can be an empty array |
+| `n_rows` | number | Yes | Number of rows (1–5) |
+| `n_cols` | number | Yes | Number of columns (1–5) |
 
 **Example Request:**
 
 ```json
 {
-  "context": "Software engineer networking event where developers meet, discuss tech stacks, exchange ideas, talk about startups, open source, AI, and career opportunities",
+  "event_description": "Software engineer networking event where developers meet, discuss tech stacks, exchange ideas, talk about startups, open source, AI, and career opportunities",
+  "tags": ["software engineers", "frontend developers", "backend developers", "startup founders", "product managers"],
   "n_rows": 2,
   "n_cols": 2
 }
 ```
 
 **Example Response:**
-```
+
+```json
 {
   "status": true,
   "bingo_grid": [
@@ -1357,6 +1361,120 @@ Generate an AI-powered bingo grid based on a given context.
       }
     ]
   ]
+}
+```
+
+**Validation Errors:**
+
+Missing or invalid `event_description`:
+
+```json
+{
+  "status": false,
+  "msg": "event_description is required and must be a non-empty string"
+}
+```
+
+Missing or invalid `tags`:
+
+```json
+{
+  "status": false,
+  "msg": "tags is required and must be an array of strings"
+}
+```
+
+Missing or invalid `n_rows` or `n_cols`:
+
+```json
+{
+  "status": false,
+  "msg": "n_rows and n_cols must be numbers where 0 < value <= 5"
+}
+```
+
+### POST `/api/bingo/generateBingo/single`
+
+Generate one new AI-powered bingo question to replace a target question in an existing bingo grid.
+
+The New generated question should be different from the existing questions in the bingo grid while still matching the provided event context.
+
+- **Auth:** Not Protected
+
+**Request Body:**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `event_description` | string | Yes | Event context used to generate the new bingo question. Cannot be empty |
+| `tags` | string[] | Yes | Types or roles of people attending the event. Can be an empty array |
+| `bingo_grid` | string[][] | Yes | Existing bingo grid containing the full question strings |
+| `bingo_question_target` | string | Yes | The question intended to be regenerated/replaced |
+
+**Example Request:**
+
+```json
+{
+  "event_description": "Software engineer networking event where developers meet, discuss tech stacks, exchange ideas, talk about startups, open source, AI, and career opportunities",
+  "tags": ["software engineers", "startup founders", "product managers", "designers"],
+  "bingo_grid": [
+    [
+      "Sketches architecture on a napkin",
+      "Shows a product demo on phone"
+    ],
+    [
+      "Explains their open-source contribution",
+      "Asks 'What's your current stack?'"
+    ]
+  ],
+  "bingo_question_target": "Explains their open-source contribution"
+}
+```
+
+**Example Response:**
+
+```json
+{
+  "status": true,
+  "question": "Shows a side project they built over the weekend",
+  "shortQuestion": "Weekend side project"
+}
+```
+
+**Validation Errors:**
+
+Missing or invalid `event_description`:
+
+```json
+{
+  "status": false,
+  "msg": "event_description is required and must be a non-empty string"
+}
+```
+
+Missing or invalid `tags`:
+
+```json
+{
+  "status": false,
+  "msg": "tags is required and must be an array of strings"
+}
+```
+
+Missing or invalid `bingo_grid`:
+
+```json
+{
+  "status": false,
+  "msg": "bingo_grid is required and must be a 2D array of strings"
+}
+```
+
+Missing or invalid `bingo_question_target`:
+
+```json
+{
+  "status": false,
+  "msg": "bingo_question_target is required and must be a non-empty string"
 }
 ```
 
