@@ -7,7 +7,7 @@ import { check_req_fields } from "../utils/requests_utils.js";
 import { User } from "../models/user_model.js";
 import { Participant } from "../models/participant_model.js";
 import { ParticipantConnection } from "../models/participant_connection_model.js";
-import { pusher } from "../utils/pusher_websocket.js";
+import { emitLeaderboardUpdate } from "../utils/leaderboard_pusher.js";
 
 /**
  * POST /api/participantConnections
@@ -105,48 +105,10 @@ export async function createParticipantConnection(req: Request, res: Response) {
       description,
     });
 
-    // Count connections for each participant after the new one was created
-    const eventObjectId = new Types.ObjectId(_eventId);
-
-    for (const participantId of [
-      primaryParticipantId,
-      secondaryParticipantId,
-    ]) {
-      const [connections, participant] = await Promise.all([
-        ParticipantConnection.find({
-          _eventId: eventObjectId,
-          $or: [
-            { primaryParticipantId: participantId },
-            { secondaryParticipantId: participantId },
-          ],
-        }).lean(),
-        Participant.findById(participantId)
-          .populate("userId", "name profilePhoto")
-          .lean(),
-      ]);
-
-      const uniquePartners = new Set(
-        connections.map((c) =>
-          c.primaryParticipantId.toString() === participantId
-            ? c.secondaryParticipantId.toString()
-            : c.primaryParticipantId.toString(),
-        ),
-      );
-
-      const user = participant?.userId as {
-        name?: string;
-        profilePhoto?: string;
-      } | null;
-
-      await pusher.trigger(`event-${_eventId}`, "leaderboard-updated", {
-        participantId,
-        name: user?.name || participant?.name,
-        profilePhoto: user?.profilePhoto || null,
-        linesCompleted: participant?.linesCompleted || 0,
-        completed: participant?.completed || false,
-        connectionsCount: uniquePartners.size,
-      });
-    }
+    await Promise.all([
+      emitLeaderboardUpdate(_eventId, primaryParticipantId),
+      emitLeaderboardUpdate(_eventId, secondaryParticipantId),
+    ]);
 
     return res.status(201).json(newConnection);
   } catch (_error) {
@@ -273,7 +235,10 @@ export async function createParticipantConnectionByEmails(
       description,
     });
 
-    await pusher.trigger(`event-${_eventId}`, "leaderboard-updated", {});
+    await Promise.all([
+      emitLeaderboardUpdate(_eventId, primaryParticipant._id as Types.ObjectId),
+      emitLeaderboardUpdate(_eventId, secondaryParticipant._id as Types.ObjectId),
+    ]);
 
     return res.status(201).json(newConnection);
   } catch (_error) {
@@ -317,7 +282,10 @@ export async function deleteParticipantConnection(req: Request, res: Response) {
         .json({ error: "ParticipantConnection not found for this event" });
     }
 
-    await pusher.trigger(`event-${eventId}`, "leaderboard-updated", {});
+    await Promise.all([
+      emitLeaderboardUpdate(eventId, deleted.primaryParticipantId),
+      emitLeaderboardUpdate(eventId, deleted.secondaryParticipantId),
+    ]);
 
     return res.status(200).json({
       message: "ParticipantConnection deleted successfully",
