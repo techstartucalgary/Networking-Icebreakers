@@ -1288,30 +1288,33 @@ Update a bingo game.
 
 ### POST `/api/bingo/generateBingo`
 
-Generate an AI-powered bingo grid based on a given context.
+Generate an AI-powered bingo grid based on a given event description and attendee tags.
 
 - **Auth:** Not Protected
 
 **Request Body:**
 
-| Field     | Type   | Required | Notes |
-|-----------|--------|----------|-------|
-| `context` | string | Yes      | Context used to generate bingo content |
-| `n_rows`  | number | Yes      | Number of rows (1–5) |
-| `n_cols`  | number | Yes      | Number of columns (1–5) |
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `event_description` | string | Yes | General information about what the event is about. Cannot be empty |
+| `tags` | string[] | Yes | List of professional types, roles, job titles, specializations, or departments attending the event. Can be an empty array |
+| `n_rows` | number | Yes | Number of rows (1–5) |
+| `n_cols` | number | Yes | Number of columns (1–5) |
 
 **Example Request:**
 
 ```json
 {
-  "context": "Software engineer networking event where developers meet, discuss tech stacks, exchange ideas, talk about startups, open source, AI, and career opportunities",
+  "event_description": "Software engineer networking event where developers meet, discuss tech stacks, exchange ideas, talk about startups, open source, AI, and career opportunities",
+  "tags": ["software engineers", "frontend developers", "backend developers", "startup founders", "product managers"],
   "n_rows": 2,
   "n_cols": 2
 }
 ```
 
 **Example Response:**
-```
+
+```json
 {
   "status": true,
   "bingo_grid": [
@@ -1336,6 +1339,35 @@ Generate an AI-powered bingo grid based on a given context.
       }
     ]
   ]
+}
+```
+
+**Validation Errors:**
+
+Missing or invalid `event_description`:
+
+```json
+{
+  "status": false,
+  "msg": "event_description is required and must be a non-empty string"
+}
+```
+
+Missing or invalid `tags`:
+
+```json
+{
+  "status": false,
+  "msg": "tags is required and must be an array of strings"
+}
+```
+
+Missing or invalid `n_rows` or `n_cols`:
+
+```json
+{
+  "status": false,
+  "msg": "n_rows and n_cols must be numbers where 0 < value <= 5"
 }
 ```
 
