@@ -1,13 +1,17 @@
 import { useAuth } from "@/src/components/context/AuthContext";
 import { User } from "@/src/interfaces/User";
-import { exchangeLinkedInCode, userFetch } from "@/src/services/user.service";
+import {
+    exchangeLinkedInCode,
+    userFetch,
+    userUpdate,
+} from "@/src/services/user.service";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 
 export default function AuthCallback() {
 	const { code } = useLocalSearchParams<{ code: string }>();
-	const { authenticate } = useAuth();
+	const { authenticate, authStorage } = useAuth();
 	const [error, setError] = useState("");
 
 	useEffect(() => {
@@ -35,9 +39,12 @@ export default function AuthCallback() {
 
 				// Store user + JWT in auth context
 				await authenticate(user, response.token, false);
+
+				// Update stored user with LinkedIn data
+				const token = authStorage.accessToken;
+				userUpdate(response.userId, user, token);
 				router.replace("/JoinEventPage");
 			} catch (err) {
-				console.log("Error with LinkedIn Callback: ", err);
 				setError((err as Error).message || "Authentication failed.");
 			}
 		};
