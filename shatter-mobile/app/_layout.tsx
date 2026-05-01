@@ -1,10 +1,12 @@
 import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 import { GameProvider } from "@/src/components/context/GameContext";
 import FullPageLoader from "@/src/components/general/FullPageLoader";
+import { colors } from "@/src/styling/constants";
 import { Poppins_600SemiBold, useFonts } from "@expo-google-fonts/poppins";
 import { WorkSans_400Regular } from "@expo-google-fonts/work-sans";
 import { Asset } from "expo-asset";
 import { SplashScreen, Stack, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
 import { Dimensions, Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -27,6 +29,11 @@ export default function RootLayout() {
 		"Poppins-SemiBold": Poppins_600SemiBold,
 		"WorkSans-Regular": WorkSans_400Regular,
 	});
+
+	const webSafeAreaTop =
+		Platform.OS === "web"
+			? ("env(safe-area-inset-top)" as unknown as number)
+			: 0;
 
 	//preload background image
 	useEffect(() => {
@@ -97,7 +104,14 @@ export default function RootLayout() {
 
 	return (
 		<SafeAreaProvider>
-			<View style={{ flex: 1 }}>
+			<View
+				style={{
+					flex: 1,
+					backgroundColor: colors.darkNavy,
+					paddingTop: webSafeAreaTop,
+				}}
+			>
+				<StatusBar style="light" />
 				<AuthProvider>
 					<GameProvider>{content}</GameProvider>
 				</AuthProvider>

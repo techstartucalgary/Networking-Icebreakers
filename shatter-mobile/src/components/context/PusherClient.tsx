@@ -1,29 +1,16 @@
-import { Pusher } from "@pusher/pusher-websocket-react-native";
+const { Pusher } = require('pusher-js/react-native');
 
-let pusher: Pusher | null = null;
-let initPromise: Promise<Pusher> | null = null;
+let pusher: any = null;
 
 const API_KEY = process.env.EXPO_PUBLIC_PUSHER_KEY!;
 const API_CLUSTER = process.env.EXPO_PUBLIC_PUSHER_CLUSTER!;
 
-export const getPusherClient = async (): Promise<Pusher> => {
-	if (pusher) return pusher;
+export const getPusherClient = () => {
+  if (pusher) return pusher;
 
-	if (!initPromise) {
-		initPromise = (async () => {
-			const instance = Pusher.getInstance();
+  pusher = new Pusher(API_KEY, {
+    cluster: API_CLUSTER,
+  });
 
-			await instance.init({
-				apiKey: API_KEY,
-				cluster: API_CLUSTER,
-			});
-
-			await instance.connect();
-
-			pusher = instance;
-			return pusher;
-		})();
-	}
-
-	return initPromise;
+  return pusher;
 };

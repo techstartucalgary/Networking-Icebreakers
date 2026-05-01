@@ -10,6 +10,8 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+	KeyboardAvoidingView,
+	Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/components/context/AuthContext";
@@ -50,6 +52,11 @@ export default function JoinEventPage() {
 				resizeMode="cover"
 			>
 				<SafeAreaView style={styles.safe}>
+					<KeyboardAvoidingView
+						style={{ flex: 1 }}
+						behavior={Platform.OS === "ios" ? "padding" : "height"}
+						keyboardVerticalOffset={80}
+					>
 					<View style={styles.header}>
 						<Text style={styles.pageTitle}>Start Shattering</Text>
 						<Text style={styles.subtitle}>
@@ -135,6 +142,7 @@ export default function JoinEventPage() {
 							</>
 						)}
 					</View>
+					</KeyboardAvoidingView>
 				</SafeAreaView>
 			</ImageBackground>
 		</AnimatedTab>
