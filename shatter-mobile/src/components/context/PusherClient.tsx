@@ -2,7 +2,7 @@ const { Pusher } = require('pusher-js/react-native');
 
 let pusher: any = null;
 
-const API_KEY     = process.env.EXPO_PUBLIC_PUSHER_KEY!;
+const API_KEY = process.env.EXPO_PUBLIC_PUSHER_KEY!;
 const API_CLUSTER = process.env.EXPO_PUBLIC_PUSHER_CLUSTER!;
 
 export const getPusherClient = () => {
