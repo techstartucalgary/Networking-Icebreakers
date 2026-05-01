@@ -19,7 +19,7 @@ export const JoinEventStyling = StyleSheet.create({
 		alignItems: "center",
 	},
 	header: {
-		height: vh(10),
+		height: vh(20),
 		justifyContent: "center",
 		alignItems: "center",
 		marginTop: 5,
@@ -42,9 +42,9 @@ export const JoinEventStyling = StyleSheet.create({
 	},
 	container: {
 		position: "absolute",
-		top: vh(20),
+		top: vh(17),
 		width: "100%",
-		bottom: 0,
+		bottom: -50,
 		backgroundColor: colors.lightGrey,
 		borderTopLeftRadius: 12,
 		borderTopRightRadius: 12,

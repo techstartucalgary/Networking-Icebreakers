@@ -19,9 +19,10 @@ export const ProfilePageStyling = StyleSheet.create({
 		alignItems: "center",
 	},
 	header: {
-		height: vh(7),
+		height: vh(20),
 		justifyContent: "center",
 		alignItems: "center",
+		marginTop: 5,
 	},
 	pageTitle: {
 		fontSize: vw(8),
@@ -50,14 +51,13 @@ export const ProfilePageStyling = StyleSheet.create({
 	},
 	container: {
 		position: "absolute",
-		top: vh(15),
+		top: vh(22),
 		width: "100%",
 		bottom: 0,
 		backgroundColor: colors.lightGrey,
-		borderTopLeftRadius: 12,
-		borderTopRightRadius: 12,
-		padding: 20,
-		alignItems: "center",
+		borderTopLeftRadius: 8,
+		borderTopRightRadius: 8,
+		padding: 5,
 	},
 	avatar: {
 		width: vw(25),
