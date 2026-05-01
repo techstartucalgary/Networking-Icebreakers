@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "shatter-mobile",
+    "name": "Shatter",
     "slug": "shatter-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -39,7 +39,9 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Shatter to access your camera to scan QR codes"
+          "cameraPermission": "Allow Shatter to access your camera to scan QR codes",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       [
