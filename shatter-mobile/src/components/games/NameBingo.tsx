@@ -1,3 +1,5 @@
+import { UpdateLeaderboardScoreApi } from "@/src/api/games/game.api";
+import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 import { useGame } from "@/src/components/context/GameContext";
 import { EventState, Participant } from "@/src/interfaces/Event";
 import { BingoTile } from "@/src/interfaces/Game";
@@ -238,6 +240,26 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 			setWinningLines([]);
 			setBingoStatus(null);
 		}
+
+		const isBlackout = result === "Blackout";
+		const totalLines =
+			categories.length + (categories[0]?.length || 0) + 2;
+		const linesCompleted = isBlackout
+			? totalLines
+			: Array.isArray(result)
+				? result.length
+				: 0;
+
+		getStoredAuth()
+			.then((auth) => {
+				if (!auth.accessToken) return;
+				return UpdateLeaderboardScoreApi(
+					eventId,
+					{ linesCompleted, completed: isBlackout },
+					auth.accessToken,
+				);
+			})
+			.catch((e) => console.warn("score update failed", e));
 	};
 
 	const filteredParticipants = participants.filter(

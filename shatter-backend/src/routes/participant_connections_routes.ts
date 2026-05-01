@@ -40,7 +40,7 @@ const router = Router();
 
 // Create connection by participant ObjectIds
 // POST /api/participantConnections
-router.post("/", authMiddleware, createParticipantConnection);
+router.post("/", createParticipantConnection);
 
 // Create connection by user emails (controller converts to participant ObjectIds)
 // POST /api/participantConnections/by-emails

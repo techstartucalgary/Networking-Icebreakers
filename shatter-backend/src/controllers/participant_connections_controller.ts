@@ -7,7 +7,7 @@ import { check_req_fields } from "../utils/requests_utils.js";
 import { User } from "../models/user_model.js";
 import { Participant } from "../models/participant_model.js";
 import { ParticipantConnection } from "../models/participant_connection_model.js";
-import { pusher } from "../utils/pusher_websocket.js";
+import { emitLeaderboardUpdate } from "../utils/leaderboard_pusher.js";
 
 /**
  * POST /api/participantConnections
@@ -105,7 +105,10 @@ export async function createParticipantConnection(req: Request, res: Response) {
       description,
     });
 
-    await pusher.trigger(`event-${_eventId}`, "leaderboard-updated", {});
+    await Promise.all([
+      emitLeaderboardUpdate(_eventId, primaryParticipantId),
+      emitLeaderboardUpdate(_eventId, secondaryParticipantId),
+    ]);
 
     return res.status(201).json(newConnection);
   } catch (_error) {
@@ -232,7 +235,10 @@ export async function createParticipantConnectionByEmails(
       description,
     });
 
-    await pusher.trigger(`event-${_eventId}`, "leaderboard-updated", {});
+    await Promise.all([
+      emitLeaderboardUpdate(_eventId, primaryParticipant._id as Types.ObjectId),
+      emitLeaderboardUpdate(_eventId, secondaryParticipant._id as Types.ObjectId),
+    ]);
 
     return res.status(201).json(newConnection);
   } catch (_error) {
@@ -276,7 +282,10 @@ export async function deleteParticipantConnection(req: Request, res: Response) {
         .json({ error: "ParticipantConnection not found for this event" });
     }
 
-    await pusher.trigger(`event-${eventId}`, "leaderboard-updated", {});
+    await Promise.all([
+      emitLeaderboardUpdate(eventId, deleted.primaryParticipantId),
+      emitLeaderboardUpdate(eventId, deleted.secondaryParticipantId),
+    ]);
 
     return res.status(200).json({
       message: "ParticipantConnection deleted successfully",
@@ -441,7 +450,10 @@ export async function getConnectedUsersInfo(req: Request, res: Response) {
       _id: { $in: participantIds },
     })
       .select("userId name")
-      .populate("userId", "name email linkedinUrl bio profilePhoto socialLinks");
+      .populate(
+        "userId",
+        "name email linkedinUrl bio profilePhoto socialLinks",
+      );
 
     const participantMap = new Map(
       participants.map((p) => [(p._id as Types.ObjectId).toString(), p]),

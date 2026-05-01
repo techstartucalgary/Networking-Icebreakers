@@ -18,6 +18,7 @@
     - [POST `/api/auth/signup`](#post-apiauthsignup)
     - [POST `/api/auth/login`](#post-apiauthlogin)
     - [GET `/api/auth/linkedin`](#get-apiauthlinkedin)
+    - [GET `/api/auth/linkedin/link`](#get-apiauthlinkedinlink)
     - [GET `/api/auth/linkedin/callback`](#get-apiauthlinkedincallback)
     - [POST `/api/auth/exchange`](#post-apiauthexchange)
   - [Users (`/api/users`)](#users-apiusers)
@@ -45,7 +46,8 @@
     - [POST `/api/bingo/createBingo`](#post-apibingocreatebingo)
     - [GET `/api/bingo/getBingo/:eventId`](#get-apibingogetbingoeventid)
     - [PUT `/api/bingo/updateBingo`](#put-apibingoupdatebingo)
-    - [POST `/api/bingo/generate`](#post-apibingogenerate)
+    - [POST `/api/bingo/generateBingo`](#post-apibingogeneratebingo)
+    - [POST `/api/bingo/generate/individual`](#post-apibingogenerateindividual)
   - [Participant Connections (`/api/participantConnections`)](#participant-connections-apiparticipantconnections)
     - [POST `/api/participantConnections/`](#post-apiparticipantconnections)
     - [POST `/api/participantConnections/by-emails`](#post-apiparticipantconnectionsby-emails)
@@ -74,6 +76,7 @@ Quick reference of all implemented endpoints. See detailed sections below for re
 | POST | `/api/auth/signup` | Public | Create new user account |
 | POST | `/api/auth/login` | Public | Log in with email + password |
 | GET | `/api/auth/linkedin` | Public | Initiate LinkedIn OAuth flow |
+| GET | `/api/auth/linkedin/link` | Protected | Link LinkedIn to existing account (guest or local) |
 | GET | `/api/auth/linkedin/callback` | Public | LinkedIn OAuth callback (not called directly) |
 | POST | `/api/auth/exchange` | Public | Exchange OAuth auth code for JWT |
 | GET | `/api/users` | Public | List all users |
@@ -243,12 +246,32 @@ Initiate LinkedIn OAuth flow. Redirects the browser to LinkedIn's authorization 
 
 ---
 
+### GET `/api/auth/linkedin/link`
+
+Initiate LinkedIn OAuth flow for linking a LinkedIn account to an existing user. Redirects to LinkedIn's authorization page with the user's identity encoded in the state token.
+
+- **Auth:** Protected (guest or local users only)
+- **Response:** 302 redirect to LinkedIn
+
+**Error Responses:**
+
+| Status | Condition |
+|--------|-----------|
+| 401 | Missing or invalid JWT |
+| 403 | Account is already a LinkedIn account |
+| 404 | User not found |
+| 409 | LinkedIn account already linked |
+
+**Flow:** After LinkedIn authorization, the callback detects the linking context from the state token and attaches the LinkedIn profile to the existing user. Guest users get upgraded to `authProvider: 'linkedin'`. Local users keep `authProvider: 'local'` (preserves password login) and gain LinkedIn profile data.
+
+---
+
 ### GET `/api/auth/linkedin/callback`
 
-LinkedIn OAuth callback. Not called directly by frontend — LinkedIn redirects here after user authorization.
+LinkedIn OAuth callback. Not called directly by frontend - LinkedIn redirects here after user authorization.
 
 - **Auth:** Public (called by LinkedIn)
-- **Flow:** Verifies CSRF state → exchanges code for access token → fetches LinkedIn profile → upserts user → creates single-use auth code → redirects to frontend with `?code=<authCode>`
+- **Flow:** Verifies CSRF state -> exchanges code for access token -> fetches LinkedIn profile -> upserts user (or links to guest account) -> creates single-use auth code -> redirects to frontend with `?code=<authCode>`
 
 **Redirect on success:** `{FRONTEND_URL}/auth/callback?code=<authCode>`
 **Redirect on error:** `{FRONTEND_URL}/auth/error?message=<error>`
@@ -537,7 +560,7 @@ Update a user's profile. Users can only update their own profile.
 | `password`     | string | Minimum 8 characters |
 | `bio`          | string | |
 | `profilePhoto` | string | URL |
-| `socialLinks`  | object | `{ linkedin?, github?, other? }` |
+| `socialLinks`  | object | `{ linkedin?: string, github?: string, other?: Array<{ label: string, url: string }> }` — each `other` entry has a required `label` and `url`; the array fully replaces the previous one on update |
 | `organization` | string | Where the user works/studies |
 | `title`        | string | Job title or role |
 
@@ -831,7 +854,7 @@ Join an event as a guest (no account required).
 | `socialLinks` | object | No* | Social links |
 | `socialLinks.linkedin` | string | No | LinkedIn URL |
 | `socialLinks.github` | string | No | GitHub URL |
-| `socialLinks.other` | string | No | Other URL |
+| `socialLinks.other` | `Array<{label, url}>` | No | Additional labeled social/profile links. Each entry requires both `label` (display name) and `url`. |
 | `organization` | string | No* | Where the guest works/studies |
 | `title` | string | No | Job title or role |
 
@@ -1287,30 +1310,33 @@ Update a bingo game.
 
 ### POST `/api/bingo/generateBingo`
 
-Generate an AI-powered bingo grid based on a given context.
+Generate an AI-powered bingo grid based on a given event description and attendee tags.
 
-- **Auth:** Protected
+- **Auth:** Not Protected
 
 **Request Body:**
 
-| Field     | Type   | Required | Notes |
-|-----------|--------|----------|-------|
-| `context` | string | Yes      | Context used to generate bingo content |
-| `n_rows`  | number | Yes      | Number of rows (1–5) |
-| `n_cols`  | number | Yes      | Number of columns (1–5) |
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `event_description` | string | Yes | General information about what the event is about. Cannot be empty |
+| `tags` | string[] | Yes | List of professional types, roles, job titles, specializations, or departments attending the event. Can be an empty array |
+| `n_rows` | number | Yes | Number of rows (1–5) |
+| `n_cols` | number | Yes | Number of columns (1–5) |
 
 **Example Request:**
 
 ```json
 {
-  "context": "Software engineer networking event where developers meet, discuss tech stacks, exchange ideas, talk about startups, open source, AI, and career opportunities",
+  "event_description": "Software engineer networking event where developers meet, discuss tech stacks, exchange ideas, talk about startups, open source, AI, and career opportunities",
+  "tags": ["software engineers", "frontend developers", "backend developers", "startup founders", "product managers"],
   "n_rows": 2,
   "n_cols": 2
 }
 ```
 
 **Example Response:**
-```
+
+```json
 {
   "status": true,
   "bingo_grid": [
@@ -1334,6 +1360,115 @@ Generate an AI-powered bingo grid based on a given context.
         "shortQuestion": "Current stack question"
       }
     ]
+  ]
+}
+```
+
+**Validation Errors:**
+
+Missing or invalid `event_description`:
+
+```json
+{
+  "status": false,
+  "msg": "event_description is required and must be a non-empty string"
+}
+```
+
+Missing or invalid `tags`:
+
+```json
+{
+  "status": false,
+  "msg": "tags is required and must be an array of strings"
+}
+```
+
+Missing or invalid `n_rows` or `n_cols`:
+
+```json
+{
+  "status": false,
+  "msg": "n_rows and n_cols must be numbers where 0 < value <= 5"
+}
+```
+
+### POST `/api/bingo/generate/individual`
+
+Generate replacement AI-powered bingo questions for one or more target questions in an existing bingo grid.
+
+The newly generated questions should:
+- Match the provided event context
+- Be different from the existing questions in the bingo grid
+- Be different from each other
+- Include both the full question and a short version
+
+- **Auth:** Not Protected
+
+**Request Body:**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `event_description` | string | Yes | Event context used to generate the new bingo questions. Cannot be empty |
+| `tags` | string[] | Yes | Types or roles of people attending the event. Can be an empty array |
+| `bingo_grid` | string[][] | Yes | Existing bingo grid containing the full question strings |
+| `bingo_question_target` | string[] | Yes | List of questions intended to be regenerated/replaced. Must be a non-empty array of non-empty strings with no duplicates |
+
+**Example Request:**
+
+```json
+{
+  "event_description": "A networking event for software engineers, product managers, startup founders, designers, and AI researchers focused on building practical AI products.",
+  "tags": [
+    "software engineer",
+    "product manager",
+    "startup founder",
+    "designer",
+    "AI researcher"
+  ],
+  "bingo_grid": [
+    [
+      "Shows a demo on their phone",
+      "Mentions their team is hiring",
+      "Explains a project they built"
+    ],
+    [
+      "Has stickers all over their laptop",
+      "Recently switched jobs",
+      "Sketches an idea while talking"
+    ],
+    [
+      "Arrives straight from work",
+      "Recognizes someone from LinkedIn",
+      "Talks about scaling an AI product"
+    ]
+  ],
+  "bingo_question_target": [
+    "Mentions their team is hiring",
+    "Recently switched jobs",
+    "Talks about scaling an AI product"
+  ]
+}
+```
+
+**Example Response:**
+
+```json
+{
+  "status": true,
+  "new_questions": [
+    {
+      "question": "References a specific AI framework",
+      "shortQuestion": "AI Framework"
+    },
+    {
+      "question": "Wears apparel from their startup",
+      "shortQuestion": "Startup Merch"
+    },
+    {
+      "question": "Shows a code snippet on their phone",
+      "shortQuestion": "Code Snippet"
+    }
   ]
 }
 ```

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createBingo, getBingo, updateBingo, generateBingo} from '../controllers/bingo_controller.js';
+import { createBingo, getBingo, updateBingo, generateBingo, generateIndividualBingoGameQuestions} from '../controllers/bingo_controller.js';
 import { authMiddleware } from '../middleware/auth_middleware.js';
 
 const router = Router();
@@ -14,6 +14,9 @@ router.put("/updateBingo", authMiddleware, updateBingo);
 
 // POST /api/bingo/generateBingo - generate bingo using AI for an event
 router.post("/generateBingo", authMiddleware, generateBingo);
+
+// POST /api/bingo/generate/individual - generate a single AI bingo question
+router.post("/generateBingo/individual", authMiddleware, generateIndividualBingoGameQuestions);
 
 
 export default router;

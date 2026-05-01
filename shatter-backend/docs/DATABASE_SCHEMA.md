@@ -67,7 +67,7 @@
 | `title`            | String            | No       | —          | Trimmed |
 | `bio`              | String            | No       | —          | Trimmed |
 | `profilePhoto`     | String            | No       | —          | |
-| `socialLinks`      | Object            | No       | —          | `{ linkedin?: String, github?: String, other?: String }` |
+| `socialLinks`      | Object            | No       | —          | `{ linkedin?: String, github?: String, other?: Array<{ label: String, url: String }> }` — each `other` entry has a required `label` and `url` so users can add multiple labeled miscellaneous links |
 | `authProvider`     | String (enum)     | Yes      | `'local'`  | One of: `'local'`, `'linkedin'`, `'guest'` |
 | `lastLogin`        | Date              | No       | `null`     | |
 | `passwordChangedAt`| Date              | No       | `null`     | |
