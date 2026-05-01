@@ -199,8 +199,10 @@ export const linkedinAuth = async (req: Request, res: Response) => {
 	// Generate CSRF protection state token
 	const state = crypto.randomBytes(16).toString('hex');
 
+	const platform = req.query.platform === 'mobile' ? 'mobile' : 'web';
+
 	// Encode state as JWT with 5-minute expiration (stateless validation)
-	const stateToken = jwt.sign({ state }, JWT_SECRET, { expiresIn: '5m' });
+	const stateToken = jwt.sign({ state, platform }, JWT_SECRET, { expiresIn: '5m' });
 
 	// Build LinkedIn authorization URL and redirect
 	const authUrl = getLinkedInAuthUrl(stateToken);
@@ -241,9 +243,11 @@ export const linkedinLink = async (req: Request, res: Response) => {
 	    });
 	}
 
+	const platform = req.query.platform === 'mobile' ? 'mobile' : 'web';
+
 	// Encode linking context into the state JWT (signed, tamper-proof)
 	const stateToken = jwt.sign(
-	    { linking: true, userId: user._id.toString() },
+	    { linking: true, userId: user._id.toString(), platform },
 	    JWT_SECRET,
 	    { expiresIn: '5m' }
 	);
@@ -269,22 +273,18 @@ export const linkedinCallback = async (req: Request, res: Response) => {
 	    error?: string;
 	};
 
-	const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:19006';
+	// Default to web frontend; mobile gets resolved after state verification below
+	let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:19006';
 
-	// Handle user denial
-	if (oauthError === 'user_cancelled_authorize') {
-	    return res.redirect(`${frontendUrl}/auth/error?message=Authorization cancelled`);
+	// State must always be present (even on cancel, LinkedIn returns it). Verify it first
+	// so we can resolve the correct redirect target before any branching.
+	if (!state) {
+	    return res.status(400).json({ error: 'Missing state parameter' });
 	}
 
-	// Validate required parameters
-	if (!code || !state) {
-	    return res.status(400).json({ error: 'Missing code or state parameter' });
-	}
-
-	// Verify state token (CSRF protection) and extract payload
-	let statePayload: { linking?: boolean; userId?: string };
+	let statePayload: { linking?: boolean; userId?: string; platform?: 'mobile' | 'web' };
 	try {
-	    statePayload = jwt.verify(state, JWT_SECRET) as { linking?: boolean; userId?: string };
+	    statePayload = jwt.verify(state, JWT_SECRET) as { linking?: boolean; userId?: string; platform?: 'mobile' | 'web' };
 	} catch (e: any) {
 	    console.error('LinkedIn state verify failed:', {
 		name: e?.name,
@@ -292,6 +292,21 @@ export const linkedinCallback = async (req: Request, res: Response) => {
 		stateLen: state?.length,
 	    });
 	    return res.status(401).json({ error: 'Invalid state parameter' });
+	}
+
+	// Resolve redirect target based on the originating client encoded in the signed state JWT
+	if (statePayload.platform === 'mobile') {
+	    frontendUrl = 'shattermobile://auth';
+	}
+
+	// Handle user denial
+	if (oauthError === 'user_cancelled_authorize') {
+	    return res.redirect(`${frontendUrl}/auth/error?message=Authorization cancelled`);
+	}
+
+	// Validate code is present for the success path
+	if (!code) {
+	    return res.status(400).json({ error: 'Missing code parameter' });
 	}
 
 	// Exchange code for access token
@@ -404,7 +419,19 @@ export const linkedinCallback = async (req: Request, res: Response) => {
     } catch (error: any) {
 	console.error('LinkedIn callback error:', error);
 
-	const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:19006';
+	// Best-effort attempt to recover platform from state for the error redirect.
+	// If state is missing/invalid we fall back to the web URL.
+	let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:19006';
+	try {
+	    const stateParam = (req.query as { state?: string }).state;
+	    if (stateParam) {
+		const payload = jwt.verify(stateParam, JWT_SECRET) as { platform?: 'mobile' | 'web' };
+		if (payload.platform === 'mobile') frontendUrl = 'shattermobile://auth';
+	    }
+	} catch {
+	    // ignore — already defaulting to web
+	}
+
 	if (error.message?.includes('LinkedIn')) {
 	    return res.redirect(`${frontendUrl}/auth/error?message=LinkedIn authentication failed`);
 	}
