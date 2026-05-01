@@ -1,3 +1,4 @@
+import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { User } from "../interfaces/User";
 import { exchangeLinkedInCode, userFetch } from "./user.service";
@@ -14,11 +15,11 @@ export async function loginWithLinkedIn(): Promise<
 
 	if (result.type !== "success") return null;
 
-	const url = new URL(result.url);
-	const errorMessage = url.searchParams.get("message");
+	const { queryParams } = Linking.parse(result.url);
+	const errorMessage = queryParams?.message as string | undefined;
 	if (errorMessage) throw new Error(errorMessage);
 
-	const code = url.searchParams.get("code");
+	const code = queryParams?.code as string | undefined;
 	if (!code) return null;
 
 	const { userId, token } = await exchangeLinkedInCode(code);
