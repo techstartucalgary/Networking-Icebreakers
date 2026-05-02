@@ -11,7 +11,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 
 export default function AuthCallback() {
 	const { code } = useLocalSearchParams<{ code: string }>();
-	const { authenticate, authStorage } = useAuth();
+	const { authenticate } = useAuth();
 	const [error, setError] = useState("");
 
 	useEffect(() => {
@@ -28,11 +28,15 @@ export default function AuthCallback() {
 				// Fetch full user profile using returned userId + token
 				const userData = await userFetch(response.userId, response.token);
 
+				const existingSocialLinks = userData.user.socialLinks ?? {};
+				const linkedinUrl = existingSocialLinks.linkedin
+					?? `https://www.linkedin.com/in/${userData.user.name.toLowerCase().replace(/\s+/g, "-")}/`;
+
 				const user: User = {
 					_id: response.userId,
 					name: userData.user.name,
 					email: userData.user.email,
-					socialLinks: userData.user.socialLinks ?? {},
+					socialLinks: { ...existingSocialLinks, linkedin: linkedinUrl },
 					profilePhoto: userData.user.profilePhoto,
 					isGuest: false,
 				};
@@ -40,9 +44,8 @@ export default function AuthCallback() {
 				// Store user + JWT in auth context
 				await authenticate(user, response.token, false);
 
-				// Update stored user with LinkedIn data
-				const token = authStorage.accessToken;
-				userUpdate(response.userId, user, token);
+				// Persist LinkedIn URL to backend using the token from the exchange response
+				userUpdate(response.userId, user, response.token);
 				router.replace("/JoinEventPage");
 			} catch (err) {
 				setError((err as Error).message || "Authentication failed.");
