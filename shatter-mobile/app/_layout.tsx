@@ -105,11 +105,23 @@ export default function RootLayout() {
 	return (
 		<SafeAreaProvider>
 			<View
-				style={{
-					flex: 1,
-					backgroundColor: colors.darkNavy,
-					paddingTop: webSafeAreaTop,
-				}}
+				style={
+					Platform.OS === "web"
+						? {
+								position: "fixed" as any,
+								top: 0,
+								left: 0,
+								right: 0,
+								bottom: 0,
+								overflow: "hidden",
+								backgroundColor: colors.darkNavy,
+							}
+						: {
+								flex: 1,
+								backgroundColor: colors.darkNavy,
+								paddingTop: webSafeAreaTop,
+							}
+				}
 			>
 				<StatusBar style="light" />
 				<AuthProvider>
