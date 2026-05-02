@@ -8,12 +8,13 @@ import {
     View,
 } from "react-native";
 import { UpdateProfileStyling as styles } from "../../styling/UpdateProfile.styles";
+import { OtherLink, SocialLinks } from "@/src/interfaces/User";
 
 type SocialLinkModalProps = {
 	socialModalVisible: boolean;
 	setSocialModalVisible: (visible: boolean) => void;
-	socialLinks: { label: string; url: string }[];
-	setSocialLinks: (links: { label: string; url: string }[]) => void;
+	socialLinks: SocialLinks;
+	setSocialLinks: (links: SocialLinks) => void;
 };
 
 export function SocialLinksModal({
@@ -22,93 +23,170 @@ export function SocialLinksModal({
 	socialLinks,
 	setSocialLinks,
 }: SocialLinkModalProps) {
-	const handleLinkChange = (
-		index: number,
-		field: "label" | "url",
-		value: string,
+	//fixed fields
+	const updateField = (
+		field: "linkedin" | "github",
+		value: string
 	) => {
-		const updated = [...socialLinks];
-		updated[index] = { ...updated[index], [field]: value };
-		setSocialLinks(updated);
+		setSocialLinks({
+			...socialLinks,
+			[field]: value,
+		});
 	};
 
-	const addNewLink = () =>
-		setSocialLinks([...socialLinks, { label: "", url: "" }]);
+	//other links
+	const updateOtherLink = (
+		index: number,
+		field: keyof OtherLink,
+		value: string
+	) => {
+		const updated = [...(socialLinks.other || [])];
+		updated[index] = {
+			...updated[index],
+			[field]: value,
+		};
 
-	const removeLink = (index: number) =>
-		setSocialLinks(socialLinks.filter((_, i) => i !== index));
+		setSocialLinks({
+			...socialLinks,
+			other: updated,
+		});
+	};
+
+	const addOtherLink = () => {
+		setSocialLinks({
+			...socialLinks,
+			other: [
+				...(socialLinks.other || []),
+				{ label: "", url: "" },
+			],
+		});
+	};
+
+	const removeOtherLink = (index: number) => {
+		const updated = (socialLinks.other || []).filter(
+			(_, i) => i !== index
+		);
+
+		setSocialLinks({
+			...socialLinks,
+			other: updated,
+		});
+	};
+
 	return (
-		<>
-			<Modal
-				visible={socialModalVisible}
-				transparent
-				animationType="slide"
-				onRequestClose={() => setSocialModalVisible(false)}
+		<Modal
+			visible={socialModalVisible}
+			transparent
+			animationType="slide"
+			onRequestClose={() => setSocialModalVisible(false)}
+		>
+			<View
+				style={{
+					flex: 1,
+					backgroundColor: "rgba(0,0,0,0.5)",
+					justifyContent: "center",
+					alignItems: "center",
+					padding: 20,
+				}}
 			>
 				<View
 					style={{
-						flex: 1,
-						backgroundColor: "rgba(0,0,0,0.5)",
-						justifyContent: "center",
-						alignItems: "center",
+						width: "100%",
+						backgroundColor: colors.lightGrey,
+						borderRadius: 16,
 						padding: 20,
+						maxHeight: "85%",
 					}}
 				>
-					<View
-						style={{
-							width: "100%",
-							backgroundColor: colors.lightGrey,
-							borderRadius: 16,
-							padding: 20,
-							maxHeight: "80%",
-						}}
-					>
-						<Text style={{ color: colors.darkNavy, fontSize: 18 }}>
-							Manage Social Links
+					<Text style={{ color: colors.darkNavy, fontSize: 18 }}>
+						Manage Social Links
+					</Text>
+
+					<ScrollView>
+
+						{/* LinkedIn */}
+						<Text style={styles.label}>LinkedIn</Text>
+						<TextInput
+							style={styles.input}
+							placeholder="LinkedIn URL"
+							value={socialLinks.linkedin ?? ""}
+							onChangeText={(text) =>
+								updateField("linkedin", text)
+							}
+							autoCapitalize="none"
+							keyboardType="url"
+						/>
+
+						{/* GitHub */}
+						<Text style={styles.label}>GitHub</Text>
+						<TextInput
+							style={styles.input}
+							placeholder="GitHub URL"
+							value={socialLinks.github ?? ""}
+							onChangeText={(text) =>
+								updateField("github", text)
+							}
+							autoCapitalize="none"
+							keyboardType="url"
+						/>
+
+						{/* Other */}
+						<Text style={[styles.label, { marginTop: 12 }]}>
+							Other Links
 						</Text>
-						<ScrollView>
-							{socialLinks.map((link, index) => (
-								<View key={index} style={styles.linkContainer}>
-									<TextInput
-										style={styles.input}
-										placeholder="Label (e.g. LinkedIn)"
-										placeholderTextColor={colors.lightGrey2}
-										value={link.label}
-										onChangeText={(text) =>
-											handleLinkChange(index, "label", text)
-										}
-									/>
-									<TextInput
-										style={styles.input}
-										placeholder="URL"
-										placeholderTextColor={colors.lightGrey2}
-										value={link.url}
-										onChangeText={(text) =>
-											handleLinkChange(index, "url", text)
-										}
-									/>
-									<TouchableOpacity
-										style={styles.removeButton}
-										onPress={() => removeLink(index)}
-									>
-										<Text style={styles.buttonText}>Remove</Text>
-									</TouchableOpacity>
-								</View>
-							))}
-							<TouchableOpacity style={styles.addButton} onPress={addNewLink}>
-								<Text style={styles.buttonText}>+ Add Social Link</Text>
-							</TouchableOpacity>
-						</ScrollView>
+
+						{(socialLinks.other || []).map((link, index) => (
+							<View key={index} style={styles.linkContainer}>
+								<TextInput
+									style={styles.input}
+									placeholder="Label (e.g. Portfolio)"
+									value={link.label}
+									onChangeText={(text) =>
+										updateOtherLink(index, "label", text)
+									}
+								/>
+
+								<TextInput
+									style={styles.input}
+									placeholder="URL"
+									value={link.url}
+									onChangeText={(text) =>
+										updateOtherLink(index, "url", text)
+									}
+									autoCapitalize="none"
+									keyboardType="url"
+								/>
+
+								<TouchableOpacity
+									style={styles.removeButton}
+									onPress={() => removeOtherLink(index)}
+								>
+									<Text style={styles.buttonText}>
+										Remove
+									</Text>
+								</TouchableOpacity>
+							</View>
+						))}
 
 						<TouchableOpacity
-							style={[styles.saveButton, { marginTop: 15 }]}
-							onPress={() => setSocialModalVisible(false)}
+							style={styles.addButton}
+							onPress={addOtherLink}
 						>
-							<Text style={styles.buttonText}>Done</Text>
+							<Text style={styles.buttonText}>
+								+ Add Other Link
+							</Text>
 						</TouchableOpacity>
-					</View>
+
+					</ScrollView>
+
+					<TouchableOpacity
+						style={[styles.saveButton, { marginTop: 15 }]}
+						onPress={() => setSocialModalVisible(false)}
+					>
+						<Text style={styles.buttonText}>Done</Text>
+					</TouchableOpacity>
 				</View>
-			</Modal>
-		</>
+			</View>
+		</Modal>
 	);
 }

@@ -17,6 +17,15 @@ export interface ActivityItem {
   timestamp: number;
 }
 
+export interface LeaderboardEntry {
+  participantId: string;
+  name: string;
+  profilePhoto: string | null;
+  connectionsCount: number;
+  linesCompleted: number;
+  completed: boolean;
+}
+
 /** Row from GET /api/participantConnections/connected-users */
 interface ConnectedUserRow {
   user: {
@@ -106,6 +115,7 @@ interface EventSpotlightProps {
   eventId: string | null;
   connections?: Connection[];
   activity?: ActivityItem[];
+  leaderboardEntries?: LeaderboardEntry[];
 }
 
 const BUBBLE_RADIUS = 32;
@@ -142,6 +152,7 @@ export default function EventSpotlight({
   eventId,
   connections: connectionsProp = [],
   activity = [],
+  leaderboardEntries = [],
 }: EventSpotlightProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
@@ -240,8 +251,8 @@ export default function EventSpotlight({
     return map;
   }, [participants, centerX, centerY, graphRadius]);
 
-  // Leaderboard: count connections per participant — show ALL participants
-  const leaderboard = useMemo(() => {
+  // Fallback leaderboard from connections if explicit leaderboard is not provided
+  const connectionLeaderboard = useMemo(() => {
     const scores = new Map<string, { name: string; count: number }>();
     participants.forEach((p) => scores.set(p.participantId, { name: p.name, count: 0 }));
 
@@ -476,41 +487,95 @@ export default function EventSpotlight({
           {/* Leaderboard */}
           <div className="p-4 flex-1 min-h-0 flex flex-col">
             <h4 className="text-sm font-heading font-semibold text-white/80 mb-3 uppercase tracking-wider">
-              Connection Leaderboard
+              Leaderboard
             </h4>
             <div className="space-y-2 overflow-y-auto max-h-48">
-              {leaderboard.map((entry, i) => (
-                <div
-                  key={entry.participantId}
-                  className="flex items-center gap-3 p-2 rounded-lg bg-white/5"
-                >
-                  <span
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-heading"
-                    style={{
-                      backgroundColor:
-                        i === 0
-                          ? "rgba(251, 191, 36, 0.3)"
-                          : i === 1
-                          ? "rgba(192, 192, 192, 0.3)"
-                          : i === 2
-                          ? "rgba(205, 127, 50, 0.3)"
-                          : "rgba(255,255,255,0.1)",
-                      color: "#fff",
-                    }}
+              {leaderboardEntries.length === 0 && connectionLeaderboard.length === 0 ? (
+                <p className="text-white/50 text-sm font-body">No leaderboard data yet</p>
+              ) : leaderboardEntries.length > 0 ? (
+                leaderboardEntries.map((entry, i) => (
+                  <div
+                    key={entry.participantId}
+                    className="flex items-center gap-3 p-2 rounded-lg bg-white/5"
                   >
-                    {i + 1}
-                  </span>
-                  <span className="font-body text-white font-medium flex-1 truncate">
-                    {entry.name}
-                  </span>
-                  <span
-                    className="text-sm font-semibold"
-                    style={{ color: "#4DC4FF" }}
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-heading"
+                      style={{
+                        backgroundColor:
+                          i === 0
+                            ? "rgba(251, 191, 36, 0.3)"
+                            : i === 1
+                            ? "rgba(192, 192, 192, 0.3)"
+                            : i === 2
+                              ? "rgba(205, 127, 50, 0.3)"
+                              : "rgba(255,255,255,0.1)",
+                        color: "#fff",
+                      }}
+                    >
+                      {i + 1}
+                    </span>
+                    {entry.profilePhoto ? (
+                      <img
+                        src={entry.profilePhoto}
+                        alt={entry.name}
+                        className="w-8 h-8 rounded-full object-cover border border-white/20"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center font-heading font-semibold text-xs text-white">
+                        {entry.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-body text-white font-medium truncate">
+                          {entry.name}
+                        </span>
+                        {entry.completed && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold font-body bg-green-500/20 text-green-300 border border-green-400/30">
+                            Completed
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-white/60 font-body">
+                        Lines: {entry.linesCompleted} • Connections: {entry.connectionsCount}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                connectionLeaderboard.map((entry, i) => (
+                  <div
+                    key={entry.participantId}
+                    className="flex items-center gap-3 p-2 rounded-lg bg-white/5"
                   >
-                    {entry.connections} {entry.connections === 1 ? "link" : "links"}
-                  </span>
-                </div>
-              ))}
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-heading"
+                      style={{
+                        backgroundColor:
+                          i === 0
+                            ? "rgba(251, 191, 36, 0.3)"
+                            : i === 1
+                              ? "rgba(192, 192, 192, 0.3)"
+                              : i === 2
+                                ? "rgba(205, 127, 50, 0.3)"
+                                : "rgba(255,255,255,0.1)",
+                        color: "#fff",
+                      }}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="font-body text-white font-medium flex-1 truncate">
+                      {entry.name}
+                    </span>
+                    <span
+                      className="text-sm font-semibold"
+                      style={{ color: "#4DC4FF" }}
+                    >
+                      {entry.connections} {entry.connections === 1 ? "link" : "links"}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

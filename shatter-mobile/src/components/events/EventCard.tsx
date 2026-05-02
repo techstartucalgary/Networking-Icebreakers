@@ -14,7 +14,7 @@ type EventCardProps = {
 
 const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 	const router = useRouter();
-	const { initializeGame } = useGame();
+	const { initializeGame, setGameViewing } = useGame();
 	const [imageLoaded, setImageLoaded] = useState(false);
 	const [modalVisible, setModalVisible] = useState(false);
 
@@ -123,6 +123,7 @@ const EventCard = ({ event, expanded, onPress }: EventCardProps) => {
 									event.gameType = GameType.NAME_BINGO;
 								}
 								initializeGame(event.gameType, event._id, event.currentState, event.participantIds);
+								setGameViewing(true); //update viewing game flag in GameContext
 								router.push({
 									pathname: "/GamePages/Game",
 									params: { eventId: event._id },

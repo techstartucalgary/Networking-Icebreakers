@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleIcon } from '../components/icons';
 
+import logo from "../assets/ShatterLogo_White.png";
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
@@ -116,7 +118,7 @@ export default function LoginPage() {
         <div className="flex items-center justify-center gap-3 mb-2">
           {/* Logo */}
           <img
-            src="/src/assets/ShatterLogo_White.png"
+            src={logo}
             alt="Shatter Logo"
             className="w-10 h-10 opacity-90 drop-shadow-[0_0_15px_rgba(77,196,255,0.5)]"
           />

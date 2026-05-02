@@ -1,19 +1,18 @@
+import { UpdateLeaderboardScoreApi } from "@/src/api/games/game.api";
+import { getStoredAuth } from "@/src/components/context/AsyncStorage";
 import { useGame } from "@/src/components/context/GameContext";
 import { EventState, Participant } from "@/src/interfaces/Event";
 import { BingoTile } from "@/src/interfaces/Game";
-import {
-    getBingoCategories,
-    getParticipantsByEventId,
-} from "@/src/services/game.service";
+import { getBingoCategories } from "@/src/services/game.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import {
-    DimensionValue,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+	DimensionValue,
+	ScrollView,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
 } from "react-native";
 import { NameBingoStyling as styles } from "../../styling/NameBingo.styles";
 import FullPageLoader from "../general/FullPageLoader";
@@ -241,6 +240,26 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 			setWinningLines([]);
 			setBingoStatus(null);
 		}
+
+		const isBlackout = result === "Blackout";
+		const totalLines =
+			categories.length + (categories[0]?.length || 0) + 2;
+		const linesCompleted = isBlackout
+			? totalLines
+			: Array.isArray(result)
+				? result.length
+				: 0;
+
+		getStoredAuth()
+			.then((auth) => {
+				if (!auth.accessToken) return;
+				return UpdateLeaderboardScoreApi(
+					eventId,
+					{ linesCompleted, completed: isBlackout },
+					auth.accessToken,
+				);
+			})
+			.catch((e) => console.warn("score update failed", e));
 	};
 
 	const filteredParticipants = participants.filter(
@@ -267,34 +286,37 @@ const NameBingo = ({ eventId, onConnect }: NameBingoProps) => {
 			)}
 
 			{/* Hint */}
-			{!selectedCardId && gameState.progress !== EventState.COMPLETED && (
-				<Text style={styles.selectCardHint}>Select a square first</Text>
-			)}
+			{!selectedCardId &&
+				gameState.progress !== EventState.COMPLETED &&
+				!gameState.viewingGame && (
+					<Text style={styles.selectCardHint}>Select a square first</Text>
+				)}
 
 			{/* Search */}
-			{gameState.progress !== EventState.COMPLETED && (
-				<View style={styles.searchContainer}>
-					<TextInput
-						style={styles.inputFlex}
-						placeholder="Who did you find?"
-						value={search}
-						onChangeText={setSearch}
-					/>
-					{search.length > 0 && filteredParticipants.length > 0 && (
-						<ScrollView style={styles.dropdown}>
-							{filteredParticipants.map((p) => (
-								<TouchableOpacity
-									key={p._id}
-									style={styles.dropdownItem}
-									onPress={() => handleAssign(p)}
-								>
-									<Text>{p.name}</Text>
-								</TouchableOpacity>
-							))}
-						</ScrollView>
-					)}
-				</View>
-			)}
+			{gameState.progress !== EventState.COMPLETED &&
+				!gameState.viewingGame && (
+					<View style={styles.searchContainer}>
+						<TextInput
+							style={styles.inputFlex}
+							placeholder="Who did you find?"
+							value={search}
+							onChangeText={setSearch}
+						/>
+						{search.length > 0 && filteredParticipants.length > 0 && (
+							<ScrollView style={styles.dropdown}>
+								{filteredParticipants.map((p) => (
+									<TouchableOpacity
+										key={p._id}
+										style={styles.dropdownItem}
+										onPress={() => handleAssign(p)}
+									>
+										<Text>{p.name}</Text>
+									</TouchableOpacity>
+								))}
+							</ScrollView>
+						)}
+					</View>
+				)}
 
 			{/* Card Grid */}
 			<View style={{ padding: 12 }}>

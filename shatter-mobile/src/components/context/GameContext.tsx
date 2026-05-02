@@ -1,255 +1,247 @@
 import { EventState, GameType, Participant } from "@/src/interfaces/Event";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-	createContext,
-	ReactNode,
-	useContext,
-	useEffect,
-	useState,
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
 import { getPusherClient } from "./PusherClient";
 
 export type GameState = {
-	gameType: GameType; //"Game Bingo"
-	eventId: string;
-	loading: boolean;
-	data: any; //generic, can hold cards, prompts, scores
-	status: string | null; //"Bingo!", "Completed"
-	progress: EventState;
-	participants: Participant[];
+  gameType: GameType; //"Game Bingo"
+  eventId: string;
+  loading: boolean;
+  data: any; //generic, can hold cards, prompts, scores
+  status: string | null; //"Bingo!", "Completed"
+  progress: EventState;
+  participants: Participant[];
+  viewingGame: boolean;
 };
 
 type GameContextType = {
-	currentParticipantId: string;
-	setCurrentParticipantId: (id: string) => Promise<void>;
-	gameState: GameState;
-	initializeGame: (
-		gameType: GameType,
-		eventId: string,
-		eventProgress: EventState,
-		initialData?: any,
-	) => void;
-	setGameData: (data: any) => void;
-	setGameStatus: (status: string | null) => void;
-	setGameProgress: (progress: EventState) => void;
-	resetGame: () => void;
+  currentParticipantId: string;
+  setCurrentParticipantId: (id: string) => Promise<void>;
+  gameState: GameState;
+  initializeGame: (
+    gameType: GameType,
+    eventId: string,
+    eventProgress: EventState,
+    initialData?: any,
+  ) => void;
+  setGameData: (data: any) => void;
+  setGameStatus: (status: string | null) => void;
+  setGameProgress: (progress: EventState) => void;
+  setGameParticipants: (participants: Participant[]) => void;
+  setGameViewing: (gameView: boolean) => void;
+  resetGame: () => void;
 };
 
 const defaultGameState: GameState = {
-	gameType: GameType.NAME_BINGO,
-	eventId: "",
-	loading: true,
-	data: "",
-	status: null,
-	progress: EventState.UPCOMING,
-	participants: [],
+  gameType: GameType.NAME_BINGO,
+  eventId: "",
+  loading: true,
+  data: "",
+  status: null,
+  progress: EventState.UPCOMING,
+  participants: [],
+  viewingGame: false,
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-	const [currentParticipantId, _setCurrentParticipantId] = useState<string>("");
-	const [gameState, setGameState] = useState<GameState>(defaultGameState);
+  const [currentParticipantId, _setCurrentParticipantId] = useState<string>("");
+  const [gameState, setGameState] = useState<GameState>(defaultGameState);
 
-	const participantStorageKey = "current-participant-id";
+  const participantStorageKey = "current-participant-id";
 
-	const storageKey = (eventId: string, gameType: GameType) =>
-		`game-${gameType}-${eventId}`;
+  const storageKey = (eventId: string, gameType: GameType) =>
+    `game-${gameType}-${eventId}`;
 
-	//create event hook for each event joined
-	useEffect(() => {
-		if (!gameState.eventId) return;
+  //create event hook for each event joined
+  useEffect(() => {
+    if (!gameState.eventId) return;
 
-		let isActive = true;
+    let isActive = true;
 
-		let channel: any = null;
-		let pusherClient: any = null;
+    const pusher = getPusherClient();
+    const channelName = `event-${gameState.eventId}`;
 
-		const setup = async () => {
-			pusherClient = await getPusherClient();
+    const channel = pusher.subscribe(channelName);
 
-			if (!isActive) return;
+    const handler = (data: any) => {
+      if (!isActive) return;
 
-			channel = await pusherClient.subscribe({
-				channelName: `event-${gameState.eventId}`,
-				onEvent: (event: any) => {
-					if (event.eventName === "event") {
-						try {
-							const data = JSON.parse(event.data);
+      try {
+        const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
-							setGameProgress(data.status);
-							setGameParticipants(data.participantIds);
-						} catch (err) {
-							console.error("Failed to parse event data", err);
-						}
-					}
-				},
-			});
-		};
+        setGameProgress(parsed.status);
+      } catch (err) {
+        console.error("Failed to parse event data", err);
+      }
+    };
 
-		setup();
+    channel.bind("event", handler);
 
-		return () => {
-			isActive = false;
+    return () => {
+      isActive = false;
 
-			if (channel) {
-				channel.unbind_all?.();
-			}
+      channel.unbind("event", handler);
+      pusher.unsubscribe(channelName);
+    };
+  }, [gameState.eventId]);
 
-			if (pusherClient && gameState.eventId) {
-				pusherClient.unsubscribe({
-					channelName: `event-${gameState.eventId}`,
-				});
-			}
-		};
-	}, [gameState.eventId]);
+  //load participantId on app start
+  useEffect(() => {
+    const loadParticipant = async () => {
+      try {
+        const storedId = await AsyncStorage.getItem(participantStorageKey);
+        if (storedId) _setCurrentParticipantId(storedId);
+      } catch (err) {
+        console.log("Failed to load participantId:", err);
+      }
+    };
+    loadParticipant();
+  }, []);
 
-	//load participantId on app start
-	useEffect(() => {
-		const loadParticipant = async () => {
-			try {
-				const storedId = await AsyncStorage.getItem(participantStorageKey);
-				if (storedId) _setCurrentParticipantId(storedId);
-			} catch (err) {
-				console.log("Failed to load participantId:", err);
-			}
-		};
-		loadParticipant();
-	}, []);
+  const setCurrentParticipantId = async (id: string) => {
+    _setCurrentParticipantId(id);
+    try {
+      await AsyncStorage.setItem(participantStorageKey, id);
+    } catch (err) {
+      console.log("Failed to save participantId:", err);
+    }
+  };
 
-	const setCurrentParticipantId = async (id: string) => {
-		_setCurrentParticipantId(id);
-		try {
-			await AsyncStorage.setItem(participantStorageKey, id);
-		} catch (err) {
-			console.log("Failed to save participantId:", err);
-		}
-	};
+  const initializeGame = async (
+    gameType: GameType,
+    eventId: string,
+    eventProgress: EventState,
+    eventParticipants: Participant[],
+    initialData: any = {},
+  ): Promise<void> => {
+    setGameState({
+      gameType,
+      eventId,
+      loading: false,
+      data: initialData,
+      status: null,
+      progress: eventProgress,
+      participants: eventParticipants,
+      viewingGame: false,
+    });
+  };
 
-	const initializeGame = async (
-		gameType: GameType,
-		eventId: string,
-		eventProgress: EventState,
-		eventParticipants: Participant[],
-		initialData: any = {},
-	): Promise<void> => {
-		setGameState({
-			gameType,
-			eventId,
-			loading: false,
-			data: initialData,
-			status: null,
-			progress: eventProgress,
-			participants: eventParticipants,
-		});
-	};
+  const setGameData = async (data: any) => {
+    if (!gameState) return;
+    const newState = { ...gameState, data };
+    setGameState(newState);
 
-	const setGameData = async (data: any) => {
-		if (!gameState) return;
-		const newState = { ...gameState, data };
-		setGameState(newState);
+    try {
+      await AsyncStorage.setItem(
+        storageKey(gameState.eventId, gameState.gameType),
+        JSON.stringify(newState),
+      );
+    } catch (err) {
+      console.log("Failed to save game data:", err);
+    }
+  };
 
-		try {
-			await AsyncStorage.setItem(
-				storageKey(gameState.eventId, gameState.gameType),
-				JSON.stringify(newState),
-			);
-		} catch (err) {
-			console.log("Failed to save game data:", err);
-		}
-	};
+  const setGameStatus = async (status: string | null) => {
+    if (!gameState) return;
+    const newState = { ...gameState, status };
+    setGameState(newState);
 
-	const setGameStatus = async (status: string | null) => {
-		if (!gameState) return;
-		const newState = { ...gameState, status };
-		setGameState(newState);
+    try {
+      await AsyncStorage.setItem(
+        storageKey(gameState.eventId, gameState.gameType),
+        JSON.stringify(newState),
+      );
+    } catch (err) {
+      console.log("Failed to save game status:", err);
+    }
+  };
 
-		try {
-			await AsyncStorage.setItem(
-				storageKey(gameState.eventId, gameState.gameType),
-				JSON.stringify(newState),
-			);
-		} catch (err) {
-			console.log("Failed to save game status:", err);
-		}
-	};
+  const setGameProgress = async (progress: EventState) => {
+    if (!gameState) return;
+    const newState = { ...gameState, progress };
+    setGameState(newState);
 
-	const setGameProgress = async (progress: EventState) => {
-		if (!gameState) return;
-		const newState = { ...gameState, progress };
-		setGameState(newState);
+    try {
+      await AsyncStorage.setItem(
+        storageKey(gameState.eventId, gameState.gameType),
+        JSON.stringify(newState),
+      );
+    } catch (err) {
+      console.log("Failed to save game progress:", err);
+    }
+  };
 
-		try {
-			await AsyncStorage.setItem(
-				storageKey(gameState.eventId, gameState.gameType),
-				JSON.stringify(newState),
-			);
-		} catch (err) {
-			console.log("Failed to save game progress:", err);
-		}
-	};
+  const setGameViewing = async (viewGame: boolean) => {
+    if (!gameState) return;
+    const newState = { ...gameState, viewGame };
+    setGameState(newState);
 
-	const setGameType = async (gameType: GameType) => {
-		if (!gameState) return;
-		const newState = { ...gameState, gameType };
-		setGameState(newState);
+    try {
+      await AsyncStorage.setItem(
+        storageKey(gameState.eventId, gameState.gameType),
+        JSON.stringify(newState),
+      );
+    } catch (err) {
+      console.log("Failed to save game viewing status:", err);
+    }
+  };
 
-		try {
-			await AsyncStorage.setItem(
-				storageKey(gameState.eventId, gameState.gameType),
-				JSON.stringify(newState),
-			);
-		} catch (err) {
-			console.log("Failed to save game type:", err);
-		}
-	};
+  const setGameParticipants = async (participants: Participant[]) => {
+    if (!gameState) return;
+    const newState = { ...gameState, participants };
+    setGameState(newState);
 
-	const setGameParticipants = async (participants: Participant[]) => {
-		if (!gameState) return;
-		const newState = { ...gameState, participants };
-		setGameState(newState);
+    try {
+      await AsyncStorage.setItem(
+        storageKey(gameState.eventId, gameState.gameType),
+        JSON.stringify(newState),
+      );
+    } catch (err) {
+      console.log("Failed to save game participants:", err);
+    }
+  };
 
-		try {
-			await AsyncStorage.setItem(
-				storageKey(gameState.eventId, gameState.gameType),
-				JSON.stringify(newState),
-			);
-		} catch (err) {
-			console.log("Failed to save game participants:", err);
-		}
-	};
+  const resetGame = async () => {
+    if (!gameState) return;
+    const key = storageKey(gameState.eventId, gameState.gameType);
+    try {
+      await AsyncStorage.removeItem(key);
+      setGameState({ ...gameState, data: {}, status: null });
+    } catch (err) {
+      console.log("Failed to reset game:", err);
+    }
+  };
 
-	const resetGame = async () => {
-		if (!gameState) return;
-		const key = storageKey(gameState.eventId, gameState.gameType);
-		try {
-			await AsyncStorage.removeItem(key);
-			setGameState({ ...gameState, data: {}, status: null });
-		} catch (err) {
-			console.log("Failed to reset game:", err);
-		}
-	};
-
-	return (
-		<GameContext.Provider
-			value={{
-				currentParticipantId,
-				setCurrentParticipantId,
-				gameState,
-				initializeGame,
-				setGameData,
-				setGameStatus,
-				setGameProgress,
-				resetGame,
-			}}
-		>
-			{children}
-		</GameContext.Provider>
-	);
+  return (
+    <GameContext.Provider
+      value={{
+        currentParticipantId,
+        setCurrentParticipantId,
+        gameState,
+        initializeGame,
+        setGameData,
+        setGameStatus,
+        setGameProgress,
+        setGameParticipants,
+        setGameViewing,
+        resetGame,
+      }}
+    >
+      {children}
+    </GameContext.Provider>
+  );
 };
 
 export const useGame = () => {
-	const context = useContext(GameContext);
-	if (!context) throw new Error("useGame must be used within a GameProvider");
-	return context;
+  const context = useContext(GameContext);
+  if (!context) throw new Error("useGame must be used within a GameProvider");
+  return context;
 };

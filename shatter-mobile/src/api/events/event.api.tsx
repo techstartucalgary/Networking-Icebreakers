@@ -2,6 +2,7 @@ import JoinEventByIdGuestRequest from "@/src/interfaces/requests/JoinEventByIdGu
 import JoinEventByIdUserRequest from "@/src/interfaces/requests/JoinEventByIdUserRequest";
 import EventResponse from "@/src/interfaces/responses/GetEventResponse";
 import EventJoinIdResponse from "@/src/interfaces/responses/JoinEventIdResponse";
+import { SocialLinks } from "@/src/interfaces/User";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
@@ -103,9 +104,11 @@ export async function JoinEventByIdUserApi(
 export async function JoinEventByIdGuestApi(
 	eventId: string,
 	name: string,
+	socialLinks: SocialLinks,
+	organization: string,
 ): Promise<EventJoinIdResponse> {
 	try {
-		const body: JoinEventByIdGuestRequest = { name };
+		const body: JoinEventByIdGuestRequest = { name, socialLinks, organization };
 		const response: AxiosResponse<EventJoinIdResponse> = await axios.post(
 			`${API_BASE_URL_EVENT}/${eventId}/join/guest`,
 			body,

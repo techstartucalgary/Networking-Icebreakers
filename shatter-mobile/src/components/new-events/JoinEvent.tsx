@@ -46,7 +46,7 @@ export function useJoinEvent() {
 				//guest joining event
 				if (!user._id) {
 					//first time joining event
-					const guestInfo = await JoinEventIdGuest(event._id, user.name);
+					const guestInfo = await JoinEventIdGuest(event._id, user.name, user.socialLinks  ?? {}, user.organization ?? "");
 					user._id = guestInfo.userId;
 
 					setCurrentParticipantId(guestInfo.participant._id);

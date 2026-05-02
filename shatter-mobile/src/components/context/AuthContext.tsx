@@ -1,4 +1,4 @@
-import { SocialLink, User } from "@/src/interfaces/User";
+import { SocialLinks, User } from "@/src/interfaces/User";
 import { userFetch } from "@/src/services/user.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -14,7 +14,7 @@ type AuthContextType = {
 	) => Promise<void>;
 	continueAsGuest: (
 		name: string,
-		socialLink: SocialLink,
+		socialLinks: SocialLinks,
 		organization: string,
 	) => Promise<void>;
 	logout: () => Promise<void>;
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		userId: "",
 		accessToken: "",
 		isGuest: true,
-		guestInfo: { name: "", socialLinks: [], organization: "" },
+		guestInfo: { name: "", socialLinks: {}, organization: "" },
 	});
 
 	const [user, setUser] = useState<User | undefined>(undefined);
@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			isGuest: isGuest,
 			guestInfo: {
 				name: user.name,
-				socialLinks: user.socialLinks || [],
+				socialLinks: user.socialLinks || {},
 				organization: user.organization,
 			},
 		};
@@ -99,14 +99,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	//when user initially creates a guest account
 	const continueAsGuest = async (
 		name: string,
-		socialLink: SocialLink,
+		socialLink: SocialLinks,
 		organization: string,
 	) => {
+		const encodedName = encodeURIComponent(name ?? "Unknown");
+		const profilePhoto = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedName}`;
+
 		const guestUser: User = {
 			_id: null,
 			name: name,
-			socialLinks: [{ label: socialLink.label, url: socialLink.url }],
+			socialLinks: { linkedin: socialLink.linkedin, github: socialLink.github, other: socialLink.other },
 			organization: organization,
+			profilePhoto: profilePhoto,
 			isGuest: true,
 		};
 
@@ -117,8 +121,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			accessToken: "",
 			isGuest: true,
 			guestInfo: {
-				name: guestUser.name,
-				socialLinks: guestUser.socialLinks || [],
+				name: name,
+				socialLinks: guestUser.socialLinks || {},
 				organization: organization || "",
 			},
 		};
@@ -133,7 +137,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			userId: "",
 			accessToken: "",
 			isGuest: true,
-			guestInfo: { name: "", socialLinks: [] },
+			guestInfo: { name: "", socialLinks: {}, organization: "" },
 		});
 		await AsyncStorage.clear();
 	};

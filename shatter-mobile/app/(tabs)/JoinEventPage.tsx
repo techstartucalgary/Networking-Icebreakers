@@ -6,6 +6,8 @@ import { useState } from "react";
 import {
     ActivityIndicator,
     ImageBackground,
+    KeyboardAvoidingView,
+    Platform,
     Text,
     TextInput,
     TouchableOpacity,
@@ -49,12 +51,19 @@ export default function JoinEventPage() {
 				style={styles.background}
 				resizeMode="cover"
 			>
-				<SafeAreaView style={styles.safe}>
+				<SafeAreaView style={styles.safe} edges={["top"]}>
+					<KeyboardAvoidingView
+						style={{ flex: 1, width: "100%" }}
+						behavior={Platform.OS === "ios" ? "padding" : "height"}
+						keyboardVerticalOffset={80}
+					>
 					<View style={styles.header}>
 						<Text style={styles.pageTitle}>Start Shattering</Text>
+						<Text style={styles.subtitleName}>
+							Hey {user?.name || "there"},
+						</Text>
 						<Text style={styles.subtitle}>
-							Hey {user?.name || "there"}, Ready to Start Shattering Some
-							Boundaries?
+							Ready to Start Shattering Some Boundaries?
 						</Text>
 					</View>
 
@@ -135,6 +144,7 @@ export default function JoinEventPage() {
 							</>
 						)}
 					</View>
+					</KeyboardAvoidingView>
 				</SafeAreaView>
 			</ImageBackground>
 		</AnimatedTab>

@@ -15,8 +15,6 @@ export const GamePageStyling = StyleSheet.create({
 	},
 	safe: {
 		flex: 1,
-		flexDirection: "column",
-		alignItems: "center",
 	},
 	page: {
 		flex: 1,

@@ -8,21 +8,20 @@ const vh = (percent: number) => (height * percent) / 100;
 
 export const JoinEventStyling = StyleSheet.create({
 	background: {
-		flex: 1,
-		width: "100%",
-		height: "100%",
+		width,
+		height,
 		backgroundColor: colors.lightGrey,
 	},
 	safe: {
 		flex: 1,
 		flexDirection: "column",
-		alignItems: "center",
 	},
 	header: {
-		height: vh(10),
+		height: vh(28),
 		justifyContent: "center",
 		alignItems: "center",
 		marginTop: 5,
+		paddingHorizontal: 20,
 	},
 	pageTitle: {
 		fontSize: vw(8),
@@ -31,31 +30,39 @@ export const JoinEventStyling = StyleSheet.create({
 		color: "#A8C8E8",
 		textAlign: "center",
 	},
-	subtitle: {
+	subtitleName: {
 		marginTop: 6,
-		fontSize: vw(4),
+		fontSize: vw(4.2),
 		color: "#ffffff",
-		opacity: 0.9,
+		fontWeight: "700",
 		letterSpacing: 1,
 		textAlign: "center",
-		paddingHorizontal: 10,
+	},
+	subtitle: {
+		marginTop: 2,
+		fontSize: vw(3.8),
+		color: "#ffffff",
+		opacity: 0.85,
+		letterSpacing: 0.5,
+		textAlign: "center",
 	},
 	container: {
 		position: "absolute",
-		top: vh(20),
-		width: "100%",
-		bottom: 0,
+		top: vh(26),
+		left: 0,
+		right: 0,
+		bottom: -50,
 		backgroundColor: colors.lightGrey,
-		borderTopLeftRadius: 12,
-		borderTopRightRadius: 12,
-		padding: 20,
+		borderTopLeftRadius: 20,
+		borderTopRightRadius: 20,
+		padding: 16,
 	},
 
 	section: {
 		backgroundColor: colors.white,
 		borderRadius: 10,
-		padding: 15,
-		marginBottom: 20,
+		padding: 12,
+		marginBottom: 12,
 	},
 
 	label: {
@@ -127,7 +134,7 @@ export const JoinEventStyling = StyleSheet.create({
 		fontSize: 16,
 	},
 	divider: {
-		marginVertical: 15,
+		marginVertical: 8,
 		alignItems: "center",
 	},
 	dividerText: {

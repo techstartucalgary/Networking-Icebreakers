@@ -348,3 +348,36 @@ export async function ExchangeLinkedInCodeApi(
 		throw new Error("Network error. Check your connection.");
 	}
 }
+
+export async function UserLinkedInLinkApi(
+	userId: string,
+): Promise<UserLoginResponse> {
+	try {
+		const response: AxiosResponse<UserLoginResponse> = await axios.post(
+			`${API_BASE_URL_AUTH}/linkedin/link`,
+			{ userId },
+		);
+		return response.data;
+	} catch (error) {
+		const err = error as AxiosError;
+
+		if (err.response) {
+			switch (err.response.status) {
+				case 400:
+					throw new Error("Authentication required.");
+				case 401:
+					throw new Error("User not found. Please try again later.");
+				case 403:
+					throw new Error("This account is already a LinkedIn account.");
+				case 409: 
+					throw new Error("This account is already linked to LinkedIn!");
+				case 500:
+					throw new Error("Server error. Please try again later.");
+				default:
+					throw new Error("Authentication failed.");
+			}
+		}
+
+		throw new Error("Network error. Check your connection.");
+	}
+}

@@ -1,32 +1,25 @@
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import {
-    Image,
-    ImageBackground,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+	Image,
+	ImageBackground,
+	ScrollView,
+	Text,
+	TouchableOpacity,
+	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SvgUri } from "react-native-svg";
 import { useAuth } from "../../src/components/context/AuthContext";
 import AnimatedTab from "../../src/components/general/AnimatedTab";
 import { ProfilePageStyling as styles } from "../../src/styling/ProfilePage.styles";
+import { LinkRow } from "@/src/components/general/LinkRow";
 
 export default function Profile() {
 	const { user, logout } = useAuth();
 	const router = useRouter();
-	const [socialLinks, setSocialLinks] = useState(user?.socialLinks || []);
 
-	//update local form
-	useFocusEffect(
-		useCallback(() => {
-			setSocialLinks(user?.socialLinks || []);
-		}, [user]),
-	);
-
-	//not logged in
+	// not logged in
 	useEffect(() => {
 		if (!user) {
 			router.replace("/UserPages/Login");
@@ -34,8 +27,13 @@ export default function Profile() {
 	}, [user]);
 
 	if (!user) {
-		return null; //don't render profile content while redirecting
+		return null;
 	}
+
+	const social = user.socialLinks;
+
+	const hasSocialLinks =
+		!!social?.linkedin || !!social?.github || (social?.other?.length ?? 0) > 0;
 
 	//logged in
 	if (user && !user.isGuest) {
@@ -53,6 +51,7 @@ export default function Profile() {
 								Welcome back, {user.name || "Networker"}!
 							</Text>
 						</View>
+
 						<View style={styles.container}>
 							<ScrollView
 								contentContainerStyle={{ alignItems: "center" }}
@@ -62,20 +61,32 @@ export default function Profile() {
 									source={{ uri: user.profilePhoto }}
 									style={styles.avatar}
 								/>
+
 								<Text style={styles.subtitleText}>{user.email}</Text>
 
-								{socialLinks.length === 0 && (
+								{/* Empty */}
+								{!hasSocialLinks && (
 									<Text style={styles.emptyText}>
 										No social links added yet.
 									</Text>
 								)}
 
-								{socialLinks.map((link, index) => (
-									<View key={index} style={styles.linkContainer}>
-										<Text style={styles.linkLabel}>{link.label}</Text>
-										<Text style={styles.linkUrl}>{link.url}</Text>
+								{/* Social Links */}
+								{user.socialLinks && (
+									<View>
+										{social?.linkedin && (
+											<LinkRow label="LinkedIn" url={social.linkedin} />
+										)}
+			
+										{social?.github && (
+											<LinkRow label="GitHub" url={social.github} />
+										)}
+			
+										{social?.other?.map((link, index) => (
+											<LinkRow key={index} label={link.label} url={link.url} />
+										))}
 									</View>
-								))}
+								)}
 
 								<TouchableOpacity
 									style={styles.editButton}
@@ -111,6 +122,7 @@ export default function Profile() {
 								Welcome, {user.name || "Networker"}!
 							</Text>
 						</View>
+
 						<View style={styles.container}>
 							<ScrollView
 								contentContainerStyle={{ alignItems: "center" }}
@@ -119,13 +131,17 @@ export default function Profile() {
 								<SvgUri
 									uri={
 										user.profilePhoto ??
-										`https://api.dicebear.com/9.1.1/initials/png?seed=${encodeURIComponent(user.name || "Unknown")}&size=128`
+										`https://api.dicebear.com/9.1.1/initials/png?seed=${encodeURIComponent(
+											user.name || "Unknown",
+										)}&size=128`
 									}
 									style={styles.avatar}
 								/>
+
 								<Text style={styles.notice}>
 									You are logged in as a guest. Some features may be limited.
 								</Text>
+
 								{!user._id && (
 									<Text style={styles.notice}>
 										To upgrade your account, join an event and then come back
@@ -133,22 +149,37 @@ export default function Profile() {
 									</Text>
 								)}
 
-								{socialLinks.length === 0 && (
+								{/* Empty */}
+								{!hasSocialLinks && (
 									<Text style={styles.emptyText}>
 										No social links added yet.
 									</Text>
 								)}
 
-								{socialLinks.map((link, index) => (
+								{/* LinkedIn */}
+								{social?.linkedin && (
+									<View style={styles.linkContainer}>
+										<Text style={styles.linkLabel}>LinkedIn</Text>
+										<Text style={styles.linkUrl}>{social.linkedin}</Text>
+									</View>
+								)}
+
+								{/* GitHub */}
+								{social?.github && (
+									<View style={styles.linkContainer}>
+										<Text style={styles.linkLabel}>GitHub</Text>
+										<Text style={styles.linkUrl}>{social.github}</Text>
+									</View>
+								)}
+
+								{/* Other Links */}
+								{social?.other?.map((link, index) => (
 									<View key={index} style={styles.linkContainer}>
-										<>
-											<Text style={styles.linkLabel}>{link.label}</Text>
-											<Text style={styles.linkUrl}>{link.url}</Text>
-										</>
+										<Text style={styles.linkLabel}>{link.label}</Text>
+										<Text style={styles.linkUrl}>{link.url}</Text>
 									</View>
 								))}
 
-								{/* Guest user who has joined event / has userId */}
 								{user._id && (
 									<View>
 										<TouchableOpacity

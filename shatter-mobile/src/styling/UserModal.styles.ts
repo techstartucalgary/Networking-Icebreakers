@@ -60,21 +60,6 @@ export const UserModalStyling = StyleSheet.create({
 		lineHeight: 22,
 	},
 
-	linkLabel: {
-		fontFamily: fonts.title,
-		fontSize: 14,
-		color: colors.darkNavy,
-		fontWeight: "bold",
-		marginTop: 6,
-	},
-
-	link: {
-		fontFamily: fonts.body,
-		fontSize: 14,
-		color: colors.darkBlue,
-		marginBottom: 10,
-	},
-
 	leaveUserButton: {
 		backgroundColor: colors.darkNavy,
 		paddingVertical: 12,

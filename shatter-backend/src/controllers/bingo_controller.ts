@@ -342,37 +342,43 @@ function buildShapeExample(rows: number, cols: number): string {
 async function generateBingoGrid(
   n_rows: number,
   n_cols: number,
-  context: string,
+  event_description: string,
+  tags: string[],
 ): Promise<Record<string, string[]>> {
   const schema = buildSchema(n_rows, n_cols);
   const schemaJson = z.toJSONSchema(schema);
   const example = buildShapeExample(n_rows, n_cols);
 
-  const { GoogleGenAI } = await import("@google/genai");
-
   const basePrompt_structure =
     `Generate a ${n_rows}x${n_cols} bingo board. Return JSON exactly matching this structure:
     ${example}
+
     Rules:
     - Keys must be row1, row2, row3, etc.
     - Each row must contain ${n_cols} strings.
-    Return ONLY valid JSON.
-
-    You will be provided with additional context to inspire the content of the bingo squares. Use that context to generate relevant bingo square phrases.
+    - Return ONLY valid JSON.
+    - Each entry should be a full bingo question or bingo square phrase.
+    - Every entry must fit the provided event description.
+    - Use the tags as guidance for the types of professionals, roles, departments, or specializations attending the event.
+    - Tags can be empty. If no tags are provided, rely only on the event description.
+    - Avoid duplicate or near-duplicate entries.
+    - Avoid generic networking items unless they are made specific to the event context.
   `.trim();
-  const userContext = `Additional context for bingo content:\n${context}`;
 
-  // const promptPath = new URL(
-  //   "../ai/prompts/bingo_short_questions.txt",
-  //   import.meta.url,
-  // );
-  // const aiInstruction = fs.readFileSync(promptPath, "utf-8");
+  const eventContext = `
+Event description:
+${event_description}
+
+Tags / attendee professional types:
+${tags.length > 0 ? tags.join(", ") : "No tags provided"}
+`.trim();
 
   const aiPrompt = new Prompt([
     basePrompt_structure,
-    userContext,
+    eventContext,
     aiShortVersionInstruction,
   ]);
+
   aiPrompt.generatePrompt();
   const prompt = aiPrompt.getPrompt();
 
@@ -492,7 +498,8 @@ function combine2DArrays(
  *
  * Generate an AI bingo grid.
  *
- * @param req.body.context - Context for bingo content (required)
+ * @param req.body.event_description - General event context for bingo content (required)
+ * @param req.body.tags - Types of professionals, roles, departments, or specializations attending the event (required, can be empty)
  * @param req.body.n_rows - Number of grid rows (1-5)
  * @param req.body.n_cols - Number of grid columns (1-5)
  *
@@ -501,12 +508,27 @@ function combine2DArrays(
  */
 export async function generateBingo(req: Request, res: Response) {
   try {
-    const { context, n_rows, n_cols } = req.body;
+    const { event_description, tags, n_rows, n_cols } = req.body;
 
-    if (!context) {
+    if (
+      !event_description ||
+      typeof event_description !== "string" ||
+      event_description.trim().length === 0
+    ) {
       return res.status(400).json({
         status: false,
-        msg: "context is required",
+        msg: "event_description is required and must be a non-empty string",
+      });
+    }
+
+    if (
+      tags === undefined ||
+      !Array.isArray(tags) ||
+      !tags.every((tag: any) => typeof tag === "string")
+    ) {
+      return res.status(400).json({
+        status: false,
+        msg: "tags is required and must be an array of strings",
       });
     }
 
@@ -524,15 +546,26 @@ export async function generateBingo(req: Request, res: Response) {
       });
     }
 
-    const bingo_questions = await generateBingoGrid(n_rows, n_cols, context);
+    const cleanedTags = tags.map((tag: string) => tag.trim()).filter(Boolean);
+
+    const bingo_questions = await generateBingoGrid(
+      n_rows,
+      n_cols,
+      event_description.trim(),
+      cleanedTags,
+    );
+
     const bingo_short_versions = await generateBingoGrid_shortVersions(
       n_rows,
       n_cols,
       JSON.stringify(bingo_questions),
     );
+
     const bingo_grid_questions: string[][] = process_ai_result(bingo_questions);
+
     const bingo_grid_short_versions: string[][] =
       process_ai_result(bingo_short_versions);
+
     const bingo_grid = combine2DArrays(
       bingo_grid_questions,
       bingo_grid_short_versions,
@@ -542,6 +575,275 @@ export async function generateBingo(req: Request, res: Response) {
       status: true,
       bingo_grid,
     });
+  } catch (err: any) {
+    return res.status(500).json({
+      status: false,
+      error: err.message,
+    });
+  }
+}
+
+function buildIndividualBingoGameQuestionsSchema(questionCount: number) {
+  return z
+    .array(
+      z.object({
+        question: z
+          .string()
+          .min(1)
+          .describe("The full generated bingo question"),
+        shortQuestion: z
+          .string()
+          .min(1)
+          .describe("A max 3 word short version of the question"),
+      }),
+    )
+    .length(questionCount)
+    .describe("The regenerated bingo questions");
+}
+
+function normalizeQuestion(question: string): string {
+  return question.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function hasDuplicateQuestions(
+  generatedQuestions: { question: string; shortQuestion: string }[],
+): boolean {
+  const seenQuestions = new Set<string>();
+  const seenShortQuestions = new Set<string>();
+
+  for (const generatedQuestion of generatedQuestions) {
+    const question = normalizeQuestion(generatedQuestion.question);
+    const shortQuestion = normalizeQuestion(generatedQuestion.shortQuestion);
+
+    if (seenQuestions.has(question) || seenShortQuestions.has(shortQuestion)) {
+      return true;
+    }
+
+    seenQuestions.add(question);
+    seenShortQuestions.add(shortQuestion);
+  }
+
+  return false;
+}
+
+function hasSourceQuestionCollision(
+  generatedQuestions: { question: string; shortQuestion: string }[],
+  bingo_grid: string[][],
+  bingo_question_target: string[],
+): boolean {
+  const existingQuestions = new Set(
+    [...bingo_grid.flat(), ...bingo_question_target].map((question) =>
+      normalizeQuestion(question),
+    ),
+  );
+
+  return generatedQuestions.some((generatedQuestion) =>
+    existingQuestions.has(normalizeQuestion(generatedQuestion.question)),
+  );
+}
+
+async function generateIndividualBingoGameQuestionsWithGemini({
+  event_description,
+  tags,
+  bingo_grid,
+  bingo_question_target,
+}: {
+  event_description: string;
+  tags: string[];
+  bingo_grid: string[][];
+  bingo_question_target: string[];
+}): Promise<{ question: string; shortQuestion: string }[]> {
+  const schema = buildIndividualBingoGameQuestionsSchema(
+    bingo_question_target.length,
+  );
+  const schemaJson = z.toJSONSchema(schema);
+
+  const basePrompt = `
+Generate ${bingo_question_target.length} new bingo questions for an event bingo game.
+
+Return JSON exactly matching this structure:
+[
+  {
+    "question": "Full bingo question here",
+    "shortQuestion": "Max 3 words"
+  }
+]
+
+Rules:
+- Return ONLY valid JSON.
+- Generate exactly ${bingo_question_target.length} new question objects.
+- The response must be a JSON array, not an object.
+- Preserve the same order as the target questions list: one replacement per target question.
+- Each new question must fit the event context.
+- Every new question must be different from every existing question in the bingo grid.
+- Every new question must be different from every other newly generated question.
+- Avoid near-duplicates, reworded duplicates, or questions with the same meaning.
+- The target questions are being regenerated, but each replacement does NOT need to be about the same topic as its target.
+- Each replacement should be entirely new while still fitting the event.
+- Each shortQuestion must be max 3 words.
+- Each shortQuestion should describe what its full question is about.
+- The shortQuestion values must also be different from each other.
+- Avoid generic networking questions.
+- Prefer observable, realistic, event-specific bingo moments.
+`.trim();
+
+  const eventContext = `
+Event description:
+${event_description}
+
+Tags / attendee roles:
+${tags.length > 0 ? tags.join(", ") : "No tags provided"}
+
+Existing bingo grid questions:
+${JSON.stringify(bingo_grid, null, 2)}
+
+Target questions to replace:
+${JSON.stringify(bingo_question_target, null, 2)}
+`.trim();
+
+  const aiPrompt = new Prompt([
+    basePrompt,
+    eventContext,
+    aiShortVersionInstruction,
+  ]);
+
+  aiPrompt.generatePrompt();
+  const prompt = aiPrompt.getPrompt();
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseJsonSchema: schemaJson,
+      temperature: 0.8,
+    },
+  });
+
+  if (!response.text) {
+    throw new Error("Gemini returned empty response");
+  }
+
+  const parsed = JSON.parse(response.text);
+  const validated = schema.parse(parsed);
+
+  if (hasDuplicateQuestions(validated)) {
+    throw new Error("Gemini returned duplicate generated questions");
+  }
+
+  if (hasSourceQuestionCollision(validated, bingo_grid, bingo_question_target)) {
+    throw new Error(
+      "Gemini returned a generated question that already exists in the bingo grid or target questions",
+    );
+  }
+
+  return validated;
+}
+
+
+/**
+ * POST /api/bingo/generate/single
+ *
+ * Generate replacement AI bingo questions.
+ *
+ * @param req.body.event_description - Context for bingo content (required) - string
+ * @param req.body.tags - Tags for the type/roles of people attending the event - string[] can be empty
+ * @param req.body.bingo_grid - Existing bingo grid of full questions - string[][]
+ * @param req.body.bingo_question_target - Target questions to regenerate - string[]
+ *
+ * @returns 200 with a list of generated bingo questions and short versions
+ * @returns 400 if validation fails
+ */
+export async function generateIndividualBingoGameQuestions(
+  req: Request,
+  res: Response,
+) {
+  try {
+    const {
+      event_description,
+      tags,
+      bingo_grid,
+      bingo_question_target,
+    } = req.body;
+
+    if (
+      !event_description ||
+      typeof event_description !== "string" ||
+      event_description.trim().length === 0
+    ) {
+      return res.status(400).json({
+        status: false,
+        msg: "event_description is required and must be a non-empty string",
+      });
+    }
+
+    if (
+      tags === undefined ||
+      !Array.isArray(tags) ||
+      !tags.every((tag: any) => typeof tag === "string")
+    ) {
+      return res.status(400).json({
+        status: false,
+        msg: "tags is required and must be an array of strings",
+      });
+    }
+
+    if (
+      !Array.isArray(bingo_grid) ||
+      bingo_grid.length === 0 ||
+      !bingo_grid.every(
+        (row: any) =>
+          Array.isArray(row) &&
+          row.every((cell: any) => typeof cell === "string"),
+      )
+    ) {
+      return res.status(400).json({
+        status: false,
+        msg: "bingo_grid is required and must be a 2D array of strings",
+      });
+    }
+
+    if (
+      !Array.isArray(bingo_question_target) ||
+      bingo_question_target.length === 0 ||
+      !bingo_question_target.every(
+        (question: any) =>
+          typeof question === "string" && question.trim().length > 0,
+      )
+    ) {
+      return res.status(400).json({
+        status: false,
+        msg: "bingo_question_target is required and must be a non-empty array of non-empty strings",
+      });
+    }
+
+    const cleanedTags = tags.map((tag: string) => tag.trim()).filter(Boolean);
+    const cleanedTargetQuestions = bingo_question_target.map((question: string) =>
+      question.trim(),
+    );
+    const uniqueTargetQuestions = new Set(
+      cleanedTargetQuestions.map((question: string) => normalizeQuestion(question)),
+    );
+
+    if (uniqueTargetQuestions.size !== cleanedTargetQuestions.length) {
+      return res.status(400).json({
+        status: false,
+        msg: "bingo_question_target must not contain duplicate questions",
+      });
+    }
+
+    const generatedQuestions = await generateIndividualBingoGameQuestionsWithGemini({
+      event_description: event_description.trim(),
+      tags: cleanedTags,
+      bingo_grid,
+      bingo_question_target: cleanedTargetQuestions,
+    });
+
+    return res.status(200).json({
+      status: true,
+      new_questions: generatedQuestions,
+    });
+    
   } catch (err: any) {
     return res.status(500).json({
       status: false,

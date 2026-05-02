@@ -277,7 +277,7 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     const { name, email, socialLinks, organization, title } = req.body as {
       name?: string;
       email?: string;
-      socialLinks?: { linkedin?: string; github?: string; other?: string };
+      socialLinks?: { linkedin?: string; github?: string; other?: { label: string; url: string }[] };
       organization?: string;
       title?: string;
     };
@@ -295,7 +295,7 @@ export async function joinEventAsGuest(req: Request, res: Response) {
     const hasSocialLink = socialLinks && (
       socialLinks.linkedin?.trim() ||
       socialLinks.github?.trim() ||
-      socialLinks.other?.trim()
+      socialLinks.other?.some((entry) => entry?.url?.trim())
     );
     const hasOrganization = organization && organization.trim();
 
@@ -498,8 +498,7 @@ export async function updateEventStatus(req: Request, res: Response) {
     const updatedEvent = await event.save();
 
     // Emit Pusher events for real-time updates
-    const pusherEvent = status === 'In Progress' ? 'event-started' : 'event-ended';
-    await pusher.trigger(`event-${eventId}`, pusherEvent, {
+    await pusher.trigger(`event-${eventId}`, 'event', {
       status,
     });
 

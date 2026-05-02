@@ -19,8 +19,10 @@ export const EventPageStyling = StyleSheet.create({
 		alignItems: "center",
 	},
 	header: {
-		height: vh(7),
+		height: vh(20),
 		justifyContent: "center",
+		alignItems: "center",
+		marginTop: 5,
 	},
 	pageTitle: {
 		fontSize: vw(8),
@@ -38,7 +40,7 @@ export const EventPageStyling = StyleSheet.create({
 	},
 	container: {
 		position: "absolute",
-		top: vh(15),
+		top: vh(22),
 		width: "100%",
 		bottom: 0,
 		backgroundColor: colors.lightGrey,
