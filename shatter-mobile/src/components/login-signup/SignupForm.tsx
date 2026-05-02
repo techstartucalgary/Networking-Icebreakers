@@ -1,8 +1,10 @@
 //called by Profile.tsx for signing up
 import { User } from "@/src/interfaces/User";
-import { loginWithLinkedIn } from "@/src/services/linkedin_auth.service";
+import { SocialLinks } from "@/src/interfaces/User";
 import { userSignup, userUpdate } from "@/src/services/user.service";
+import { FontAwesome, Feather } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import {
 	ActivityIndicator,
@@ -18,6 +20,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SignUpFormStyling as styles } from "../../styling/SignUpFormStyling.styles";
 import { useAuth } from "../context/AuthContext";
+import { colors } from "@/src/styling/constants";
 
 export default function SignUpForm() {
 	const { authenticate } = useAuth();
@@ -26,23 +29,15 @@ export default function SignUpForm() {
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [err, setError] = useState("");
+	const [selectedType, setSelectedType] = useState<"linkedin" | "github" | "other" | null>(null);
+	const [linkedin, setLinkedin] = useState("");
+	const [github, setGithub] = useState("");
+	const [other, setOther] = useState("");
 
 	const handleLinkedIn = async () => {
-		setError("");
-		setLoading(true);
-		try {
-			const result = await loginWithLinkedIn();
-			if (!result) return;
-			await authenticate(result.user, result.token, false);
-			router.push("/(tabs)/JoinEventPage");
-		} catch (err) {
-			console.log("LinkedIn signup failed:", err);
-			setError(
-				(err as Error).message || "LinkedIn signup failed. Please try again.",
-			);
-		} finally {
-			setLoading(false);
-		}
+		await WebBrowser.openBrowserAsync(
+			`${process.env.EXPO_PUBLIC_API_BASE}/api/auth/linkedin`,
+		);
 	};
 
 	const handleSignup = async () => {
@@ -88,11 +83,16 @@ export default function SignUpForm() {
 				setError("User info could not be created. Please try again later.");
 			}
 
+			const socialLinks: SocialLinks = {};
+			if (linkedin.trim()) socialLinks.linkedin = linkedin.trim();
+			if (github.trim()) socialLinks.github = github.trim();
+			if (other.trim()) socialLinks.other = [{ label: "Contact Link", url: other.trim() }];
+
 			const user: User = {
 				_id: userResponse.userId,
 				name,
 				email,
-				socialLinks: {},
+				socialLinks,
 				profilePhoto: profilePhoto,
 				isGuest: false,
 			};
@@ -158,6 +158,52 @@ export default function SignUpForm() {
 									onChangeText={setPassword}
 									placeholderTextColor="#888"
 								/>
+
+								<Text style={styles.input && { color: colors.darkNavy, fontWeight: "600", fontSize: 14, marginBottom: 8 }}>Contact Link</Text>
+								<View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+									<TouchableOpacity
+										onPress={() => setSelectedType("linkedin")}
+										style={{ padding: 12, borderRadius: 12, backgroundColor: selectedType === "linkedin" ? "#0A66C2" : colors.lightGrey2, flex: 1, marginRight: 8, alignItems: "center" }}
+									>
+										<FontAwesome name="linkedin" size={22} color="white" />
+									</TouchableOpacity>
+									<TouchableOpacity
+										onPress={() => setSelectedType("github")}
+										style={{ padding: 12, borderRadius: 12, backgroundColor: selectedType === "github" ? "#24292e" : colors.lightGrey2, flex: 1, marginRight: 8, alignItems: "center" }}
+									>
+										<FontAwesome name="github" size={22} color="white" />
+									</TouchableOpacity>
+									<TouchableOpacity
+										onPress={() => setSelectedType("other")}
+										style={{ padding: 12, borderRadius: 12, backgroundColor: selectedType === "other" ? "#6c63ff" : colors.lightGrey2, flex: 1, alignItems: "center" }}
+									>
+										<Feather name="link" size={22} color="white" />
+									</TouchableOpacity>
+								</View>
+
+								{selectedType && (
+									<TextInput
+										style={styles.input}
+										placeholder={
+											selectedType === "linkedin" ? "LinkedIn URL"
+											: selectedType === "github" ? "GitHub URL"
+											: "Portfolio / Other URL"
+										}
+										placeholderTextColor="#888"
+										value={selectedType === "linkedin" ? linkedin : selectedType === "github" ? github : other}
+										onChangeText={(text) => {
+											if (selectedType === "linkedin") setLinkedin(text);
+											else if (selectedType === "github") setGithub(text);
+											else setOther(text);
+										}}
+										autoCapitalize="none"
+										keyboardType="url"
+									/>
+								)}
+
+								<Text style={{ color: "#888", fontSize: 13, fontStyle: "italic", marginBottom: 12 }}>
+									Select a platform above, then enter your profile link.
+								</Text>
 
 								<TouchableOpacity
 									style={[
