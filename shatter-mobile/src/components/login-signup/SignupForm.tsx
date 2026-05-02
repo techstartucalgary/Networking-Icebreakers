@@ -1,8 +1,8 @@
 //called by Profile.tsx for signing up
 import { User } from "@/src/interfaces/User";
-import { loginWithLinkedIn } from "@/src/services/linkedin_auth.service";
 import { userSignup, userUpdate } from "@/src/services/user.service";
 import { router, Stack } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import {
 	ActivityIndicator,
@@ -28,21 +28,9 @@ export default function SignUpForm() {
 	const [err, setError] = useState("");
 
 	const handleLinkedIn = async () => {
-		setError("");
-		setLoading(true);
-		try {
-			const result = await loginWithLinkedIn();
-			if (!result) return;
-			await authenticate(result.user, result.token, false);
-			router.push("/(tabs)/JoinEventPage");
-		} catch (err) {
-			console.log("LinkedIn signup failed:", err);
-			setError(
-				(err as Error).message || "LinkedIn signup failed. Please try again.",
-			);
-		} finally {
-			setLoading(false);
-		}
+		await WebBrowser.openBrowserAsync(
+			`${process.env.EXPO_PUBLIC_API_BASE}/api/auth/linkedin`,
+		);
 	};
 
 	const handleSignup = async () => {
