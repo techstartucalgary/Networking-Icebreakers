@@ -17,7 +17,7 @@ export default function QRScannerBox({ onClose }: { onClose: () => void }) {
 	const extractjoinCode = (qrData: string): string | null => {
 		try {
 			//8 numbers (0-9)
-			const isValid = /^[0-9]{8}$/.test(qrData);
+			const isValid = /^[0-9]{4}$/.test(qrData);
 
 			if (!isValid) {
 				console.log("Invalid join code format: ", qrData);
