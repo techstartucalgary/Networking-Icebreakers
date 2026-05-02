@@ -1,5 +1,6 @@
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
 import { User } from "../interfaces/User";
 import { exchangeLinkedInCode, userFetch } from "./user.service";
 
@@ -8,6 +9,11 @@ const REDIRECT_SCHEME = "shattermobile://auth";
 export async function loginWithLinkedIn(): Promise<
 	{ user: User; token: string } | null
 > {
+	if (Platform.OS === "web") {
+		window.location.href = `${process.env.EXPO_PUBLIC_API_BASE}/api/auth/linkedin`;
+		return null;
+	}
+
 	const result = await WebBrowser.openAuthSessionAsync(
 		`${process.env.EXPO_PUBLIC_API_BASE}/api/auth/linkedin?platform=mobile`,
 		REDIRECT_SCHEME,
